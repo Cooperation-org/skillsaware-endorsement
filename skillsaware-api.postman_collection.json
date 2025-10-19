@@ -1,0 +1,318 @@
+{
+  "info": {
+    "name": "SkillsAware OBv3 Endorsement API",
+    "description": "Complete API collection for SkillsAware endorsement workflow with OBv3 credential generation",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "12345678"
+  },
+  "item": [
+    {
+      "name": "1. Create Claim",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Save claim_id and claimant_link for next requests",
+              "if (pm.response.code === 200) {",
+              "    const response = pm.response.json();",
+              "    pm.environment.set('claim_id', response.claim_id);",
+              "    pm.environment.set('claimant_link', response.claimant_link);",
+              "    ",
+              "    // Extract token from claimant_link",
+              "    const url = new URL(response.claimant_link);",
+              "    const claimant_token = url.searchParams.get('token');",
+              "    pm.environment.set('claimant_token', claimant_token);",
+              "    ",
+              "    console.log('Claim ID:', response.claim_id);",
+              "    console.log('Claimant Link:', response.claimant_link);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-api-key",
+            "value": "8f33e3a4fd9322e89dc15300f603d91654d7eb38802f0cef0440ca292bf2c3f5",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tenant_id\": \"skillsaware\",\n  \"skill_code\": \"ICTDSN403\",\n  \"skill_name\": \"Design and Develop Complex ICT Solutions\",\n  \"skill_description\": \"This skill involves analyzing, designing, developing, and testing complex ICT solutions to meet organizational requirements. It requires advanced problem-solving abilities, technical expertise, and the capacity to work with stakeholders to deliver innovative solutions.\",\n  \"claimant_name\": \"Jane Doe\",\n  \"claimant_email\": \"jane.doe@example.com\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/claims",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "claims"]
+        },
+        "description": "Creates a new skill claim and generates a magic link for the claimant.\n\n**Required Headers:**\n- `x-api-key`: API key for tenant authentication\n\n**Response:**\n- `claim_id`: Unique identifier for the claim\n- `claimant_link`: Magic link JWT for claimant to submit narrative\n- `expires_at`: Token expiration timestamp"
+      },
+      "response": []
+    },
+    {
+      "name": "2. Generate Endorser Link",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Save endorser_link for next request",
+              "if (pm.response.code === 200) {",
+              "    const response = pm.response.json();",
+              "    pm.environment.set('endorser_link', response.endorser_link);",
+              "    ",
+              "    // Extract token from endorser_link",
+              "    const url = new URL(response.endorser_link);",
+              "    const endorser_token = url.searchParams.get('token');",
+              "    pm.environment.set('endorser_token', endorser_token);",
+              "    ",
+              "    console.log('Endorser Link:', response.endorser_link);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{claimant_token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"claimant_narrative\": \"I have successfully designed and developed multiple complex ICT solutions over the past three years. My work includes architecting a microservices-based e-commerce platform that handles over 100,000 daily transactions, implementing CI/CD pipelines that reduced deployment time by 80%, and leading the technical design of a real-time analytics dashboard used by executive leadership. I have consistently demonstrated the ability to analyze complex requirements, design scalable solutions, and deliver high-quality code while mentoring junior developers.\",\n  \"endorser_name\": \"John Manager\",\n  \"endorser_email\": \"john.manager@example.com\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/claims/{{claim_id}}/endorser-link",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "claims", "{{claim_id}}", "endorser-link"]
+        },
+        "description": "Generates endorser magic link after claimant submits their narrative.\n\n**Required Headers:**\n- `Authorization: Bearer <claimant_token>`\n\n**Prerequisites:**\n- Must run \"1. Create Claim\" first to get claimant_token\n\n**Response:**\n- `endorser_link`: Magic link JWT for endorser to submit endorsement\n- `expires_at`: Token expiration timestamp"
+      },
+      "response": []
+    },
+    {
+      "name": "3. Submit Endorsement",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Verify endorsement submission",
+              "if (pm.response.code === 200) {",
+              "    const response = pm.response.json();",
+              "    console.log('Endorsement submitted successfully!');",
+              "    console.log('Claim ID:', response.claim_id);",
+              "    console.log('OBv3 JSON artifact:', response.artifacts.obv3_json);",
+              "    console.log('PDF artifact:', response.artifacts.pdf);",
+              "    console.log('Webhook delivered:', response.webhook_delivered);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{endorser_token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"endorsement_text\": \"I have had the pleasure of working directly with Jane Doe for the past two years as her technical lead. During this time, I have witnessed her exceptional ability to design and develop complex ICT solutions that consistently exceed expectations. Jane's work on our microservices architecture demonstrated not only technical excellence but also strategic thinking and attention to scalability. She approaches problems methodically, communicates effectively with stakeholders, and delivers solutions that are both innovative and maintainable. Her contributions have been instrumental to our team's success, and I wholeheartedly endorse her demonstrated competency in this skill area.\",\n  \"bona_fides\": \"Senior Technical Lead at TechCorp, 12+ years experience in software architecture and team leadership, certified AWS Solutions Architect\",\n  \"evidence_urls\": [\n    \"https://github.com/example/microservices-project\",\n    \"https://techcorp.com/case-studies/ecommerce-platform\"\n  ],\n  \"signature\": \"John Manager\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/endorsements/submit",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "endorsements", "submit"]
+        },
+        "description": "Submits the endorsement and generates OBv3 credentials.\n\n**Required Headers:**\n- `Authorization: Bearer <endorser_token>`\n\n**Prerequisites:**\n- Must run \"2. Generate Endorser Link\" first to get endorser_token\n\n**Process:**\n1. Validates endorser JWT\n2. Generates OBv3 AchievementCredential JSON-LD\n3. Generates OBv3 EndorsementCredential JSON-LD\n4. Renders professional PDF certificate\n5. Uploads both artifacts to S3\n6. Sends HMAC-signed webhook to SkillsAware\n\n**Response:**\n- `success`: Boolean indicating success\n- `claim_id`: The claim identifier\n- `artifacts.obv3_json`: S3 key for JSON-LD credential\n- `artifacts.pdf`: S3 key for PDF certificate\n- `webhook_delivered`: Boolean indicating webhook delivery status"
+      },
+      "response": []
+    },
+    {
+      "name": "4. Test Webhook",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "8f33e3a4fd9322e89dc15300f603d91654d7eb38802f0cef0440ca292bf2c3f5",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/webhook/test",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "webhook", "test"]
+        },
+        "description": "Tests webhook delivery to configured endpoint.\n\n**Required Headers:**\n- `x-api-key`: API key for tenant authentication\n\n**Process:**\n1. Generates test webhook payload\n2. Signs with HMAC-SHA256\n3. Sends to configured webhook URL\n4. Returns delivery status\n\n**Webhook Headers Sent:**\n- `Content-Type: application/json`\n- `X-Signature: sha256=<hmac-signature>`\n- `X-Tenant: <tenant-id>`\n- `X-Event-Id: <unique-event-id>`\n\n**Response:**\n- `success`: Boolean indicating webhook delivery\n- `webhook_url`: The endpoint that was called\n- `error`: Error message if delivery failed"
+      },
+      "response": []
+    },
+    {
+      "name": "Error: Invalid API Key",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-api-key",
+            "value": "invalid-api-key",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tenant_id\": \"skillsaware\",\n  \"skill_code\": \"TEST001\",\n  \"skill_name\": \"Test Skill\",\n  \"skill_description\": \"Test\",\n  \"claimant_name\": \"Test User\",\n  \"claimant_email\": \"test@example.com\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/claims",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "claims"]
+        },
+        "description": "Example of error response when using invalid API key.\n\n**Expected Response:** `401 Unauthorized`\n```json\n{\n  \"error\": \"Invalid API key\"\n}\n```"
+      },
+      "response": []
+    },
+    {
+      "name": "Error: Missing Required Fields",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-api-key",
+            "value": "8f33e3a4fd9322e89dc15300f603d91654d7eb38802f0cef0440ca292bf2c3f5",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tenant_id\": \"skillsaware\",\n  \"skill_code\": \"TEST001\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/claims",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "claims"]
+        },
+        "description": "Example of validation error when required fields are missing.\n\n**Expected Response:** `400 Bad Request`\n```json\n{\n  \"error\": \"Invalid request\",\n  \"details\": {\n    \"fieldErrors\": {\n      \"skill_name\": [\"Required\"],\n      \"skill_description\": [\"Required\"],\n      \"claimant_name\": [\"Required\"],\n      \"claimant_email\": [\"Required\"]\n    }\n  }\n}\n```"
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "8f33e3a4fd9322e89dc15300f603d91654d7eb38802f0cef0440ca292bf2c3f5",
+      "type": "string"
+    },
+    {
+      "key": "webhook_secret",
+      "value": "438a5280706a52f10b6aab934363cf07befa5c5604de65f0030b88423154003f",
+      "type": "string"
+    },
+    {
+      "key": "claim_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "claimant_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "endorser_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "claimant_link",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "endorser_link",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
