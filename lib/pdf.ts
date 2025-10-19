@@ -1,5 +1,6 @@
 import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
+import fs from 'fs';
 
 // Function to find Chrome/Edge executable on Windows
 function getLocalChromePath(): string | null {
@@ -10,8 +11,6 @@ function getLocalChromePath(): string | null {
     'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
     process.env.CHROME_PATH || '',
   ].filter(Boolean);
-
-  const fs = require('fs');
   for (const path of paths) {
     try {
       if (fs.existsSync(path)) {
