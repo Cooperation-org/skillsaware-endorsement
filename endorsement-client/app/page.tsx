@@ -12,7 +12,11 @@ export default function Home() {
   });
   
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<{
+    claim_id: string;
+    claimant_link: string;
+    expires_at: string;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -208,7 +212,7 @@ export default function Home() {
           <h3 className="text-blue-900 font-bold mb-2">How it works:</h3>
           <ol className="text-blue-800 text-sm space-y-2 list-decimal list-inside">
             <li>Fill in the claimant details above</li>
-            <li>Click "Create Claim" to generate a magic link</li>
+            <li>Click &ldquo;Create Claim&rdquo; to generate a magic link</li>
             <li>Send the claimant link to the person claiming the skill</li>
             <li>They submit their narrative and generate an endorser link</li>
             <li>The endorser completes the endorsement form</li>
