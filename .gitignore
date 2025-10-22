@@ -42,3 +42,20 @@ next-env.d.ts
 
 # local artifacts (development S3 fallback)
 .artifacts/
+
+# endorsement-client subdirectory
+endorsement-client/node_modules
+endorsement-client/.pnp
+endorsement-client/.pnp.*
+endorsement-client/.yarn/*
+!endorsement-client/.yarn/patches
+!endorsement-client/.yarn/plugins
+!endorsement-client/.yarn/releases
+!endorsement-client/.yarn/versions
+endorsement-client/coverage
+endorsement-client/.next/
+endorsement-client/out/
+endorsement-client/build
+endorsement-client/.vercel
+endorsement-client/*.tsbuildinfo
+endorsement-client/next-env.d.ts
