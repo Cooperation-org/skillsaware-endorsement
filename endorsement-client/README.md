@@ -94,9 +94,28 @@ This is a bare-minimum client that demonstrates how to:
                                                   │
                                                   ▼
                                           Generate credentials
-                                          Upload to S3
-                                          Send webhook ──▶ Your Database
+                                          (PDF + JSON)
+                                                  │
+                                                  ▼
+                                          ┌─────────────────────────────┐
+                                          │ Files delivered directly    │
+                                          │ (base64 + download buttons) │
+                                          │ ✨ No S3 required!          │
+                                          └─────────────────────────────┘
+                                                  │
+                                          ┌───────┴───────┐
+                                          ▼               ▼
+                                    Optional:       Optional:
+                                    Upload to S3    Send webhook
 ```
+
+### ✨ What's New (2025-10-23)
+
+The endorsement system now works **without requiring AWS S3**:
+- ✅ Files delivered directly via base64 encoding
+- ✅ Download buttons work on all devices (PC, mobile, tablets)
+- ✅ Optional: S3 upload still available if configured
+- ✅ Optional: Webhooks sent if S3 configured
 
 ## 🔧 Configuration
 

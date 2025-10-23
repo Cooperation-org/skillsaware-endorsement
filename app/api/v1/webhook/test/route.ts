@@ -22,6 +22,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if webhook is configured
+    if (!tenant.webhook_url || !tenant.webhook_secret) {
+      return NextResponse.json({
+        success: false,
+        error: 'Webhook URL or secret not configured for this tenant',
+      });
+    }
+
     // Generate test webhook payload
     const testClaimId = crypto.randomUUID();
     const webhookResult = await sendWebhook(

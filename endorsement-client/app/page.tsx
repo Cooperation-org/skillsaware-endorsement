@@ -216,9 +216,16 @@ export default function Home() {
             <li>Send the claimant link to the person claiming the skill</li>
             <li>They submit their narrative and generate an endorser link</li>
             <li>The endorser completes the endorsement form</li>
-            <li>Credentials are generated and stored in S3</li>
-            <li>A webhook notifies your system with the artifact locations</li>
+            <li>PDF certificate and JSON credentials are generated</li>
+            <li>Files are available for immediate download (no S3 required!)</li>
+            <li>Optional: Files can also be stored in S3 and webhook sent if configured</li>
           </ol>
+
+          <div className="mt-4 p-3 bg-green-50 border border-green-300 rounded">
+            <p className="text-green-900 text-sm">
+              <strong>✨ New:</strong> The system now works without AWS S3! Files are delivered directly to users for download.
+            </p>
+          </div>
         </div>
       </div>
     </div>
