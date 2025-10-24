@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.913.0",
@@ -17,6 +18,7 @@
     "pdf-lib": "^1.17.1",
     "pdf-parse-fork": "^1.2.0",
     "pdfjs-dist": "^5.4.296",
+    "prettier": "^3.6.2",
     "puppeteer-core": "^24.25.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",

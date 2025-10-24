@@ -1,16 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { verifyPdfBasic, verifyPdfSignature, extractPdfMetadata } from '@/lib/pdf-verify';
+import { NextRequest, NextResponse } from 'next/server'
+import { verifyPdfBasic, verifyPdfSignature, extractPdfMetadata } from '@/lib/pdf-verify'
 
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData();
-    const file = formData.get('pdf') as File;
+    const formData = await request.formData()
+    const file = formData.get('pdf') as File
 
     if (!file) {
-      return NextResponse.json(
-        { error: 'No PDF file provided' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'No PDF file provided' }, { status: 400 })
     }
 
     // Check file size (max 10MB)
@@ -18,32 +15,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'PDF file too large (max 10MB)' },
         { status: 400 }
-      );
+      )
     }
 
     // Check file type
     if (file.type !== 'application/pdf') {
-      return NextResponse.json(
-        { error: 'File must be a PDF' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'File must be a PDF' }, { status: 400 })
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    const bytes = await file.arrayBuffer()
+    const buffer = Buffer.from(bytes)
 
     // Step 1: Extract metadata
-    const metadata = await extractPdfMetadata(buffer);
+    const metadata = await extractPdfMetadata(buffer)
 
     // Step 2: Basic verification (always run)
-    const basicResult = await verifyPdfBasic(buffer);
+    const basicResult = await verifyPdfBasic(buffer)
 
     // Step 3: Full verification if credential data provided
-    const skillCode = formData.get('skillCode') as string;
-    const claimantName = formData.get('claimantName') as string;
-    const endorserName = formData.get('endorserName') as string;
+    const skillCode = formData.get('skillCode') as string
+    const claimantName = formData.get('claimantName') as string
+    const endorserName = formData.get('endorserName') as string
 
-    let fullVerification = null;
+    let fullVerification = null
 
     if (skillCode && claimantName && endorserName) {
       // Full cryptographic verification
@@ -52,7 +46,7 @@ export async function POST(request: NextRequest) {
         skillCode,
         claimantName,
         endorserName
-      );
+      )
     }
 
     // Return comprehensive verification result
@@ -70,17 +64,17 @@ export async function POST(request: NextRequest) {
         creationDate: metadata.creationDate?.toISOString(),
         modificationDate: metadata.modificationDate?.toISOString(),
         keywords: metadata.keywords,
-        customFields: metadata.customFields,
-      },
-    });
+        customFields: metadata.customFields
+      }
+    })
   } catch (error) {
-    console.error('PDF verification error:', error);
+    console.error('PDF verification error:', error)
     return NextResponse.json(
       {
         error: 'Verification failed',
-        details: error instanceof Error ? error.message : String(error),
+        details: error instanceof Error ? error.message : String(error)
       },
       { status: 500 }
-    );
+    )
   }
 }

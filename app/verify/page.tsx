@@ -1,5 +1,5 @@
-import VerifyPdfClient from './client';
+import VerifyPdfClient from './client'
 
 export default function VerifyPdfPage() {
-  return <VerifyPdfClient />;
+  return <VerifyPdfClient />
 }

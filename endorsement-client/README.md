@@ -5,6 +5,7 @@ A minimal Next.js client application to initiate the endorsement workflow by cre
 ## 🎯 Purpose
 
 This is a bare-minimum client that demonstrates how to:
+
 - Create a skill claim via the endorsement system API
 - Generate magic links for claimants
 - Start the endorsement workflow
@@ -19,13 +20,15 @@ This is a bare-minimum client that demonstrates how to:
 ### Installation
 
 1. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
 2. **Configure environment variables:**
-   
+
    Create a `.env.local` file in the root directory with:
+
    ```bash
    # URL of the endorsement system (no trailing slash)
    ENDORSEMENT_API_URL=http://localhost:3000
@@ -37,6 +40,7 @@ This is a bare-minimum client that demonstrates how to:
    > See `env.example.txt` for reference
 
 3. **Run the development server:**
+
    ```bash
    npm run dev
    ```
@@ -112,6 +116,7 @@ This is a bare-minimum client that demonstrates how to:
 ### ✨ What's New (2025-10-23)
 
 The endorsement system now works **without requiring AWS S3**:
+
 - ✅ Files delivered directly via base64 encoding
 - ✅ Download buttons work on all devices (PC, mobile, tablets)
 - ✅ Optional: S3 upload still available if configured
@@ -122,6 +127,7 @@ The endorsement system now works **without requiring AWS S3**:
 ### Default Skill
 
 The form is pre-populated with:
+
 - **Skill Code**: `ICTDSN403`
 - **Skill Name**: "Apply innovative thinking and practices in digital environments"
 
@@ -130,9 +136,9 @@ You can modify these defaults in `app/page.tsx`:
 ```typescript
 const [formData, setFormData] = useState({
   skill_code: 'YOUR_SKILL_CODE',
-  skill_name: 'Your Skill Name',
+  skill_name: 'Your Skill Name'
   // ...
-});
+})
 ```
 
 ### Connecting to Production
@@ -170,15 +176,18 @@ endorsement-client/
 ## 🐛 Troubleshooting
 
 ### "Failed to create claim"
+
 - Ensure the endorsement system is running on `http://localhost:3000`
 - Check that `ENDORSEMENT_API_KEY` matches the key in the endorsement system
 - Verify the endorsement system is accepting requests
 
 ### Port conflicts
+
 - This client runs on port 3000 by default
 - If needed, specify a different port: `npm run dev -- -p 3001`
 
 ### CORS errors
+
 - The endorsement system should allow requests from your client origin
 - Check the endorsement system's CORS configuration
 

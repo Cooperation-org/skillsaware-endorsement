@@ -5,12 +5,15 @@ Complete testing scenarios for developers to validate the endorsement workflow.
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 1. Start the development server:
+
    ```bash
    npm run dev
    ```
 
 2. **(Optional)** Start a webhook receiver for testing:
+
    ```bash
    # In a new terminal
    npx http-server -p 3001
@@ -27,15 +30,18 @@ Complete testing scenarios for developers to validate the endorsement workflow.
 **Objective:** Test the entire endorsement workflow from claim creation to credential generation.
 
 #### Step 1: Create a Claim
+
 **API:** `POST /api/v1/claims`
 
 **Using Postman:**
+
 1. Open "1. Create Claim" request
 2. Click "Send"
 3. Verify response contains `claim_id` and `claimant_link`
 4. Copy the `claimant_link` URL
 
 **Using cURL:**
+
 ```bash
 curl -X POST http://localhost:3000/api/v1/claims \
   -H "Content-Type: application/json" \
@@ -51,6 +57,7 @@ curl -X POST http://localhost:3000/api/v1/claims \
 ```
 
 **Expected Response (200):**
+
 ```json
 {
   "claim_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -60,6 +67,7 @@ curl -X POST http://localhost:3000/api/v1/claims \
 ```
 
 **Validation:**
+
 - ✅ Status code is 200
 - ✅ Response contains valid UUID for `claim_id`
 - ✅ `claimant_link` contains a JWT token
@@ -68,6 +76,7 @@ curl -X POST http://localhost:3000/api/v1/claims \
 ---
 
 #### Step 2: Open Claimant Form
+
 **Action:** Browser navigation
 
 1. Paste the `claimant_link` from Step 1 into your browser
@@ -75,6 +84,7 @@ curl -X POST http://localhost:3000/api/v1/claims \
 3. Form should display pre-filled skill information
 
 **Expected UI:**
+
 - ✅ Skill name, code, and description are displayed (read-only)
 - ✅ Claimant name is shown
 - ✅ Form has textarea for "Your Skill Narrative"
@@ -82,6 +92,7 @@ curl -X POST http://localhost:3000/api/v1/claims \
 - ✅ "Generate Endorser Link" button is visible
 
 **Manual Test:**
+
 1. Fill in narrative: "I have successfully designed and developed complex ICT solutions..."
 2. Enter endorser name: "John Manager"
 3. Enter endorser email: "john.manager@example.com"
@@ -90,15 +101,18 @@ curl -X POST http://localhost:3000/api/v1/claims \
 ---
 
 #### Step 3: Generate Endorser Link
+
 **API:** `POST /api/v1/claims/{claim_id}/endorser-link`
 
 **Using Postman:**
+
 1. Open "2. Generate Endorser Link" request
 2. Ensure `{{claimant_token}}` variable is set from Step 1
 3. Click "Send"
 4. Copy the `endorser_link` URL
 
 **Expected Response (200):**
+
 ```json
 {
   "endorser_link": "http://localhost:3000/form/endorser?token=eyJhbGc...",
@@ -107,6 +121,7 @@ curl -X POST http://localhost:3000/api/v1/claims \
 ```
 
 **Validation:**
+
 - ✅ Status code is 200
 - ✅ `endorser_link` contains a different JWT than claimant link
 - ✅ Link is displayed in the browser UI
@@ -115,12 +130,14 @@ curl -X POST http://localhost:3000/api/v1/claims \
 ---
 
 #### Step 4: Open Endorser Form
+
 **Action:** Browser navigation
 
 1. Paste the `endorser_link` from Step 3 into your browser
 2. Form should display claimant's information and narrative
 
 **Expected UI:**
+
 - ✅ Skill information displayed (read-only)
 - ✅ Claimant name and narrative shown (read-only)
 - ✅ Form has textarea for "Endorsement Statement"
@@ -130,6 +147,7 @@ curl -X POST http://localhost:3000/api/v1/claims \
 - ✅ Form has consent checkbox
 
 **Manual Test:**
+
 1. Fill in bona fides: "Senior Technical Lead at TechCorp"
 2. Fill in endorsement: "Jane has demonstrated exceptional skills..."
 3. Add evidence URL (optional): "https://github.com/example/project"
@@ -140,14 +158,17 @@ curl -X POST http://localhost:3000/api/v1/claims \
 ---
 
 #### Step 5: Submit Endorsement
+
 **API:** `POST /api/v1/endorsements/submit`
 
 **Using Postman:**
+
 1. Open "3. Submit Endorsement" request
 2. Ensure `{{endorser_token}}` variable is set
 3. Click "Send"
 
 **Expected Response (200):**
+
 ```json
 {
   "success": true,
@@ -161,6 +182,7 @@ curl -X POST http://localhost:3000/api/v1/claims \
 ```
 
 **Validation:**
+
 - ✅ Status code is 200
 - ✅ `success` is true
 - ✅ `artifacts` contains S3 keys for both JSON and PDF
@@ -172,9 +194,11 @@ curl -X POST http://localhost:3000/api/v1/claims \
 ### Scenario 2: Authentication & Authorization Tests
 
 #### Test 2.1: Invalid API Key
+
 **Objective:** Verify API key validation
 
 **Test:**
+
 ```bash
 curl -X POST http://localhost:3000/api/v1/claims \
   -H "Content-Type: application/json" \
@@ -183,6 +207,7 @@ curl -X POST http://localhost:3000/api/v1/claims \
 ```
 
 **Expected Response (401):**
+
 ```json
 {
   "error": "Invalid API key"
@@ -192,7 +217,9 @@ curl -X POST http://localhost:3000/api/v1/claims \
 ---
 
 #### Test 2.2: Missing API Key
+
 **Test:**
+
 ```bash
 curl -X POST http://localhost:3000/api/v1/claims \
   -H "Content-Type: application/json" \
@@ -200,6 +227,7 @@ curl -X POST http://localhost:3000/api/v1/claims \
 ```
 
 **Expected Response (401):**
+
 ```json
 {
   "error": "Missing API key"
@@ -209,21 +237,26 @@ curl -X POST http://localhost:3000/api/v1/claims \
 ---
 
 #### Test 2.3: Expired Token
+
 **Objective:** Verify token expiry handling
 
 **Steps:**
+
 1. Create a claim
 2. Wait for token to expire (or modify `JWT_EXPIRY_DAYS` to a very small value)
 3. Try to access the form with expired token
 
 **Expected:**
+
 - ✅ Browser redirects to `/error/token-expired`
 - ✅ User-friendly error message displayed
 
 ---
 
 #### Test 2.4: Invalid Token
+
 **Test:**
+
 ```bash
 # Try to access endorser form with claimant token (wrong role)
 curl -X POST http://localhost:3000/api/v1/endorsements/submit \
@@ -232,6 +265,7 @@ curl -X POST http://localhost:3000/api/v1/endorsements/submit \
 ```
 
 **Expected Response (403):**
+
 ```json
 {
   "error": "Invalid token role"
@@ -243,9 +277,11 @@ curl -X POST http://localhost:3000/api/v1/endorsements/submit \
 ### Scenario 3: Input Validation Tests
 
 #### Test 3.1: Missing Required Fields
+
 **Using Postman:** Open "Error: Missing Required Fields" request
 
 **Expected Response (400):**
+
 ```json
 {
   "error": "Invalid request",
@@ -263,7 +299,9 @@ curl -X POST http://localhost:3000/api/v1/endorsements/submit \
 ---
 
 #### Test 3.2: Invalid Email Format
+
 **Test:**
+
 ```bash
 curl -X POST http://localhost:3000/api/v1/claims \
   -H "Content-Type: application/json" \
@@ -279,6 +317,7 @@ curl -X POST http://localhost:3000/api/v1/claims \
 ```
 
 **Expected Response (400):**
+
 ```json
 {
   "error": "Invalid request",
@@ -293,9 +332,11 @@ curl -X POST http://localhost:3000/api/v1/claims \
 ---
 
 #### Test 3.3: Narrative Too Short
+
 **Test:** Submit endorser link request with very short narrative
 
 **Expected Response (400):**
+
 ```json
 {
   "error": "Invalid request",
@@ -312,9 +353,11 @@ curl -X POST http://localhost:3000/api/v1/claims \
 ### Scenario 4: Webhook Testing
 
 #### Test 4.1: Test Webhook Endpoint
+
 **Using Postman:** Open "4. Test Webhook" request
 
 **Expected Response (200):**
+
 ```json
 {
   "success": true,
@@ -323,6 +366,7 @@ curl -X POST http://localhost:3000/api/v1/claims \
 ```
 
 **If webhook endpoint is not available:**
+
 ```json
 {
   "success": false,
@@ -334,9 +378,11 @@ curl -X POST http://localhost:3000/api/v1/claims \
 ---
 
 #### Test 4.2: Verify HMAC Signature
+
 **Objective:** Validate webhook signature on receiving end
 
 **Webhook Payload Example:**
+
 ```json
 {
   "event": "claim.endorsed",
@@ -360,22 +406,24 @@ curl -X POST http://localhost:3000/api/v1/claims \
 ```
 
 **Headers Sent:**
+
 - `Content-Type: application/json`
 - `X-Signature: sha256=<hmac-signature>`
 - `X-Tenant: skillsaware`
 - `X-Event-Id: <uuid>`
 
 **Verification Code (Node.js):**
+
 ```javascript
-const crypto = require('crypto');
+const crypto = require('crypto')
 
 function verifyWebhook(payload, signature, secret) {
   const expectedSig = crypto
     .createHmac('sha256', secret)
     .update(JSON.stringify(payload))
-    .digest('hex');
+    .digest('hex')
 
-  return signature === `sha256=${expectedSig}`;
+  return signature === `sha256=${expectedSig}`
 }
 
 // Usage
@@ -383,7 +431,7 @@ const isValid = verifyWebhook(
   req.body,
   req.headers['x-signature'],
   '438a5280706a52f10b6aab934363cf07befa5c5604de65f0030b88423154003f'
-);
+)
 ```
 
 ---
@@ -391,14 +439,17 @@ const isValid = verifyWebhook(
 ### Scenario 5: OBv3 Credential Validation
 
 #### Test 5.1: Validate JSON-LD Structure
+
 **Objective:** Ensure generated credentials comply with OBv3 spec
 
 **Steps:**
+
 1. Complete endorsement flow (Scenario 1)
 2. Download `claim.obv3.json` from S3 (or check response logs)
 3. Validate against OBv3 schema
 
 **Expected JSON-LD Structure:**
+
 ```json
 {
   "@context": [
@@ -462,6 +513,7 @@ const isValid = verifyWebhook(
 ```
 
 **Validation Checklist:**
+
 - ✅ `@context` includes W3C and OBv3 v3.0.3 contexts
 - ✅ `type` includes "VerifiableCredential" and "AchievementCredential"
 - ✅ `id` is a URN with UUID
@@ -475,9 +527,11 @@ const isValid = verifyWebhook(
 ### Scenario 6: Error Handling & Edge Cases
 
 #### Test 6.1: Claim ID Mismatch
+
 **Test:** Try to generate endorser link with wrong claim_id
 
 **Expected Response (403):**
+
 ```json
 {
   "error": "Claim ID mismatch"
@@ -487,22 +541,27 @@ const isValid = verifyWebhook(
 ---
 
 #### Test 6.2: Form Without Consent
+
 **UI Test:**
+
 1. Open endorser form
 2. Fill all fields
 3. DO NOT check consent checkbox
 4. Try to submit
 
 **Expected:**
+
 - ✅ Error message: "You must provide consent to submit the endorsement"
 - ✅ Form does not submit
 
 ---
 
 #### Test 6.3: S3 Upload Failure
+
 **Scenario:** S3 credentials not configured
 
 **Expected:**
+
 - ✅ API returns 500 error
 - ✅ Error logged: "S3 upload failed"
 - ✅ User sees generic error message (security)
@@ -512,14 +571,17 @@ const isValid = verifyWebhook(
 ### Scenario 7: Browser Testing
 
 #### Test 7.1: Token Cookie Flow
+
 **Objective:** Verify magic link → cookie → redirect flow
 
 **Steps:**
+
 1. Get claimant link from API
 2. Open link in browser (includes `?token=...`)
 3. Observe network tab
 
 **Expected:**
+
 - ✅ Page loads with token in URL
 - ✅ Middleware sets `token` cookie (HttpOnly, Secure in prod)
 - ✅ Page redirects to clean URL (no token in query)
@@ -528,13 +590,16 @@ const isValid = verifyWebhook(
 ---
 
 #### Test 7.2: Multiple Evidence URLs
+
 **UI Test:**
+
 1. Open endorser form
 2. Click "Add Evidence URL" multiple times
 3. Fill in multiple URLs
 4. Submit
 
 **Expected:**
+
 - ✅ Multiple input fields appear
 - ✅ All URLs included in submission
 - ✅ All URLs appear in generated credential
@@ -542,11 +607,14 @@ const isValid = verifyWebhook(
 ---
 
 #### Test 7.3: Copy to Clipboard
+
 **UI Test:**
+
 1. Complete claimant form
 2. Click "Copy to Clipboard" on endorser link
 
 **Expected:**
+
 - ✅ Link copied to clipboard
 - ✅ Alert confirms: "Link copied to clipboard!"
 - ✅ Can paste link into new tab
@@ -556,23 +624,29 @@ const isValid = verifyWebhook(
 ## 🔍 Debugging Tips
 
 ### Enable Detailed Logging
+
 Add to your test requests:
+
 ```bash
 # Check server logs in terminal running npm run dev
 ```
 
 ### Decode JWT Tokens
+
 ```bash
 # Use jwt.io or decode locally
 echo "eyJhbGc..." | base64 -d
 ```
 
 ### Test S3 Uploads Locally
+
 Without S3 configured, the system will attempt upload but fail gracefully.
 Check console logs for detailed error messages.
 
 ### Monitor Webhook Delivery
+
 Use tools like:
+
 - **ngrok**: `ngrok http 3001` for local webhook testing
 - **RequestBin**: https://requestbin.com for inspecting webhooks
 - **webhook.site**: https://webhook.site for quick testing
@@ -603,6 +677,7 @@ Before deploying to production:
 ## 📞 Support
 
 If tests fail:
+
 1. Check `.env.local` configuration
 2. Verify server is running: `npm run dev`
 3. Review server logs for errors

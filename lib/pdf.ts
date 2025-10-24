@@ -1,8 +1,8 @@
-import puppeteer from 'puppeteer-core';
-import chromium from '@sparticuz/chromium';
-import fs from 'fs';
-import { PDFDocument } from 'pdf-lib';
-import crypto from 'crypto';
+import puppeteer from 'puppeteer-core'
+import chromium from '@sparticuz/chromium'
+import fs from 'fs'
+import { PDFDocument } from 'pdf-lib'
+import crypto from 'crypto'
 
 // Function to find Chrome/Edge executable on Windows
 function getLocalChromePath(): string | null {
@@ -11,49 +11,49 @@ function getLocalChromePath(): string | null {
     'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
     'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
     'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-    process.env.CHROME_PATH || '',
-  ].filter(Boolean);
+    process.env.CHROME_PATH || ''
+  ].filter(Boolean)
   for (const path of paths) {
     try {
       if (fs.existsSync(path)) {
-        return path;
+        return path
       }
     } catch {
       // Continue to next path
     }
   }
-  return null;
+  return null
 }
 
 export async function generatePdfFromHtml(
   html: string,
   options: { format?: 'A4' } = {}
 ): Promise<Buffer> {
-  let browser;
+  let browser
 
   try {
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    const localChromePath = getLocalChromePath();
+    const isDevelopment = process.env.NODE_ENV === 'development'
+    const localChromePath = getLocalChromePath()
 
     if (isDevelopment && localChromePath) {
       // Use local Chrome/Edge for development
-      console.log('Using local Chrome/Edge for PDF generation:', localChromePath);
+      console.log('Using local Chrome/Edge for PDF generation:', localChromePath)
       browser = await puppeteer.launch({
         executablePath: localChromePath,
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      });
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+      })
     } else {
       // Use chromium for serverless/production environment
       browser = await puppeteer.launch({
         args: chromium.args,
         executablePath: await chromium.executablePath(),
-        headless: true,
-      });
+        headless: true
+      })
     }
 
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
+    const page = await browser.newPage()
+    await page.setContent(html, { waitUntil: 'networkidle0' })
 
     // Generate PDF with metadata
     const pdf = await page.pdf({
@@ -63,79 +63,84 @@ export async function generatePdfFromHtml(
         top: '20mm',
         right: '15mm',
         bottom: '20mm',
-        left: '15mm',
+        left: '15mm'
       },
       displayHeaderFooter: false,
-      tagged: true,
-    });
+      tagged: true
+    })
 
-    return Buffer.from(pdf);
+    return Buffer.from(pdf)
   } catch (error) {
-    console.error('PDF generation error:', error);
+    console.error('PDF generation error:', error)
     // For development: return a simple buffer with HTML if Puppeteer fails
-    console.warn('Falling back to HTML-only PDF generation');
-    return Buffer.from(html);
+    console.warn('Falling back to HTML-only PDF generation')
+    return Buffer.from(html)
   } finally {
     if (browser) {
-      await browser.close();
+      await browser.close()
     }
   }
 }
 
 // Generate cryptographic signature for PDF verification
 function generatePdfSignature(data: {
-  skillCode: string;
-  claimantName: string;
-  endorserName: string;
-  timestamp: string;
+  skillCode: string
+  claimantName: string
+  endorserName: string
+  timestamp: string
 }): string {
-  const secret = process.env.JWT_SECRET || 'default-secret';
-  const payload = `${data.skillCode}:${data.claimantName}:${data.endorserName}:${data.timestamp}`;
-  return crypto.createHmac('sha256', secret).update(payload).digest('hex');
+  const secret = process.env.JWT_SECRET || 'default-secret'
+  const payload = `${data.skillCode}:${data.claimantName}:${data.endorserName}:${data.timestamp}`
+  return crypto.createHmac('sha256', secret).update(payload).digest('hex')
 }
 
 export async function renderCredentialPdf(data: {
-  skillName: string;
-  skillCode: string;
-  skillDescription: string;
-  claimantName: string;
-  narrative: string;
-  endorserName: string;
-  endorsementText: string;
-  bonaFides: string;
-  signature: string;
-  evidence?: string[];
-  logoUrl?: string;
-  primaryColor?: string;
-  claimId?: string;
-  jwtToken?: string;
+  skillName: string
+  skillCode: string
+  skillDescription: string
+  claimantName: string
+  narrative: string
+  endorserName: string
+  endorsementText: string
+  bonaFides: string
+  signature: string
+  evidence?: string[]
+  logoUrl?: string
+  primaryColor?: string
+  claimId?: string
+  jwtToken?: string
 }): Promise<Buffer> {
-  const primaryColor = data.primaryColor || '#0B5FFF';
+  const primaryColor = data.primaryColor || '#0B5FFF'
 
   // Generate HTML directly without React
-  const evidenceHtml = data.evidence && data.evidence.length > 0
-    ? `
+  const evidenceHtml =
+    data.evidence && data.evidence.length > 0
+      ? `
       <section style="margin-bottom: 30px;">
         <h3 style="color: #333; font-size: 16px; margin-bottom: 10px;">Supporting Evidence</h3>
         <ul style="padding-left: 20px; margin: 0;">
-          ${data.evidence.map((url, index) => `
+          ${data.evidence
+            .map(
+              (url, index) => `
             <li key="${index}" style="font-size: 12px; margin-bottom: 5px; color: #0066cc;">
               <a href="${url}" style="color: #0066cc; text-decoration: none;">${url}</a>
             </li>
-          `).join('')}
+          `
+            )
+            .join('')}
         </ul>
       </section>
     `
-    : '';
+      : ''
 
   // Generate timestamp and signature
-  const timestamp = new Date().toISOString();
+  const timestamp = new Date().toISOString()
   const pdfSignature = generatePdfSignature({
     skillCode: data.skillCode,
     claimantName: data.claimantName,
     endorserName: data.endorserName,
-    timestamp,
-  });
+    timestamp
+  })
 
   const fullHtml = `
     <!DOCTYPE html>
@@ -240,14 +245,14 @@ export async function renderCredentialPdf(data: {
         </div>
       </body>
     </html>
-  `;
+  `
 
   // Generate PDF from HTML
-  const pdfBuffer = await generatePdfFromHtml(fullHtml);
+  const pdfBuffer = await generatePdfFromHtml(fullHtml)
 
   try {
     // Load the PDF and add metadata with signature
-    const pdfDoc = await PDFDocument.load(pdfBuffer);
+    const pdfDoc = await PDFDocument.load(pdfBuffer)
 
     // Calculate content hash BEFORE adding metadata
     // This hash is based on the actual credential data that should never change
@@ -261,25 +266,25 @@ export async function renderCredentialPdf(data: {
       endorsementText: data.endorsementText,
       bonaFides: data.bonaFides,
       signature: data.signature,
-      evidence: data.evidence || [],
-    });
-    const contentHash = crypto.createHash('sha256').update(contentPayload).digest('hex');
+      evidence: data.evidence || []
+    })
+    const contentHash = crypto.createHash('sha256').update(contentPayload).digest('hex')
 
     // Set PDF metadata
-    pdfDoc.setTitle(`Skill Endorsement Certificate - ${data.skillName}`);
-    pdfDoc.setSubject('Open Badges v3.0 Skill Endorsement');
-    pdfDoc.setAuthor('SkillsAware - What\'s Cookin\' Inc.');
+    pdfDoc.setTitle(`Skill Endorsement Certificate - ${data.skillName}`)
+    pdfDoc.setSubject('Open Badges v3.0 Skill Endorsement')
+    pdfDoc.setAuthor("SkillsAware - What's Cookin' Inc.")
     pdfDoc.setKeywords([
       'skill-endorsement',
       'open-badges-v3',
       data.skillCode,
       `claimant:${data.claimantName}`,
-      `endorser:${data.endorserName}`,
-    ]);
-    pdfDoc.setCreator('SkillsAware OBv3 Endorsement System');
-    pdfDoc.setProducer('SkillsAware (https://skillsaware.com)');
-    pdfDoc.setCreationDate(new Date());
-    pdfDoc.setModificationDate(new Date());
+      `endorser:${data.endorserName}`
+    ])
+    pdfDoc.setCreator('SkillsAware OBv3 Endorsement System')
+    pdfDoc.setProducer('SkillsAware (https://skillsaware.com)')
+    pdfDoc.setCreationDate(new Date())
+    pdfDoc.setModificationDate(new Date())
 
     // Store complete credential data as JSON for verification
     const credentialData = {
@@ -292,9 +297,9 @@ export async function renderCredentialPdf(data: {
       endorsementText: data.endorsementText,
       bonaFides: data.bonaFides,
       signature: data.signature,
-      evidence: data.evidence || [],
-    };
-    const credentialDataJson = JSON.stringify(credentialData);
+      evidence: data.evidence || []
+    }
+    const credentialDataJson = JSON.stringify(credentialData)
 
     // Add custom metadata with verification signature AND content hash
     // This creates a hidden metadata field that can be extracted for verification
@@ -303,28 +308,25 @@ export async function renderCredentialPdf(data: {
       'SkillsAware-Timestamp': timestamp,
       'SkillsAware-ClaimID': data.claimId || 'unknown',
       'SkillsAware-Version': 'v1.0',
-      'SkillsAware-Issuer': 'What\'s Cookin\' Inc.',
+      'SkillsAware-Issuer': "What's Cookin' Inc.",
       'SkillsAware-ContentHash': contentHash,
       'SkillsAware-JWT': data.jwtToken || '', // Store JWT token for verification
-      'SkillsAware-CredentialData': credentialDataJson, // Store ALL credential data
-    };
+      'SkillsAware-CredentialData': credentialDataJson // Store ALL credential data
+    }
 
     // Add custom metadata to PDF info dictionary
     // We embed the verification signature in the PDF's info dictionary
     try {
-      const infoDict = pdfDoc.context.lookup(pdfDoc.context.trailerInfo.Info);
+      const infoDict = pdfDoc.context.lookup(pdfDoc.context.trailerInfo.Info)
       if (infoDict && typeof infoDict === 'object' && 'dict' in infoDict) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const dict = (infoDict as any).dict;
+        const dict = (infoDict as any).dict
         for (const [key, value] of Object.entries(customMetadata)) {
-          dict.set(
-            pdfDoc.context.obj(key),
-            pdfDoc.context.obj(value)
-          );
+          dict.set(pdfDoc.context.obj(key), pdfDoc.context.obj(value))
         }
       }
     } catch (dictError) {
-      console.warn('Could not set custom metadata in PDF info dict:', dictError);
+      console.warn('Could not set custom metadata in PDF info dict:', dictError)
       // Continue anyway - standard metadata is still set
     }
 
@@ -332,14 +334,14 @@ export async function renderCredentialPdf(data: {
     // IMPORTANT: Save without compression so text can be verified
     // This makes verification easier since we can search for text strings directly
     const pdfBytes = await pdfDoc.save({
-      useObjectStreams: false,  // Don't use object streams
+      useObjectStreams: false // Don't use object streams
       // Note: pdf-lib doesn't have a direct "don't compress streams" option
       // but we can work around this by embedding text in metadata
-    });
-    return Buffer.from(pdfBytes);
+    })
+    return Buffer.from(pdfBytes)
   } catch (metadataError) {
-    console.error('Failed to add PDF metadata, returning original PDF:', metadataError);
+    console.error('Failed to add PDF metadata, returning original PDF:', metadataError)
     // If metadata addition fails, return the original PDF
-    return pdfBuffer;
+    return pdfBuffer
   }
 }
