@@ -59,3 +59,5 @@ endorsement-client/build
 endorsement-client/.vercel
 endorsement-client/*.tsbuildinfo
 endorsement-client/next-env.d.ts
+
+nul

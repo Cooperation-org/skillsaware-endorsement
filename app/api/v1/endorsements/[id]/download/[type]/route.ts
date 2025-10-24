@@ -104,7 +104,7 @@ export async function GET(
         },
       });
     } else {
-      // Regenerate PDF
+      // Regenerate PDF with metadata and signature
       const pdf = await renderCredentialPdf({
         skillName: payload.skill_name,
         skillCode: payload.skill_code,
@@ -118,18 +118,19 @@ export async function GET(
         evidence: evidenceUrls,
         logoUrl: tenant.brand_logo_url,
         primaryColor: tenant.brand_primary_color,
+        claimId: payload.claim_id,
       });
 
       const filename = `${payload.skill_code}-${payload.claim_id}.pdf`;
 
-      // Convert Buffer to ArrayBuffer for Response
-      const arrayBuffer = pdf.buffer.slice(pdf.byteOffset, pdf.byteOffset + pdf.byteLength) as ArrayBuffer;
+      // Create a proper Uint8Array from the Buffer for Response body
+      const uint8Array = new Uint8Array(pdf);
 
-      return new Response(arrayBuffer, {
+      return new Response(uint8Array, {
         status: 200,
         headers: {
           'Content-Type': 'application/pdf',
-          'Content-Disposition': `attachment; filename="${filename}"`,
+          'Content-Disposition': `inline; filename="${filename}"`,
           'Cache-Control': 'private, max-age=3600',
         },
       });

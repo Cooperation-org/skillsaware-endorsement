@@ -171,25 +171,31 @@
       "response": []
     },
     {
-      "name": "4. Test Webhook",
+      "name": "4. Verify PDF Certificate",
       "request": {
         "method": "POST",
-        "header": [
-          {
-            "key": "x-api-key",
-            "value": "8f33e3a4fd9322e89dc15300f603d91654d7eb38802f0cef0440ca292bf2c3f5",
-            "type": "text"
-          }
-        ],
-        "url": {
-          "raw": "{{base_url}}/api/v1/webhook/test",
-          "host": ["{{base_url}}"],
-          "path": ["api", "v1", "webhook", "test"]
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "pdf",
+              "type": "file",
+              "src": "",
+              "description": "PDF certificate file to verify"
+            }
+          ]
         },
-        "description": "Tests webhook delivery to configured endpoint.\n\n**Required Headers:**\n- `x-api-key`: API key for tenant authentication\n\n**Process:**\n1. Generates test webhook payload\n2. Signs with HMAC-SHA256\n3. Sends to configured webhook URL\n4. Returns delivery status\n\n**Webhook Headers Sent:**\n- `Content-Type: application/json`\n- `X-Signature: sha256=<hmac-signature>`\n- `X-Tenant: <tenant-id>`\n- `X-Event-Id: <unique-event-id>`\n\n**Response:**\n- `success`: Boolean indicating webhook delivery\n- `webhook_url`: The endpoint that was called\n- `error`: Error message if delivery failed"
+        "url": {
+          "raw": "{{base_url}}/api/v1/verify-pdf",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "verify-pdf"]
+        },
+        "description": "Verifies PDF certificate authenticity and detects tampering using multi-layer cryptographic verification.\n\n**Multi-Layer Verification Process:**\n1. **Metadata Integrity** - Verifies HMAC-SHA256 signature and content hash stored in PDF metadata\n2. **Creator Validation** - Ensures the PDF was created by SkillsAware and not modified with external editors\n3. **Content Verification** - Extracts and validates actual PDF text against stored credential data\n4. **Context-Aware Matching** - Checks that all fields appear in their expected locations\n\n**Fields Verified (10 total):**\n• Skill Name\n• Skill Code\n• Skill Description\n• Claimant Name\n• Claimant Narrative\n• Endorser Name\n• Endorser Credentials (Bona Fides)\n• Endorsement Statement\n• Digital Signature\n• Evidence URLs\n\n**Request Format:**\n- Content-Type: `multipart/form-data`\n- Field: `pdf` (File upload)\n\n**Response Format (Tampering Detected):**\n```json\n{\n  \"basicVerification\": {\n    \"valid\": false,\n    \"message\": \"⚠️ CONTENT TAMPERING DETECTED - Found 2 field(s) that have been modified\",\n    \"tamperDetails\": {\n      \"detected\": true,\n      \"contentModified\": true,\n      \"changes\": [\n        {\n          \"field\": \"Skill Code\",\n          \"original\": \"ICTDSN403\",\n          \"status\": \"NOT FOUND IN EXPECTED LOCATION\"\n        },\n        {\n          \"field\": \"Digital Signature\",\n          \"original\": \"John Manager\",\n          \"current\": \"John Manager2\",\n          \"status\": \"SIGNATURE MODIFIED OR REMOVED\"\n        }\n      ],\n      \"warning\": \"⚠️ CONTENT TAMPERING DETECTED - The PDF text has been modified...\"\n    }\n  },\n  \"metadata\": {\n    \"title\": \"Skill Endorsement Certificate - Design and Develop Complex ICT Solutions\",\n    \"author\": \"SkillsAware - What's Cookin' Inc.\",\n    \"creator\": \"SkillsAware OBv3 Endorsement System\",\n    \"customFields\": {\n      \"SkillsAware-Signature\": \"a1b2c3d4...\",\n      \"SkillsAware-Timestamp\": \"2025-10-24T...\",\n      \"SkillsAware-ClaimID\": \"91ff17dc-2b54-45dc-9079-3d439acdad47\",\n      \"SkillsAware-Version\": \"v1.0\",\n      \"SkillsAware-ContentHash\": \"sha256hash...\"\n    }\n  }\n}\n```\n\n**Response Format (Valid Certificate):**\n```json\n{\n  \"basicVerification\": {\n    \"valid\": true,\n    \"message\": \"✅ PDF VERIFIED - Cryptographic signature, metadata, and PDF content are authentic and unmodified\",\n    \"tamperDetails\": {\n      \"detected\": false,\n      \"verified\": true\n    }\n  },\n  \"metadata\": { ... }\n}\n```\n\n**Verification Outcomes:**\n- ✅ **Valid** - All checks passed, certificate is authentic\n- ⚠️ **Metadata Tampered** - Cryptographic signature or hash invalid\n- ⚠️ **Content Tampered** - PDF text has been modified (shows which fields)\n- ❌ **Invalid Creator** - PDF was not created by SkillsAware\n- ❌ **No Metadata** - Missing required verification metadata"
       },
       "response": []
-    },
+    }
+    ,
     {
       "name": "Error: Invalid API Key",
       "request": {

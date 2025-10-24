@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     // Attach endorsement to achievement credential
     achievementCred.endorsement = [endorsementCred];
 
-    // Generate PDF
+    // Generate PDF with metadata and signature
     const pdf = await renderCredentialPdf({
       skillName: payload.skill_name,
       skillCode: payload.skill_code,
@@ -91,6 +91,8 @@ export async function POST(request: NextRequest) {
       evidence: data.evidence_urls,
       logoUrl: tenant.brand_logo_url,
       primaryColor: tenant.brand_primary_color,
+      claimId: payload.claim_id,
+      jwtToken: token, // Store JWT for verification
     });
 
     // Prepare JSON and PDF content
