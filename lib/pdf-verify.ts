@@ -7,7 +7,15 @@ import crypto from 'crypto'
  * @param pdfBuffer The PDF file as a Buffer
  * @returns The PDF content as searchable text
  */
-export async function extractPdfText(pdfBuffer: Buffer) {
+export async function extractPdfText(pdfBuffer: Buffer): Promise<{
+  fullText: string
+  extractedData: {
+    skillCode?: string
+    skillName?: string
+    claimantName?: string
+    endorserName?: string
+  }
+}> {
   try {
     // Use pdf-parse-fork which handles compressed streams properly
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -395,17 +403,12 @@ export async function verifyPdfBasic(pdfBuffer: Buffer): Promise<{
 
         // Check skill description appears in the gray box after skill code
         if (originalData.skillDescription) {
-          // Escape the description text for regex and check if it exists
-          const escapedDesc = originalData.skillDescription.replace(
-            /[.*+?^${}()|[\]\\]/g,
-            '\\$&'
-          )
           // Allow for some whitespace variation but check substantial presence
           const descWords = originalData.skillDescription
             .split(/\s+/)
-            .filter(w => w.length > 3)
+            .filter((w: string) => w.length > 3)
             .slice(0, 5)
-          const foundWords = descWords.filter(word => {
+          const foundWords = descWords.filter((word: string) => {
             const wordPattern = new RegExp(
               word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
               'i'
@@ -441,9 +444,9 @@ export async function verifyPdfBasic(pdfBuffer: Buffer): Promise<{
         if (originalData.narrative) {
           const narrativeWords = originalData.narrative
             .split(/\s+/)
-            .filter(w => w.length > 3)
+            .filter((w: string) => w.length > 3)
             .slice(0, 5)
-          const foundNarrativeWords = narrativeWords.filter(word => {
+          const foundNarrativeWords = narrativeWords.filter((word: string) => {
             const wordPattern = new RegExp(
               word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
               'i'
@@ -479,9 +482,9 @@ export async function verifyPdfBasic(pdfBuffer: Buffer): Promise<{
         if (originalData.bonaFides) {
           const bonaFidesWords = originalData.bonaFides
             .split(/\s+/)
-            .filter(w => w.length > 3)
+            .filter((w: string) => w.length > 3)
             .slice(0, 5)
-          const foundBonaFidesWords = bonaFidesWords.filter(word => {
+          const foundBonaFidesWords = bonaFidesWords.filter((word: string) => {
             const wordPattern = new RegExp(
               word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
               'i'
@@ -502,9 +505,9 @@ export async function verifyPdfBasic(pdfBuffer: Buffer): Promise<{
         if (originalData.endorsementText) {
           const endorsementWords = originalData.endorsementText
             .split(/\s+/)
-            .filter(w => w.length > 3)
+            .filter((w: string) => w.length > 3)
             .slice(0, 5)
-          const foundEndorsementWords = endorsementWords.filter(word => {
+          const foundEndorsementWords = endorsementWords.filter((word: string) => {
             const wordPattern = new RegExp(
               word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
               'i'
@@ -524,7 +527,7 @@ export async function verifyPdfBasic(pdfBuffer: Buffer): Promise<{
         // Check signature appears after "Digital Signature:" and before "This is a digitally"
         // This is the most critical check - signature must be in the right location
         const signatureSection = textData.fullText.match(
-          /Digital\s+Signature[:\s]+(.*?)(?=This\s+is\s+a\s+digitally|Generated\s+with|$)/is
+          /Digital\s+Signature[:\s]+([\s\S]*?)(?=This\s+is\s+a\s+digitally|Generated\s+with|$)/i
         )
         if (originalData.signature) {
           if (!signatureSection) {

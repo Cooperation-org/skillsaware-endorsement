@@ -2,6 +2,36 @@
 
 import { useState } from 'react'
 
+interface TamperChange {
+  field: string
+  original: string
+  modified: string
+  description: string
+}
+
+interface ExtractedData {
+  skillCode?: string
+  skillName?: string
+  claimantName?: string
+  endorserName?: string
+}
+
+interface TamperDetails {
+  detected: boolean
+  changes?: TamperChange[]
+  extractedData?: ExtractedData
+  warning?: string
+  contentModified?: boolean
+  storedHash?: string
+  currentHash?: string
+}
+
+interface VerificationDifference {
+  field: string
+  youEntered: string
+  pdfContains: string
+}
+
 interface VerificationResult {
   filename: string
   fileSize: number
@@ -10,16 +40,28 @@ interface VerificationResult {
     message: string
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadata?: any
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    tamperDetails?: any
+    tamperDetails?: TamperDetails
   }
   fullVerification?: {
     valid: boolean
     message: string
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadata?: any
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    details?: any
+    details?: {
+      providedData?: {
+        skillCode?: string
+        claimantName?: string
+        endorserName?: string
+      }
+      pdfData?: ExtractedData
+      pdfTimestamp?: string
+      signatureMatch?: boolean
+      differences?: VerificationDifference[]
+      expectedSignature?: string
+      foundSignature?: string
+      hint?: string
+      [key: string]: unknown
+    }
   } | null
   metadata: {
     title?: string
@@ -84,9 +126,6 @@ export default function VerifyPdfClient() {
 
   const handleReset = () => {
     setFile(null)
-    setSkillCode('')
-    setClaimantName('')
-    setEndorserName('')
     setResult(null)
     setError(null)
   }
@@ -282,9 +321,8 @@ export default function VerifyPdfClient() {
                       🔍 Tampering Details Detected:
                     </h4>
 
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {result.basicVerification.tamperDetails.changes?.map(
-                      (change: any, index: number) => (
+                      (change: TamperChange, index: number) => (
                         <div
                           key={index}
                           style={{
@@ -343,10 +381,7 @@ export default function VerifyPdfClient() {
                                 fontFamily: 'monospace'
                               }}
                             >
-                              {change.status ||
-                                change.modified ||
-                                change.current ||
-                                'MODIFIED'}
+                              {change.modified}
                             </span>
                           </div>
                           {change.description && (
@@ -641,9 +676,8 @@ export default function VerifyPdfClient() {
                                 Difference(s):
                               </strong>
                             </div>
-                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             {result.fullVerification.details.differences.map(
-                              (diff: any, index: number) => (
+                              (diff: VerificationDifference, index: number) => (
                                 <div
                                   key={index}
                                   style={{
