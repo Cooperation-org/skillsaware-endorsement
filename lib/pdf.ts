@@ -52,7 +52,7 @@ export async function generatePdfFromHtml(
       browser = await puppeteer.launch({
         args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
         executablePath: executablePath,
-        headless: chromium.headless
+        headless: true
       })
     }
 
