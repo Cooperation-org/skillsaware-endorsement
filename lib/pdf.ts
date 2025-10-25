@@ -37,7 +37,7 @@ export async function generatePdfFromHtml(
 
     if (isDevelopment && localChromePath) {
       // Use local Chrome/Edge for development
-      console.log('Using local Chrome/Edge for PDF generation:', localChromePath)
+      console.log('[PDF] Using local Chrome/Edge for PDF generation:', localChromePath)
       browser = await puppeteer.launch({
         executablePath: localChromePath,
         headless: true,
@@ -45,19 +45,32 @@ export async function generatePdfFromHtml(
       })
     } else {
       // Use chromium for serverless/production environment
-      console.log('Using Chromium for serverless PDF generation')
+      console.log('[PDF] Using Chromium for serverless PDF generation')
       const executablePath = await chromium.executablePath()
-      console.log('Chromium executable path:', executablePath)
+      console.log('[PDF] Chromium executable path:', executablePath)
 
       browser = await puppeteer.launch({
-        args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
+        args: [
+          ...chromium.args,
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--disable-gpu',
+          '--single-process'
+        ],
         executablePath: executablePath,
-        headless: true
+        headless: true,
+        timeout: 30000
       })
+      console.log('[PDF] Chromium browser launched successfully')
     }
 
     const page = await browser.newPage()
-    await page.setContent(html, { waitUntil: 'networkidle0' })
+    console.log('[PDF] New page created')
+
+    await page.setContent(html, { waitUntil: 'networkidle0', timeout: 30000 })
+    console.log('[PDF] HTML content set')
 
     // Generate PDF with metadata
     const pdf = await page.pdf({
@@ -72,14 +85,21 @@ export async function generatePdfFromHtml(
       displayHeaderFooter: false,
       tagged: true
     })
+    console.log('[PDF] PDF generated successfully, size:', pdf.length, 'bytes')
 
     return Buffer.from(pdf)
   } catch (error) {
-    console.error('PDF generation error:', error)
+    console.error('[PDF] PDF generation error:', error)
+    console.error('[PDF] Error stack:', error instanceof Error ? error.stack : 'N/A')
     throw new Error(`Failed to generate PDF: ${error instanceof Error ? error.message : String(error)}`)
   } finally {
     if (browser) {
-      await browser.close()
+      try {
+        await browser.close()
+        console.log('[PDF] Browser closed successfully')
+      } catch (closeError) {
+        console.error('[PDF] Error closing browser:', closeError)
+      }
     }
   }
 }

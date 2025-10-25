@@ -175,6 +175,7 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Submit endorsement error:', error)
+    console.error('Error stack:', error instanceof Error ? error.stack : 'N/A')
 
     if (error instanceof Error) {
       if (error.message === 'TOKEN_EXPIRED') {
@@ -183,8 +184,26 @@ export async function POST(request: NextRequest) {
       if (error.message === 'TOKEN_INVALID') {
         return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
       }
+
+      // Check if it's a PDF generation error
+      if (error.message.includes('Failed to generate PDF')) {
+        return NextResponse.json(
+          {
+            error: 'PDF generation failed',
+            details: error.message,
+            message: 'There was an error generating the PDF certificate. Please try again or contact support.'
+          },
+          { status: 500 }
+        )
+      }
     }
 
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : String(error)
+      },
+      { status: 500 }
+    )
   }
 }
