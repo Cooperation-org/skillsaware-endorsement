@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyPdfBasic, verifyPdfSignature, extractPdfMetadata } from '@/lib/pdf-verify'
 
+// Force Node.js runtime for pdf-parse-fork compatibility
+export const runtime = 'nodejs'
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
