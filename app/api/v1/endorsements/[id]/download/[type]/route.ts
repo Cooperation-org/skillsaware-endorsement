@@ -4,6 +4,9 @@ import { getTenantConfig } from '@/lib/config'
 import { generateAchievementCredential, generateEndorsementCredential } from '@/lib/obv3'
 import { renderCredentialPdf } from '@/lib/pdf'
 
+// Force Node.js runtime for puppeteer and pdf-lib
+export const runtime = 'nodejs'
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; type: string }> }

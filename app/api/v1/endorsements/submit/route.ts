@@ -7,6 +7,9 @@ import { getPresignedPutUrl, uploadToS3 } from '@/lib/s3'
 import { sendWebhook } from '@/lib/webhook'
 import { SubmitEndorsementSchema } from '@/lib/validation'
 
+// Force Node.js runtime for puppeteer and pdf-lib
+export const runtime = 'nodejs'
+
 export async function POST(request: NextRequest) {
   try {
     // Extract and verify JWT
