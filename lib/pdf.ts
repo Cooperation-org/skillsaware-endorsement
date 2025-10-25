@@ -45,10 +45,14 @@ export async function generatePdfFromHtml(
       })
     } else {
       // Use chromium for serverless/production environment
+      console.log('Using Chromium for serverless PDF generation')
+      const executablePath = await chromium.executablePath()
+      console.log('Chromium executable path:', executablePath)
+
       browser = await puppeteer.launch({
-        args: chromium.args,
-        executablePath: await chromium.executablePath(),
-        headless: true
+        args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
+        executablePath: executablePath,
+        headless: chromium.headless
       })
     }
 
@@ -72,9 +76,7 @@ export async function generatePdfFromHtml(
     return Buffer.from(pdf)
   } catch (error) {
     console.error('PDF generation error:', error)
-    // For development: return a simple buffer with HTML if Puppeteer fails
-    console.warn('Falling back to HTML-only PDF generation')
-    return Buffer.from(html)
+    throw new Error(`Failed to generate PDF: ${error instanceof Error ? error.message : String(error)}`)
   } finally {
     if (browser) {
       await browser.close()
