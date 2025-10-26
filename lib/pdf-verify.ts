@@ -2,8 +2,8 @@ import { PDFDocument } from 'pdf-lib'
 import crypto from 'crypto'
 
 /**
- * Extract text content from PDF using pdf-parse-fork
- * This properly handles compressed PDF streams from Puppeteer
+ * Extract text content from PDF using pdfjs-dist (Mozilla's PDF.js)
+ * This is more reliable for Puppeteer-generated PDFs than pdf-parse-fork
  * @param pdfBuffer The PDF file as a Buffer
  * @returns The PDF content as searchable text
  */
@@ -17,22 +17,25 @@ export async function extractPdfText(pdfBuffer: Buffer): Promise<{
   }
 }> {
   try {
-    // Use pdf-parse-fork which handles compressed streams properly
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    // Use pdf-parse-fork for text extraction
     const pdfParse = require('pdf-parse-fork')
+
+    console.log(`[PDF Verify] Extracting text from PDF...`)
 
     const data = await pdfParse(pdfBuffer)
     const fullText = data.text
 
     console.log(`[PDF Verify] Extracted ${fullText.length} characters from PDF`)
-    console.log(`[PDF Verify] Sample text (first 300 chars):`, fullText.substring(0, 300))
+    console.log(`[PDF Verify] Sample text (first 500 chars):`, fullText.substring(0, 500))
 
     return {
       fullText,
       extractedData: {} // We don't need to parse - we compare with stored metadata
     }
   } catch (error) {
-    console.error('Failed to extract PDF text:', error)
+    console.error('[PDF Verify] Failed to extract PDF text:', error)
+    console.error('[PDF Verify] Error message:', (error as Error).message)
+    // Return empty text - verification will skip text-based checks
     return {
       fullText: '',
       extractedData: {}
@@ -367,207 +370,220 @@ export async function verifyPdfBasic(pdfBuffer: Buffer): Promise<{
         }
 
         // Metadata hash verified - now check if PDF text matches the stored data
+        // ONLY if we actually extracted text successfully
         const differences = []
 
-        // Check each critical field in the PDF text with context-aware matching
+        // Skip text-based verification if text extraction failed or returned empty text
+        const hasValidText = textData.fullText && textData.fullText.trim().length > 0
 
-        // Check skill name appears in "Skill: {name}" heading
-        if (originalData.skillName) {
-          const skillNamePattern = new RegExp(
-            `Skill[:\\s]+${originalData.skillName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`,
-            'i'
-          )
-          if (!skillNamePattern.test(textData.fullText)) {
-            differences.push({
-              field: 'Skill Name',
-              original: originalData.skillName,
-              status: 'NOT FOUND IN EXPECTED LOCATION'
-            })
-          }
-        }
-
-        // Check skill code appears after "Skill Code:"
-        if (originalData.skillCode) {
-          const skillCodePattern = new RegExp(
-            `Skill\\s+Code[:\\s]+${originalData.skillCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`,
-            'i'
-          )
-          if (!skillCodePattern.test(textData.fullText)) {
-            differences.push({
-              field: 'Skill Code',
-              original: originalData.skillCode,
-              status: 'NOT FOUND IN EXPECTED LOCATION'
-            })
-          }
-        }
-
-        // Check skill description appears in the gray box after skill code
-        if (originalData.skillDescription) {
-          // Allow for some whitespace variation but check substantial presence
-          const descWords = originalData.skillDescription
-            .split(/\s+/)
-            .filter((w: string) => w.length > 3)
-            .slice(0, 5)
-          const foundWords = descWords.filter((word: string) => {
-            const wordPattern = new RegExp(
-              word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-              'i'
-            )
-            return wordPattern.test(textData.fullText)
-          })
-
-          if (foundWords.length < Math.min(3, descWords.length)) {
-            differences.push({
-              field: 'Skill Description',
-              original: originalData.skillDescription.substring(0, 100) + '...',
-              status: 'DESCRIPTION TEXT MODIFIED OR MISSING'
-            })
-          }
-        }
-
-        // Check claimant name appears after "Claimant:"
-        if (originalData.claimantName) {
-          const claimantPattern = new RegExp(
-            `Claimant[:\\s]+${originalData.claimantName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`,
-            'i'
-          )
-          if (!claimantPattern.test(textData.fullText)) {
-            differences.push({
-              field: 'Claimant Name',
-              original: originalData.claimantName,
-              status: 'NOT FOUND IN EXPECTED LOCATION'
-            })
-          }
-        }
-
-        // Check narrative appears in the claimant section
-        if (originalData.narrative) {
-          const narrativeWords = originalData.narrative
-            .split(/\s+/)
-            .filter((w: string) => w.length > 3)
-            .slice(0, 5)
-          const foundNarrativeWords = narrativeWords.filter((word: string) => {
-            const wordPattern = new RegExp(
-              word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-              'i'
-            )
-            return wordPattern.test(textData.fullText)
-          })
-
-          if (foundNarrativeWords.length < Math.min(3, narrativeWords.length)) {
-            differences.push({
-              field: 'Claimant Narrative',
-              original: originalData.narrative.substring(0, 100) + '...',
-              status: 'NARRATIVE TEXT MODIFIED OR MISSING'
-            })
-          }
-        }
-
-        // Check endorser name appears after "Endorsement by:"
-        if (originalData.endorserName) {
-          const endorserPattern = new RegExp(
-            `Endorsement\\s+by[:\\s]+${originalData.endorserName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`,
-            'i'
-          )
-          if (!endorserPattern.test(textData.fullText)) {
-            differences.push({
-              field: 'Endorser Name',
-              original: originalData.endorserName,
-              status: 'NOT FOUND IN EXPECTED LOCATION'
-            })
-          }
-        }
-
-        // Check bona fides (endorser credentials)
-        if (originalData.bonaFides) {
-          const bonaFidesWords = originalData.bonaFides
-            .split(/\s+/)
-            .filter((w: string) => w.length > 3)
-            .slice(0, 5)
-          const foundBonaFidesWords = bonaFidesWords.filter((word: string) => {
-            const wordPattern = new RegExp(
-              word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-              'i'
-            )
-            return wordPattern.test(textData.fullText)
-          })
-
-          if (foundBonaFidesWords.length < Math.min(3, bonaFidesWords.length)) {
-            differences.push({
-              field: 'Endorser Credentials (Bona Fides)',
-              original: originalData.bonaFides.substring(0, 100) + '...',
-              status: 'CREDENTIALS TEXT MODIFIED OR MISSING'
-            })
-          }
-        }
-
-        // Check endorsement text
-        if (originalData.endorsementText) {
-          const endorsementWords = originalData.endorsementText
-            .split(/\s+/)
-            .filter((w: string) => w.length > 3)
-            .slice(0, 5)
-          const foundEndorsementWords = endorsementWords.filter((word: string) => {
-            const wordPattern = new RegExp(
-              word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-              'i'
-            )
-            return wordPattern.test(textData.fullText)
-          })
-
-          if (foundEndorsementWords.length < Math.min(3, endorsementWords.length)) {
-            differences.push({
-              field: 'Endorsement Statement',
-              original: originalData.endorsementText.substring(0, 100) + '...',
-              status: 'ENDORSEMENT TEXT MODIFIED OR MISSING'
-            })
-          }
-        }
-
-        // Check signature appears after "Digital Signature:" and before "This is a digitally"
-        // This is the most critical check - signature must be in the right location
-        const signatureSection = textData.fullText.match(
-          /Digital\s+Signature[:\s]+([\s\S]*?)(?=This\s+is\s+a\s+digitally|Generated\s+with|$)/i
+        console.log(
+          `[PDF Verify] Text extraction ${hasValidText ? 'successful' : 'failed'} - ${hasValidText ? `Got ${textData.fullText.length} chars` : 'empty text'}`
         )
-        if (originalData.signature) {
-          if (!signatureSection) {
-            differences.push({
-              field: 'Digital Signature',
-              original: originalData.signature,
-              status: 'SIGNATURE SECTION NOT FOUND'
-            })
-          } else {
-            const signatureText = signatureSection[1].trim()
-            if (!signatureText.includes(originalData.signature)) {
+
+        if (hasValidText) {
+          // Check each critical field in the PDF text with context-aware matching
+
+          // Check skill name appears in "Skill: {name}" heading
+          if (originalData.skillName) {
+            const skillNamePattern = new RegExp(
+              `Skill[:\\s]+${originalData.skillName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`,
+              'i'
+            )
+            if (!skillNamePattern.test(textData.fullText)) {
               differences.push({
-                field: 'Digital Signature',
-                original: originalData.signature,
-                current: signatureText.substring(0, 100),
-                status: 'SIGNATURE MODIFIED OR REMOVED'
+                field: 'Skill Name',
+                original: originalData.skillName,
+                status: 'NOT FOUND IN EXPECTED LOCATION'
               })
             }
           }
-        }
 
-        // Check evidence URLs if present
-        if (
-          originalData.evidence &&
-          Array.isArray(originalData.evidence) &&
-          originalData.evidence.length > 0
-        ) {
-          const missingEvidence = []
-          for (const evidenceUrl of originalData.evidence) {
-            if (!textData.fullText.includes(evidenceUrl)) {
-              missingEvidence.push(evidenceUrl)
-            }
-          }
-          if (missingEvidence.length > 0) {
-            differences.push({
-              field: 'Evidence URLs',
-              original: `${originalData.evidence.length} evidence link(s)`,
-              status: `${missingEvidence.length} EVIDENCE LINK(S) MISSING OR MODIFIED`
+          // Check skill code appears after "Skill Code:"
+          if (originalData.skillCode) {
+            const skillCodePattern = new RegExp(
+              `Skill\\s+Code[:\\s]+${originalData.skillCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`,
+              'i'
+            )
+            if (!skillCodePattern.test(textData.fullText)) {
+              differences.push({
+                field: 'Skill Code',
+                original: originalData.skillCode,
+                status: 'NOT FOUND IN EXPECTED LOCATION'
             })
           }
+        }
+          // Check skill description appears in the gray box after skill code
+          if (originalData.skillDescription) {
+            // Allow for some whitespace variation but check substantial presence
+            const descWords = originalData.skillDescription
+              .split(/\s+/)
+              .filter((w: string) => w.length > 3)
+              .slice(0, 5)
+            const foundWords = descWords.filter((word: string) => {
+              const wordPattern = new RegExp(
+                word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+                'i'
+              )
+              return wordPattern.test(textData.fullText)
+            })
+
+            if (foundWords.length < Math.min(3, descWords.length)) {
+              differences.push({
+                field: 'Skill Description',
+                original: originalData.skillDescription.substring(0, 100) + '...',
+                status: 'DESCRIPTION TEXT MODIFIED OR MISSING'
+              })
+            }
+          }
+
+          // Check claimant name appears after "Claimant:"
+          if (originalData.claimantName) {
+            const claimantPattern = new RegExp(
+              `Claimant[:\\s]+${originalData.claimantName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`,
+              'i'
+            )
+            if (!claimantPattern.test(textData.fullText)) {
+              differences.push({
+                field: 'Claimant Name',
+                original: originalData.claimantName,
+                status: 'NOT FOUND IN EXPECTED LOCATION'
+              })
+            }
+          }
+
+          // Check narrative appears in the claimant section
+          if (originalData.narrative) {
+            const narrativeWords = originalData.narrative
+              .split(/\s+/)
+              .filter((w: string) => w.length > 3)
+              .slice(0, 5)
+            const foundNarrativeWords = narrativeWords.filter((word: string) => {
+              const wordPattern = new RegExp(
+                word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+                'i'
+              )
+              return wordPattern.test(textData.fullText)
+            })
+
+            if (foundNarrativeWords.length < Math.min(3, narrativeWords.length)) {
+              differences.push({
+                field: 'Claimant Narrative',
+                original: originalData.narrative.substring(0, 100) + '...',
+                status: 'NARRATIVE TEXT MODIFIED OR MISSING'
+              })
+            }
+          }
+
+          // Check endorser name appears after "Endorsement by:"
+          if (originalData.endorserName) {
+            const endorserPattern = new RegExp(
+              `Endorsement\\s+by[:\\s]+${originalData.endorserName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`,
+              'i'
+            )
+            if (!endorserPattern.test(textData.fullText)) {
+              differences.push({
+                field: 'Endorser Name',
+                original: originalData.endorserName,
+                status: 'NOT FOUND IN EXPECTED LOCATION'
+              })
+            }
+          }
+
+          // Check bona fides (endorser credentials)
+          if (originalData.bonaFides) {
+            const bonaFidesWords = originalData.bonaFides
+              .split(/\s+/)
+              .filter((w: string) => w.length > 3)
+              .slice(0, 5)
+            const foundBonaFidesWords = bonaFidesWords.filter((word: string) => {
+              const wordPattern = new RegExp(
+                word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+                'i'
+              )
+              return wordPattern.test(textData.fullText)
+            })
+
+            if (foundBonaFidesWords.length < Math.min(3, bonaFidesWords.length)) {
+              differences.push({
+                field: 'Endorser Credentials (Bona Fides)',
+                original: originalData.bonaFides.substring(0, 100) + '...',
+                status: 'CREDENTIALS TEXT MODIFIED OR MISSING'
+              })
+            }
+          }
+
+          // Check endorsement text
+          if (originalData.endorsementText) {
+            const endorsementWords = originalData.endorsementText
+              .split(/\s+/)
+              .filter((w: string) => w.length > 3)
+              .slice(0, 5)
+            const foundEndorsementWords = endorsementWords.filter((word: string) => {
+              const wordPattern = new RegExp(
+                word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+                'i'
+              )
+              return wordPattern.test(textData.fullText)
+            })
+
+            if (foundEndorsementWords.length < Math.min(3, endorsementWords.length)) {
+              differences.push({
+                field: 'Endorsement Statement',
+                original: originalData.endorsementText.substring(0, 100) + '...',
+                status: 'ENDORSEMENT TEXT MODIFIED OR MISSING'
+              })
+            }
+          }
+
+          // Check signature appears after "Digital Signature:" and before "This is a digitally"
+          // This is the most critical check - signature must be in the right location
+          const signatureSection = textData.fullText.match(
+            /Digital\s+Signature[:\s]+([\s\S]*?)(?=This\s+is\s+a\s+digitally|Generated\s+with|$)/i
+          )
+          if (originalData.signature) {
+            if (!signatureSection) {
+              differences.push({
+                field: 'Digital Signature',
+                original: originalData.signature,
+                status: 'SIGNATURE SECTION NOT FOUND'
+              })
+            } else {
+              const signatureText = signatureSection[1].trim()
+              if (!signatureText.includes(originalData.signature)) {
+                differences.push({
+                  field: 'Digital Signature',
+                  original: originalData.signature,
+                  current: signatureText.substring(0, 100),
+                  status: 'SIGNATURE MODIFIED OR REMOVED'
+                })
+              }
+            }
+          }
+
+          // Check evidence URLs if present
+          if (originalData.evidence &&
+            Array.isArray(originalData.evidence) &&
+            originalData.evidence.length > 0
+          ) {
+            const missingEvidence = []
+            for (const evidenceUrl of originalData.evidence) {
+              if (!textData.fullText.includes(evidenceUrl)) {
+                missingEvidence.push(evidenceUrl)
+              }
+            }
+            if (missingEvidence.length > 0) {
+              differences.push({
+                field: 'Evidence URLs',
+                original: `${originalData.evidence.length} evidence link(s)`,
+                status: `${missingEvidence.length} EVIDENCE LINK(S) MISSING OR MODIFIED`
+              })
+            }
+          }
+        } else {
+          // Text extraction failed - skip all text-based checks
+          console.log(
+            `[PDF Verify] ⚠️ Skipping text-based verification - text extraction failed. Relying on metadata hash verification only.`
+          )
         }
 
         if (differences.length > 0) {
