@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'next/image'
 
 interface CredentialTemplateProps {
   skillName: string
@@ -40,10 +41,12 @@ export default function CredentialTemplate({
         }}
       >
         {logoUrl && (
-          <img
+          <Image
             src={logoUrl}
             alt='Logo'
-            style={{ maxHeight: '60px', marginBottom: '10px' }}
+            width={200}
+            height={60}
+            style={{ maxHeight: '60px', marginBottom: '10px', width: 'auto' }}
           />
         )}
         <h1 style={{ color: primaryColor, fontSize: '28px', margin: '10px 0' }}>

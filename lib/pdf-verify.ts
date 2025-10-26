@@ -18,6 +18,7 @@ export async function extractPdfText(pdfBuffer: Buffer): Promise<{
 }> {
   try {
     // Use pdf-parse-fork for text extraction
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const pdfParse = require('pdf-parse-fork')
 
     console.log(`[PDF Verify] Extracting text from PDF...`)
