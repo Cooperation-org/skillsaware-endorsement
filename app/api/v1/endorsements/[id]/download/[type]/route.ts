@@ -112,7 +112,8 @@ export async function GET(
         evidence: evidenceUrls,
         logoUrl: tenant.brand_logo_url,
         primaryColor: tenant.brand_primary_color,
-        claimId: payload.claim_id
+        claimId: payload.claim_id,
+        jwtToken: token // Pass the JWT token to embed in PDF metadata
       })
 
       const filename = `${payload.skill_code}-${payload.claim_id}.pdf`

@@ -385,12 +385,15 @@ export async function verifyPdfBasic(pdfBuffer: Buffer): Promise<{
           // Check each critical field in the PDF text with context-aware matching
 
           // Check skill name appears in "Skill: {name}" heading
+          // More lenient: just check if the skill name text exists anywhere in the PDF
           if (originalData.skillName) {
-            const skillNamePattern = new RegExp(
-              `Skill[:\\s]+${originalData.skillName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`,
-              'i'
-            )
-            if (!skillNamePattern.test(textData.fullText)) {
+            // Normalize both strings: remove extra whitespace and newlines
+            const normalizedText = textData.fullText.replace(/\s+/g, ' ').toLowerCase()
+            const normalizedSkillName = originalData.skillName
+              .replace(/\s+/g, ' ')
+              .toLowerCase()
+
+            if (!normalizedText.includes(normalizedSkillName)) {
               differences.push({
                 field: 'Skill Name',
                 original: originalData.skillName,
@@ -401,34 +404,24 @@ export async function verifyPdfBasic(pdfBuffer: Buffer): Promise<{
 
           // Check skill code appears after "Skill Code:"
           if (originalData.skillCode) {
-            const skillCodePattern = new RegExp(
-              `Skill\\s+Code[:\\s]+${originalData.skillCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`,
-              'i'
-            )
-            if (!skillCodePattern.test(textData.fullText)) {
+            // Simple check: skill code should exist in the text
+            if (!textData.fullText.includes(originalData.skillCode)) {
               differences.push({
                 field: 'Skill Code',
                 original: originalData.skillCode,
                 status: 'NOT FOUND IN EXPECTED LOCATION'
-            })
+              })
+            }
           }
-        }
           // Check skill description appears in the gray box after skill code
           if (originalData.skillDescription) {
-            // Allow for some whitespace variation but check substantial presence
-            const descWords = originalData.skillDescription
-              .split(/\s+/)
-              .filter((w: string) => w.length > 3)
-              .slice(0, 5)
-            const foundWords = descWords.filter((word: string) => {
-              const wordPattern = new RegExp(
-                word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-                'i'
-              )
-              return wordPattern.test(textData.fullText)
-            })
+            // Normalize and check if description exists (allow for line breaks)
+            const normalizedText = textData.fullText.replace(/\s+/g, ' ').toLowerCase()
+            const normalizedDesc = originalData.skillDescription
+              .replace(/\s+/g, ' ')
+              .toLowerCase()
 
-            if (foundWords.length < Math.min(3, descWords.length)) {
+            if (!normalizedText.includes(normalizedDesc)) {
               differences.push({
                 field: 'Skill Description',
                 original: originalData.skillDescription.substring(0, 100) + '...',
@@ -439,11 +432,8 @@ export async function verifyPdfBasic(pdfBuffer: Buffer): Promise<{
 
           // Check claimant name appears after "Claimant:"
           if (originalData.claimantName) {
-            const claimantPattern = new RegExp(
-              `Claimant[:\\s]+${originalData.claimantName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`,
-              'i'
-            )
-            if (!claimantPattern.test(textData.fullText)) {
+            // Simple check: claimant name should exist in the text
+            if (!textData.fullText.includes(originalData.claimantName)) {
               differences.push({
                 field: 'Claimant Name',
                 original: originalData.claimantName,
@@ -454,34 +444,32 @@ export async function verifyPdfBasic(pdfBuffer: Buffer): Promise<{
 
           // Check narrative appears in the claimant section
           if (originalData.narrative) {
+            // Check if key words from narrative are present (at least 50% of significant words)
             const narrativeWords = originalData.narrative
               .split(/\s+/)
-              .filter((w: string) => w.length > 3)
-              .slice(0, 5)
-            const foundNarrativeWords = narrativeWords.filter((word: string) => {
-              const wordPattern = new RegExp(
-                word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-                'i'
-              )
-              return wordPattern.test(textData.fullText)
-            })
+              .filter((w: string) => w.length > 4) // Only words longer than 4 chars
+              .slice(0, 10) // Check first 10 significant words
 
-            if (foundNarrativeWords.length < Math.min(3, narrativeWords.length)) {
-              differences.push({
-                field: 'Claimant Narrative',
-                original: originalData.narrative.substring(0, 100) + '...',
-                status: 'NARRATIVE TEXT MODIFIED OR MISSING'
-              })
+            if (narrativeWords.length > 0) {
+              const foundWords = narrativeWords.filter((word: string) =>
+                textData.fullText.toLowerCase().includes(word.toLowerCase())
+              )
+
+              // At least 50% of significant words should be present
+              if (foundWords.length < narrativeWords.length * 0.5) {
+                differences.push({
+                  field: 'Claimant Narrative',
+                  original: originalData.narrative.substring(0, 100) + '...',
+                  status: 'NARRATIVE TEXT MODIFIED OR MISSING'
+                })
+              }
             }
           }
 
           // Check endorser name appears after "Endorsement by:"
           if (originalData.endorserName) {
-            const endorserPattern = new RegExp(
-              `Endorsement\\s+by[:\\s]+${originalData.endorserName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`,
-              'i'
-            )
-            if (!endorserPattern.test(textData.fullText)) {
+            // Simple check: endorser name should exist in the text
+            if (!textData.fullText.includes(originalData.endorserName)) {
               differences.push({
                 field: 'Endorser Name',
                 original: originalData.endorserName,
@@ -492,47 +480,49 @@ export async function verifyPdfBasic(pdfBuffer: Buffer): Promise<{
 
           // Check bona fides (endorser credentials)
           if (originalData.bonaFides) {
+            // Check if key words from bona fides are present (at least 50% of significant words)
             const bonaFidesWords = originalData.bonaFides
               .split(/\s+/)
-              .filter((w: string) => w.length > 3)
-              .slice(0, 5)
-            const foundBonaFidesWords = bonaFidesWords.filter((word: string) => {
-              const wordPattern = new RegExp(
-                word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-                'i'
-              )
-              return wordPattern.test(textData.fullText)
-            })
+              .filter((w: string) => w.length > 4) // Only words longer than 4 chars
+              .slice(0, 8) // Check first 8 significant words
 
-            if (foundBonaFidesWords.length < Math.min(3, bonaFidesWords.length)) {
-              differences.push({
-                field: 'Endorser Credentials (Bona Fides)',
-                original: originalData.bonaFides.substring(0, 100) + '...',
-                status: 'CREDENTIALS TEXT MODIFIED OR MISSING'
-              })
+            if (bonaFidesWords.length > 0) {
+              const foundWords = bonaFidesWords.filter((word: string) =>
+                textData.fullText.toLowerCase().includes(word.toLowerCase())
+              )
+
+              // At least 50% of significant words should be present
+              if (foundWords.length < bonaFidesWords.length * 0.5) {
+                differences.push({
+                  field: 'Endorser Credentials (Bona Fides)',
+                  original: originalData.bonaFides.substring(0, 100) + '...',
+                  status: 'CREDENTIALS TEXT MODIFIED OR MISSING'
+                })
+              }
             }
           }
 
           // Check endorsement text
           if (originalData.endorsementText) {
+            // Check if key words from endorsement are present (at least 50% of significant words)
             const endorsementWords = originalData.endorsementText
               .split(/\s+/)
-              .filter((w: string) => w.length > 3)
-              .slice(0, 5)
-            const foundEndorsementWords = endorsementWords.filter((word: string) => {
-              const wordPattern = new RegExp(
-                word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-                'i'
-              )
-              return wordPattern.test(textData.fullText)
-            })
+              .filter((w: string) => w.length > 4) // Only words longer than 4 chars
+              .slice(0, 10) // Check first 10 significant words
 
-            if (foundEndorsementWords.length < Math.min(3, endorsementWords.length)) {
-              differences.push({
-                field: 'Endorsement Statement',
-                original: originalData.endorsementText.substring(0, 100) + '...',
-                status: 'ENDORSEMENT TEXT MODIFIED OR MISSING'
-              })
+            if (endorsementWords.length > 0) {
+              const foundWords = endorsementWords.filter((word: string) =>
+                textData.fullText.toLowerCase().includes(word.toLowerCase())
+              )
+
+              // At least 50% of significant words should be present
+              if (foundWords.length < endorsementWords.length * 0.5) {
+                differences.push({
+                  field: 'Endorsement Statement',
+                  original: originalData.endorsementText.substring(0, 100) + '...',
+                  status: 'ENDORSEMENT TEXT MODIFIED OR MISSING'
+                })
+              }
             }
           }
 
@@ -562,7 +552,8 @@ export async function verifyPdfBasic(pdfBuffer: Buffer): Promise<{
           }
 
           // Check evidence URLs if present
-          if (originalData.evidence &&
+          if (
+            originalData.evidence &&
             Array.isArray(originalData.evidence) &&
             originalData.evidence.length > 0
           ) {
