@@ -14,6 +14,7 @@ This system provides a complete endorsement workflow for SkillsAware:
 - **Security**: HMAC webhooks, short-lived JWTs, timing-safe comparisons
 - **Artifact Generation**: Professional PDF certificates + JSON-LD credentials
 - **Complete Evidence Capture**: Claimant narratives and evidence URLs in both PDF and JSON
+- **📚 Interactive API Documentation**: Full Swagger/OpenAPI documentation with live testing
 
 ## 🚀 Quick Start
 
@@ -139,6 +140,40 @@ SKILLSAWARE_WEBHOOK_SECRET=...
 - Long-term archival needs
 - Integration with external systems
 - High-availability requirements
+
+## 📚 API Documentation
+
+### Interactive Swagger UI
+
+Access comprehensive, interactive API documentation at:
+
+```
+http://localhost:3000/api-docs
+```
+
+**Features:**
+
+- 🎯 Try all endpoints directly from the browser
+- 📖 Complete request/response schemas
+- 🔐 Authentication examples (API Key & JWT)
+- 📝 Detailed descriptions and examples
+- 🚀 Real-time API testing
+
+### OpenAPI Specification
+
+Download the OpenAPI 3.0 specification (JSON):
+
+```
+http://localhost:3000/api/openapi
+```
+
+Import this into tools like Postman, Insomnia, or any OpenAPI-compatible client.
+
+### Quick Links
+
+- **Web Interface:** [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+- **OpenAPI JSON:** [http://localhost:3000/api/openapi](http://localhost:3000/api/openapi)
+- **Home Page:** [http://localhost:3000/](http://localhost:3000/)
 
 ## 📡 API Endpoints
 

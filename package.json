@@ -23,6 +23,8 @@
     "puppeteer-core": "^24.25.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-react": "^5.30.0",
     "zod": "^4.1.12"
   },
   "devDependencies": {

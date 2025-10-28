@@ -149,7 +149,7 @@ export default function Home() {
             Verify Certificate (Web) →
           </a>
           <a
-            href='#verification-api'
+            href='/api-docs'
             style={{
               display: 'inline-block',
               backgroundColor: '#2e7d32',
@@ -161,7 +161,7 @@ export default function Home() {
               fontWeight: 'bold'
             }}
           >
-            View API Documentation →
+            View Full API Documentation →
           </a>
         </div>
       </section>
@@ -191,10 +191,71 @@ export default function Home() {
         </ul>
       </section>
 
-      {/* API Documentation */}
+      {/* API Documentation Section */}
+      <section
+        style={{
+          marginBottom: '40px',
+          backgroundColor: '#e3f2fd',
+          padding: '30px',
+          borderRadius: '8px',
+          border: '2px solid #2196f3'
+        }}
+      >
+        <h2 style={{ color: '#1565c0', fontSize: '24px', marginBottom: '20px' }}>
+          📚 Interactive API Documentation
+        </h2>
+        <p
+          style={{
+            fontSize: '16px',
+            lineHeight: '1.8',
+            color: '#555',
+            marginBottom: '20px'
+          }}
+        >
+          Explore our comprehensive API documentation with interactive examples using
+          Swagger UI. Test endpoints directly from your browser, view request/response
+          schemas, and learn about authentication requirements.
+        </p>
+        <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+          <a
+            href='/api-docs'
+            style={{
+              display: 'inline-block',
+              backgroundColor: '#2196f3',
+              color: 'white',
+              padding: '12px 24px',
+              borderRadius: '6px',
+              textDecoration: 'none',
+              fontSize: '16px',
+              fontWeight: 'bold'
+            }}
+          >
+            Open Interactive API Docs →
+          </a>
+          <a
+            href='/api/openapi'
+            target='_blank'
+            rel='noopener noreferrer'
+            style={{
+              display: 'inline-block',
+              backgroundColor: '#1565c0',
+              color: 'white',
+              padding: '12px 24px',
+              borderRadius: '6px',
+              textDecoration: 'none',
+              fontSize: '16px',
+              fontWeight: 'bold'
+            }}
+          >
+            Download OpenAPI Spec (JSON)
+          </a>
+        </div>
+      </section>
+
+      {/* API Endpoints */}
       <section id='verification-api' style={{ marginBottom: '40px' }}>
         <h2 style={{ color: '#333', fontSize: '24px', marginBottom: '15px' }}>
-          API Endpoints
+          API Endpoints Overview
         </h2>
         <div style={{ backgroundColor: '#f5f5f5', padding: '20px', borderRadius: '5px' }}>
           <div style={{ marginBottom: '15px' }}>
