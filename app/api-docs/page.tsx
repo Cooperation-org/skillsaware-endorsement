@@ -1,6 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { swaggerSpec } from '@/lib/swagger'
 import 'swagger-ui-react/swagger-ui.css'
 
@@ -205,15 +206,15 @@ export default function ApiDocsPage() {
           skill endorsement credentials with cryptographic signatures.
         </p>
         <div className='api-docs-links'>
-          <a href='/' className='api-docs-link'>
+          <Link href='/' className='api-docs-link'>
             ← Back to Home
-          </a>
-          <a href='/form/claimant' className='api-docs-link'>
+          </Link>
+          <Link href='/form/claimant' className='api-docs-link'>
             Claimant Form
-          </a>
-          <a href='/form/endorser' className='api-docs-link'>
+          </Link>
+          <Link href='/form/endorser' className='api-docs-link'>
             Endorser Form
-          </a>
+          </Link>
         </div>
       </div>
 
