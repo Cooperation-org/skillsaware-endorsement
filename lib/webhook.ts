@@ -26,8 +26,8 @@ export function verifyWebhookSignature(
 
 function getErrorMessage(error: unknown, url: string): string {
   if (error instanceof Error) {
-    const errorCode = (error as any).code
-    const errorCause = (error as any).cause
+    const errorCode = (error as Error & { code?: string }).code
+    const errorCause = (error as Error & { cause?: { code?: string } }).cause
 
     // Handle specific error codes
     if (errorCode === 'ECONNREFUSED' || errorCause?.code === 'ECONNREFUSED') {
@@ -66,7 +66,7 @@ export async function sendWebhook(
   // Validate URL format
   try {
     new URL(url)
-  } catch (urlError) {
+  } catch {
     const errorMsg = `Invalid webhook URL format: ${url}`
     console.error(`[Webhook] ${errorMsg}`)
     return { success: false, lastError: errorMsg }
