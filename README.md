@@ -25,15 +25,19 @@ This system provides a complete endorsement workflow for SkillsAware:
 - (Optional) AWS S3 bucket for long-term archival and webhooks
 - (Optional) Webhook endpoint for receiving notifications
 
-### 🎉 What's New (2025-10-23 Update)
+### 🎉 What's New (Latest Updates)
 
 **Major Improvements:**
 
-1. ✅ **No S3 Required**: System now works perfectly without AWS S3 bucket
-2. ✅ **Direct File Downloads**: PDF and JSON delivered directly to users via base64
-3. ✅ **Cross-Device Compatible**: Downloads work on all devices (PC, mobile, tablets)
-4. ✅ **Evidence Verified**: Complete evidence capture confirmed (narrative + URLs)
-5. ✅ **Dual Download Methods**: Base64 + download URLs for maximum compatibility
+1. ✅ **S3 Integration**: PDFs and JSON files now upload to S3 during submission for long-term storage
+2. ✅ **AWS SES Email Integration**: Automatic email notifications sent to endorsers when links are generated
+3. ✅ **OBV3 Standards Compliance**: Added schema references and proper DID:Web format for credentials
+4. ✅ **SkillsAware Branding**: Complete rebranding with logo, colors, and professional UI design system
+5. ✅ **Enhanced UI**: Modern, responsive design with improved forms and user experience
+6. ✅ **Direct File Downloads**: PDF and JSON delivered directly to users via base64 (still works without S3)
+7. ✅ **Cross-Device Compatible**: Downloads work on all devices (PC, mobile, tablets)
+8. ✅ **Evidence Verified**: Complete evidence capture confirmed (narrative + URLs)
+9. ✅ **Dual Download Methods**: Base64 + download URLs for maximum compatibility
 
 See [CHANGES_SUMMARY.md](./CHANGES_SUMMARY.md) for detailed technical changes.
 
@@ -47,35 +51,71 @@ See [CHANGES_SUMMARY.md](./CHANGES_SUMMARY.md) for detailed technical changes.
 
 2. **Environment setup:**
 
+   Create a `.env.local` file in the root directory with the following variables:
+
    **Minimum Required (System works with just these):**
 
    ```bash
-   # Copy example environment file
-   cp .env.local.example .env.local
+   # Required - JWT Secret (generate with: openssl rand -hex 32)
+   JWT_SECRET=your-super-secret-jwt-key-min-256-bits
 
-   # Edit .env.local and set:
-   JWT_SECRET=<your-super-secret-jwt-key-min-256-bits>
-   SKILLSAWARE_API_KEY=<your-api-key>
+   # Required - API Key for SkillsAware tenant
+   SKILLSAWARE_API_KEY=your-api-key
    ```
 
-   **Optional - Add S3 for archival storage:**
+   **Optional - S3 Storage (for long-term archival):**
 
    ```bash
-   # Uncomment these in .env.local if you want S3 archival:
+   # AWS Credentials (same credentials used for both S3 and SES)
    AWS_ACCESS_KEY_ID=your-access-key
    AWS_SECRET_ACCESS_KEY=your-secret-key
    AWS_REGION=us-east-1
-   S3_BUCKET=skillsaware-artifacts
+
+   # S3 Configuration
+   S3_BUCKET=skillsaware-endorsements
    S3_PREFIX=endorsements
    ```
 
-   **Optional - Add webhook notifications:**
+   **Optional - AWS SES Email (for sending endorser invitations):**
 
    ```bash
-   # Uncomment these in .env.local if you want webhooks:
-   SKILLSAWARE_WEBHOOK_URL=https://your-webhook-endpoint.com
-   SKILLSAWARE_WEBHOOK_SECRET=<your-webhook-secret>
+   # Email sender configuration
+   SES_FROM_EMAIL=noreply@skillsaware.com
+   SES_FROM_NAME=SkillsAware
+
+   # Note: Uses same AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY as S3
+   # IAM user/role needs ses:SendEmail permission
    ```
+
+   **Optional - Webhook notifications:**
+
+   ```bash
+   # Webhook URL and secret for HMAC signing
+   SKILLSAWARE_WEBHOOK_URL=https://your-webhook-endpoint.com/webhook
+   SKILLSAWARE_WEBHOOK_SECRET=your-webhook-secret
+   ```
+
+   **Optional - Branding:**
+
+   ```bash
+   # Logo URL (relative path from public/ or absolute URL)
+   BRAND_LOGO_URL=/logo/skillsaware-logo.svg
+
+   # Primary brand color
+   BRAND_PRIMARY_COLOR=#0B5FFF
+   ```
+
+   **Optional - Application Configuration:**
+
+   ```bash
+   # Public URL for magic links (must match your deployment domain)
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+   # JWT expiry in days (default: 7)
+   JWT_EXPIRY_DAYS=7
+   ```
+
+   See `.env.example` file for a complete template with all available options.
 
 3. **Run development server:**
 
@@ -99,7 +139,8 @@ SKILLSAWARE_API_KEY=your-api-key
 **What Happens:**
 
 - ✅ Files generated on submission
-- ✅ Returned as base64 in API response
+- ✅ Download URLs returned in API response
+- ✅ Optional base64 JSON (`json_base64`) returned for immediate access
 - ✅ Download buttons work immediately
 - ✅ Files available for 7 days (JWT expiry)
 - ✅ No AWS costs
@@ -129,7 +170,7 @@ SKILLSAWARE_WEBHOOK_SECRET=...
 
 - ✅ Everything from Mode 1 +
 - ✅ Files uploaded to S3 for long-term storage
-- ✅ Webhook sent to external systems
+- ✅ Webhook sent to external systems (includes S3 keys for artifacts)
 - ✅ Files available indefinitely
 - ✅ Can serve from CloudFront CDN
 - 💰 S3 storage costs (~$0.023/GB/month)
@@ -227,6 +268,27 @@ Import this into tools like Postman, Insomnia, or any OpenAPI-compatible client.
 }
 ```
 
+**Response:**
+
+```json
+{
+  "endorser_link": "http://localhost:3000/form/endorser?token=<jwt>",
+  "expires_at": "2025-01-26T00:00:00.000Z"
+}
+```
+
+**Email Notification:**
+
+When an endorser link is generated, the system automatically sends an email to the endorser (if AWS SES is configured) with:
+
+- Professional SkillsAware-branded email template
+- Skill information (name and code)
+- Claimant name
+- Direct link to complete the endorsement
+- Link expiration notice (7 days)
+
+The email is sent asynchronously and failures are logged but don't break the request flow.
+
 ### 3. Submit Endorsement
 
 **Endpoint:** `POST /api/v1/endorsements/submit`
@@ -246,37 +308,68 @@ Import this into tools like Postman, Insomnia, or any OpenAPI-compatible client.
 }
 ```
 
-**Response (NEW - 2025-10-23):**
+**Response:**
 
 ```json
 {
   "success": true,
   "claim_id": "uuid",
-  "artifacts": {
-    "obv3_json": "endorsements/uuid/claim.obv3.json",
-    "pdf": "endorsements/uuid/claim.pdf"
-  },
+  "message": "Endorsement submitted successfully. Download your credentials using the links below.",
   "downloads": {
     "json": {
-      "base64": "eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvbnMv...",
+      "url": "http://localhost:3000/api/v1/endorsements/uuid/download/json?token=...",
       "filename": "ICTDSN403-uuid.obv3.json",
-      "url": "/api/v1/endorsements/uuid/download/json?token=..."
+      "ready": true,
+      "size_estimate": "~2 KB"
     },
     "pdf": {
-      "base64": "JVBERi0xLjQKJeLjz9MKNSAwIG9iago8PC9GaWx0ZXIvRmxh...",
+      "url": "http://localhost:3000/api/v1/endorsements/uuid/download/pdf?token=...",
       "filename": "ICTDSN403-uuid.pdf",
-      "url": "/api/v1/endorsements/uuid/download/pdf?token=..."
+      "ready": true,
+      "size_estimate": "~180 KB",
+      "note": "PDF is ready for download"
     }
   },
-  "s3_uploaded": false,
-  "webhook_delivered": false
+  "json_base64": "eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvbnMv...",
+  "s3_uploaded": true,
+  "webhook_delivered": true
 }
 ```
 
+**What Happens During Submission:**
+
+1. **OBV3 JSON Generation**: Creates AchievementCredential with:
+   - Schema references in `@context` array
+   - Proper DID:Web format for subject IDs (e.g., `did:web:endorse.skillsaware.com:users:base64email`)
+   - Claimant narrative in `credentialSubject.narrative`
+   - Evidence URLs in `evidence` array
+   - Embedded EndorsementCredential
+
+2. **PDF Generation**: Creates professional certificate with:
+   - SkillsAware logo and branding
+   - Skill information
+   - Claimant narrative section
+   - Endorsement details
+   - Supporting evidence URLs
+   - Digital signature
+   - Cryptographic verification metadata
+
+3. **S3 Upload** (if configured):
+   - JSON file uploaded to: `s3://{bucket}/{prefix}/{claim_id}/claim.obv3.json`
+   - PDF file uploaded to: `s3://{bucket}/{prefix}/{claim_id}/claim.pdf`
+   - Both uploads happen in parallel during submission
+   - Files are immediately available for download
+
+4. **Webhook Notification** (if S3 upload succeeds):
+   - HMAC-signed webhook sent to configured endpoint
+   - Includes claim details and S3 keys for artifacts
+
+5. **Response**: Returns download URLs and base64 data for immediate access
+
 **Download Methods:**
 
-1. **Base64 Data**: Use `downloads.pdf.base64` or `downloads.json.base64` for immediate download
-2. **Download URLs**: Use `downloads.pdf.url` or `downloads.json.url` for browser downloads (works for 7 days)
+1. **Download URLs (primary)**: Use `downloads.pdf.url` or `downloads.json.url` for browser downloads (works for 7 days).
+2. **Base64 JSON (optional)**: Use `json_base64` if you need the OBv3 JSON content immediately in the client without hitting the download endpoint.
 
 ### 4. Download Files (NEW)
 
@@ -334,10 +427,12 @@ GET /api/v1/endorsements/abc-123/download/pdf?token=eyJhbGc...
 
 - **Framework**: Next.js 15 (App Router)
 - **Runtime**: Edge-compatible (jose, not jsonwebtoken)
-- **Storage**: AWS S3 (optional - presigned URLs) or Direct delivery (base64)
+- **Storage**: AWS S3 (optional - files uploaded during submission) or Direct delivery (base64)
+- **Email**: AWS SES (Simple Email Service) for sending endorser invitations
 - **PDF**: Puppeteer-core + @sparticuz/chromium
 - **Validation**: Zod schemas
 - **Standards**: OBv3 v3.0.3, W3C Verifiable Credentials v2.0
+- **UI**: Custom SkillsAware design system with CSS variables
 
 ### File Delivery Architecture (NEW - 2025-10-23)
 
@@ -350,9 +445,7 @@ User submits endorsement
     ↓
 Generate PDF + JSON
     ↓
-Convert to base64
-    ↓
-Return in API response
+Return download URLs + optional base64 JSON
     ↓
 User downloads immediately
 ```
@@ -376,16 +469,25 @@ User downloads immediately
 ```
 User submits endorsement
     ↓
-Generate PDF + JSON
+Generate PDF + JSON (in parallel)
     ↓
-Upload to S3 (parallel)
+Upload JSON to S3
     ↓
-Send webhook notification
+Upload PDF to S3
     ↓
-Return base64 + S3 keys
+Send webhook notification (if S3 succeeds)
     ↓
-User downloads via either method
+Return download URLs + optional base64 JSON
+    ↓
+User downloads via download URLs
 ```
+
+**Key Changes:**
+
+- PDFs are now generated and uploaded to S3 **during submission** (not on-demand)
+- Both JSON and PDF uploads happen immediately
+- Files are available in S3 for long-term archival
+- Download endpoints can serve from S3 or regenerate on-demand
 
 **Advantages:**
 
@@ -400,36 +502,81 @@ User downloads via either method
 - 💰 ~$0.023/GB/month storage
 - 💰 ~$0.005/1000 PUT requests
 
-### Evidence Capture Flow
+### Complete Workflow Flow
 
 ```
-1. Claimant Form
-   ├─ Skill Narrative (textarea)
-   └─ Stored in JWT as "claimant_narrative"
+1. Create Claim (API)
+   ├─ POST /api/v1/claims
+   ├─ Requires: API key in x-api-key header
+   ├─ Creates JWT token for claimant
+   └─ Returns: claimant_link (magic link)
 
-2. Endorser Form
-   ├─ Reads narrative from JWT
-   ├─ Endorsement Text (textarea)
-   ├─ Bona Fides (credentials)
-   ├─ Evidence URLs (optional, array)
-   └─ Digital Signature
+2. Claimant Form (Web)
+   ├─ Access via claimant_link
+   ├─ Form fields:
+   │   ├─ Skill Narrative (textarea) - describes their skill demonstration
+   │   ├─ Endorser Name
+   │   └─ Endorser Email
+   ├─ Submits to: POST /api/v1/claims/{id}/endorser-link
+   └─ System:
+       ├─ Creates endorser JWT token (includes claimant narrative)
+       ├─ Generates endorser magic link
+       ├─ Sends email to endorser (if AWS SES configured)
+       └─ Returns: endorser_link
 
-3. Submit Endorsement
-   ├─ Generate Achievement Credential (JSON)
-   │   ├─ credentialSubject.narrative = claimant_narrative
-   │   └─ evidence = [{ id: url, type: "Evidence", name: "Evidence 1" }]
-   ├─ Generate Endorsement Credential (JSON)
-   ├─ Generate PDF Certificate
-   │   ├─ Claimant Information section with narrative
-   │   ├─ Endorsement section with endorser details
-   │   └─ Supporting Evidence section with clickable URLs
-   └─ Return files (base64 + optionally upload to S3)
+3. Endorser Form (Web)
+   ├─ Receives email with endorsement request
+   ├─ Clicks link or accesses via endorser_link
+   ├─ Form fields:
+   │   ├─ Endorser Credentials/Bona Fides
+   │   ├─ Endorsement Statement (textarea)
+   │   ├─ Supporting Evidence URLs (optional, multiple)
+   │   └─ Digital Signature (full name)
+   ├─ Submits to: POST /api/v1/endorsements/submit
+   └─ System:
+       ├─ Validates JWT token
+       ├─ Generates OBV3 Achievement Credential (JSON)
+       │   ├─ Includes schema references in @context
+       │   ├─ Uses DID:Web format for subject ID
+       │   ├─ credentialSubject.narrative = claimant_narrative
+       │   └─ evidence = [{ id: url, type: "Evidence", name: "Evidence 1" }]
+       ├─ Generates OBV3 Endorsement Credential (JSON)
+       ├─ Generates PDF Certificate
+       │   ├─ SkillsAware logo and branding
+       │   ├─ Claimant Information section with narrative
+       │   ├─ Endorsement section with endorser details
+       │   └─ Supporting Evidence section with clickable URLs
+       ├─ Uploads JSON to S3 (if configured)
+       ├─ Uploads PDF to S3 (if configured)
+       ├─ Sends webhook notification (if S3 succeeds)
+       └─ Returns: download URLs + base64 data
 
 4. Success Page
-   ├─ Download PDF button (base64 decode)
-   ├─ Download JSON button (base64 decode)
-   ├─ Fallback: Download URLs (valid 7 days)
-   └─ Works on all devices
+   ├─ Download PDF button (base64 decode or URL)
+   ├─ Download JSON button (base64 decode or URL)
+   ├─ Files available for 7 days (JWT expiry)
+   └─ Works on all devices (PC, mobile, tablets)
+```
+
+### Email Notification Flow
+
+```
+Claimant submits endorser details
+    ↓
+System generates endorser link
+    ↓
+Email sent to endorser (if AWS SES configured)
+    ├─ Subject: "Skill Endorsement Request: {skill_name}"
+    ├─ HTML email with SkillsAware branding
+    ├─ Includes skill information
+    ├─ Direct link to endorsement form
+    └─ Link expiration notice
+    ↓
+Endorser receives email
+    ↓
+Clicks link → Opens endorsement form
+    ↓
+Completes endorsement
 ```
 
 ### Project Structure
@@ -541,7 +688,7 @@ curl -X POST http://localhost:3000/api/v1/claims \
 
 ## 📦 Build & Deploy
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for comprehensive deployment guide.
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for comprehensive deployment guide with detailed instructions for all deployment options.
 
 ### Build for Production
 
@@ -549,7 +696,57 @@ See [DEPLOYMENT.md](./DEPLOYMENT.md) for comprehensive deployment guide.
 npm run build
 ```
 
-### Quick Deploy to Vercel (No S3 Required!)
+### AWS Deployment (Recommended)
+
+The system is optimized for AWS deployment with multiple options available:
+
+**Option 1: AWS Lambda + API Gateway** (Recommended - Serverless)
+
+- Auto-scaling, pay-per-use
+- See [DEPLOYMENT.md](./DEPLOYMENT.md#option-1-aws-lambda--api-gateway-recommended---serverless) for full guide
+- Uses IAM roles (no access keys needed)
+- Supports Parameter Store/Secrets Manager for secrets
+
+**Option 2: AWS Amplify**
+
+- Simple Next.js hosting with automatic CI/CD
+- See [DEPLOYMENT.md](./DEPLOYMENT.md#option-2-aws-amplify) for full guide
+
+**Option 3: AWS ECS/Fargate**
+
+- Containerized deployment
+- See [DEPLOYMENT.md](./DEPLOYMENT.md#option-3-aws-ecsfargate-containerized) for full guide
+- Includes Dockerfile example
+
+**Option 4: AWS EC2**
+
+- Traditional server deployment
+- See [DEPLOYMENT.md](./DEPLOYMENT.md#option-4-aws-ec2-traditional-server) for full guide
+
+**Quick Start with AWS Lambda:**
+
+```bash
+# Install Serverless Framework
+npm install -g serverless
+
+# Copy example configuration
+cp serverless.yml.example serverless.yml
+
+# Edit serverless.yml with your settings
+# Store secrets in Parameter Store
+aws ssm put-parameter --name /skillsaware/jwt-secret --value "your-secret" --type SecureString
+aws ssm put-parameter --name /skillsaware/api-key --value "your-api-key" --type SecureString
+
+# Deploy
+npm run build
+serverless deploy
+```
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete AWS deployment instructions, IAM role setup, and configuration details.
+
+### Alternative: Vercel Deployment
+
+**Quick Deploy to Vercel (No S3 Required!):**
 
 ```bash
 # Install Vercel CLI
@@ -565,36 +762,23 @@ vercel env add SKILLSAWARE_API_KEY production
 # That's it! System works without S3
 ```
 
-### Deploy with S3 (Optional)
+**Deploy with S3 (Optional):**
 
 ```bash
 # After basic deployment, add S3 variables:
 vercel env add AWS_ACCESS_KEY_ID production
 vercel env add AWS_SECRET_ACCESS_KEY production
+vercel env add AWS_REGION production
 vercel env add S3_BUCKET production
 vercel env add S3_PREFIX production
-vercel env add SKILLSAWARE_WEBHOOK_URL production
-vercel env add SKILLSAWARE_WEBHOOK_SECRET production
+vercel env add SES_FROM_EMAIL production
+vercel env add SES_FROM_NAME production
 
 # Redeploy
 vercel --prod
 ```
 
-### Deploy to AWS Lambda
-
-**Minimum Configuration:**
-
-- Environment: JWT_SECRET, SKILLSAWARE_API_KEY
-- Memory: 1024MB (for PDF generation)
-- Timeout: 30 seconds minimum
-
-**With S3:**
-
-- Add AWS credentials to environment
-- Grant Lambda role `s3:PutObject` permission
-- Configure VPC if using private S3 buckets
-
-### Deploy to Other Platforms
+### Other Platforms
 
 **Netlify:**
 
@@ -604,19 +788,9 @@ netlify deploy --prod
 # Set environment variables in Netlify dashboard
 ```
 
-**Docker:**
+**Docker (for ECS or local):**
 
-```dockerfile
-FROM node:20-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-RUN npm run build
-ENV NODE_ENV=production
-EXPOSE 3000
-CMD ["npm", "start"]
-```
+See `Dockerfile` in project root for containerized deployment.
 
 ### Environment Variable Checklist
 
@@ -625,23 +799,46 @@ CMD ["npm", "start"]
 - ✅ `JWT_SECRET` - Strong random secret (min 256 bits)
 - ✅ `SKILLSAWARE_API_KEY` - Your API key
 
-**Optional (S3 Archival):**
+**For AWS Deployments (Recommended):**
 
-- ⚪ `AWS_ACCESS_KEY_ID`
-- ⚪ `AWS_SECRET_ACCESS_KEY`
-- ⚪ `S3_BUCKET`
-- ⚪ `S3_PREFIX`
-- ⚪ `AWS_REGION`
+- ⚪ `AWS_REGION` - AWS region (e.g., us-east-1)
+- ⚪ `S3_BUCKET` - S3 bucket name (optional, for archival)
+- ⚪ `S3_PREFIX` - S3 prefix path (optional)
+- ⚪ `SES_FROM_EMAIL` - Verified sender email (optional, for email notifications)
+- ⚪ `SES_FROM_NAME` - Sender display name (optional)
+- **Note:** For AWS Lambda/ECS/EC2, use IAM roles instead of access keys (more secure). See [DEPLOYMENT.md](./DEPLOYMENT.md#option-a-iam-roles-recommended-for-aws-deployments) for details.
+
+**For Non-AWS Deployments (Vercel, Netlify, etc.):**
+
+- ⚪ `AWS_ACCESS_KEY_ID` - AWS access key (if using S3/SES)
+- ⚪ `AWS_SECRET_ACCESS_KEY` - AWS secret key (if using S3/SES)
+- ⚪ `AWS_REGION` - AWS region
+- ⚪ `S3_BUCKET` - S3 bucket name (optional)
+- ⚪ `S3_PREFIX` - S3 prefix path (optional)
 
 **Optional (Webhooks):**
 
-- ⚪ `SKILLSAWARE_WEBHOOK_URL`
-- ⚪ `SKILLSAWARE_WEBHOOK_SECRET`
+- ⚪ `SKILLSAWARE_WEBHOOK_URL` - Webhook endpoint URL
+- ⚪ `SKILLSAWARE_WEBHOOK_SECRET` - Webhook signing secret
 
 **Optional (Branding):**
 
-- ⚪ `BRAND_LOGO_URL`
-- ⚪ `BRAND_PRIMARY_COLOR`
+- ⚪ `BRAND_LOGO_URL` - Logo file path or URL
+- ⚪ `BRAND_PRIMARY_COLOR` - Primary brand color (hex format)
+
+**Optional (Application):**
+
+- ⚪ `NEXT_PUBLIC_APP_URL` - Public URL for magic links
+- ⚪ `JWT_EXPIRY_DAYS` - Token expiry in days (default: 7)
+
+**AWS Secrets Management:**
+
+For production AWS deployments, store sensitive values (`JWT_SECRET`, `SKILLSAWARE_API_KEY`) in:
+
+- AWS Systems Manager Parameter Store (recommended)
+- AWS Secrets Manager
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md#aws-secrets-management) for setup instructions.
 
 ## 🔧 Configuration
 
@@ -664,12 +861,12 @@ const TENANT_CONFIGS: Record<string, TenantConfig> = {
     s3_region: process.env.AWS_REGION,
 
     // Branding (optional):
-    brand_logo_url: process.env.BRAND_LOGO_URL,
+    brand_logo_url: process.env.BRAND_LOGO_URL || '/logo/skillsaware-logo.svg',
     brand_primary_color: process.env.BRAND_PRIMARY_COLOR || '#0B5FFF',
 
     // Required:
     issuer_id: 'https://endorse.skillsaware.com/issuers/whatscookin',
-    issuer_name: "What's Cookin' Inc."
+    issuer_name: 'SkillsAware'
   }
   // Add new tenants here
 }
@@ -691,14 +888,22 @@ const retryDelays = [60, 300, 1800, 21600, 86400] // seconds
 
 ### Open Badges v3.0
 
-- Context: `https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json`
-- Spec: https://www.imsglobal.org/spec/ob/v3p0
-- Credential types: AchievementCredential, EndorsementCredential
+- **Context URLs**:
+  - `https://www.w3.org/ns/credentials/v2`
+  - `https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json`
+  - `https://purl.imsglobal.org/spec/ob/v3p0/schema/achievement-credential-3.0.3.json` (schema reference)
+- **Spec**: https://www.imsglobal.org/spec/ob/v3p0
+- **Credential types**: AchievementCredential, EndorsementCredential
+- **DID Format**: Uses DID:Web method (e.g., `did:web:endorse.skillsaware.com:users:base64email`)
+  - Domain extracted from issuer ID
+  - Email encoded in base64url format
+  - Compliant with W3C DID specification
 
 ### W3C Verifiable Credentials
 
-- Context: `https://www.w3.org/ns/credentials/v2`
-- Spec: https://www.w3.org/TR/vc-data-model-2.0/
+- **Context**: `https://www.w3.org/ns/credentials/v2`
+- **Spec**: https://www.w3.org/TR/vc-data-model-2.0/
+- **Credential Schema**: Included in `@context` array for validation
 
 ## 🐛 Troubleshooting
 
@@ -825,7 +1030,7 @@ const retryDelays = [60, 300, 1800, 21600, 86400] // seconds
 
 ## 📝 License
 
-Proprietary - What's Cookin' Inc.
+Proprietary - SkillsAware
 
 ## 🤝 Contributing
 
@@ -850,9 +1055,9 @@ For future developers:
 
 #### 2. File Delivery Mechanisms (Added 2025-10-23)
 
-- **Primary**: Base64 in API response → Client decodes → Download
-- **Secondary**: Download URLs → Server regenerates → Stream to client
-- **Optional**: S3 upload → Presigned URLs → Long-term access
+- **Primary**: Download URLs → Server regenerates → Stream to client
+- **Optional**: Base64 OBv3 JSON (`json_base64`) in API response for immediate access
+- **Optional**: S3 upload + webhooks for long-term access and integration
 
 #### 3. Evidence Capture Flow
 

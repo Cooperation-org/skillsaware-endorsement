@@ -34,9 +34,23 @@ export interface SubmitEndorsementRequest {
 export interface SubmitEndorsementResponse {
   success: boolean
   claim_id: string
-  artifacts: {
-    obv3_json: string // S3 key
-    pdf: string // S3 key
+  message: string
+  downloads: {
+    json: {
+      url: string
+      filename: string
+      ready: boolean
+      size_estimate: string
+    }
+    pdf: {
+      url: string
+      filename: string
+      ready: boolean
+      size_estimate: string
+      note: string
+    }
   }
+  json_base64: string
+  s3_uploaded: boolean
   webhook_delivered: boolean
 }

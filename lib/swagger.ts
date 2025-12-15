@@ -253,29 +253,84 @@ Tokens are issued via magic links and expire after 7 days (configurable).
           },
           message: {
             type: 'string',
-            example: 'Endorsement submitted successfully'
+            example:
+              'Endorsement submitted successfully. Download your credentials using the links below.'
           },
           claim_id: {
             type: 'string',
             format: 'uuid',
             example: '123e4567-e89b-12d3-a456-426614174000'
           },
-          download_links: {
+          downloads: {
             type: 'object',
             properties: {
-              pdf: {
-                type: 'string',
-                format: 'uri',
-                example:
-                  '/api/v1/endorsements/123e4567-e89b-12d3-a456-426614174000/download/pdf?token=...'
-              },
               json: {
-                type: 'string',
-                format: 'uri',
-                example:
-                  '/api/v1/endorsements/123e4567-e89b-12d3-a456-426614174000/download/json?token=...'
+                type: 'object',
+                properties: {
+                  url: {
+                    type: 'string',
+                    format: 'uri',
+                    example:
+                      'http://localhost:3000/api/v1/endorsements/123e4567-e89b-12d3-a456-426614174000/download/json?token=...'
+                  },
+                  filename: {
+                    type: 'string',
+                    example: 'ICTDSN403-123e4567-e89b-12d3-a456-426614174000.obv3.json'
+                  },
+                  ready: {
+                    type: 'boolean',
+                    example: true
+                  },
+                  size_estimate: {
+                    type: 'string',
+                    example: '~2 KB'
+                  }
+                }
+              },
+              pdf: {
+                type: 'object',
+                properties: {
+                  url: {
+                    type: 'string',
+                    format: 'uri',
+                    example:
+                      'http://localhost:3000/api/v1/endorsements/123e4567-e89b-12d3-a456-426614174000/download/pdf?token=...'
+                  },
+                  filename: {
+                    type: 'string',
+                    example: 'ICTDSN403-123e4567-e89b-12d3-a456-426614174000.pdf'
+                  },
+                  ready: {
+                    type: 'boolean',
+                    example: true
+                  },
+                  size_estimate: {
+                    type: 'string',
+                    example: '~180 KB'
+                  },
+                  note: {
+                    type: 'string',
+                    example:
+                      'PDF is ready for download (or will be generated when you access this URL, which may take a few seconds).'
+                  }
+                }
               }
             }
+          },
+          json_base64: {
+            type: 'string',
+            description: 'Base64-encoded OBv3 JSON credential for immediate access',
+            example: 'eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvbnMv...'
+          },
+          s3_uploaded: {
+            type: 'boolean',
+            description: 'Whether JSON/PDF were uploaded to S3 (if configured)',
+            example: true
+          },
+          webhook_delivered: {
+            type: 'boolean',
+            description: 'Whether the webhook notification was delivered successfully',
+            example: true
           }
         }
       },
@@ -757,18 +812,17 @@ Tokens are issued via magic links and expire after 7 days (configurable).
         description: `Verifies the authenticity of a PDF credential using both text-based and cryptographic verification.
         
 **Two-Level Verification:**
-1. **Basic Verification:** Checks if PDF content matches embedded metadata
-2. **Full Verification:** Validates cryptographic signature using HMAC-SHA256
+1. **Basic Verification:** Checks if PDF content and embedded metadata look like a genuine SkillsAware certificate, and detects obvious tampering.
+2. **Full Verification (optional):** Validates cryptographic signature using HMAC-SHA256 when you also provide expected skill code, claimant name, and endorser name.
 
 **What is checked:**
-- JWT token presence and validity
-- Cryptographic signature verification
-- Content hash integrity
-- Text content matching (skill code, names, descriptions, endorsement text)
+- SkillsAware-specific metadata and signature fields
+- Cryptographic content hash integrity
+- Text content matching (skill code, names, descriptions, endorsement text) where extractable
 - Evidence URL presence
 
 **Tamper Detection:**
-If any content has been modified after issuance, the verification will fail and report specific changes.`,
+If any content or metadata has been modified after issuance, the verification will fail and report specific changes where possible.`,
         operationId: 'verifyPdf',
         requestBody: {
           required: true,
@@ -803,6 +857,64 @@ If any content has been modified after issuance, the verification will fail and 
           },
           '500': {
             description: 'Verification error',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error'
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    '/api/v1/webhook/test': {
+      post: {
+        tags: ['Endorsements'],
+        summary: 'Send test webhook event',
+        description:
+          'Sends a test `claim.endorsed` webhook event to the configured tenant webhook URL. Useful for validating webhook receivers and HMAC verification.',
+        operationId: 'testWebhook',
+        security: [{ ApiKeyAuth: [] }],
+        responses: {
+          '200': {
+            description: 'Webhook test executed',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: {
+                      type: 'boolean',
+                      example: true
+                    },
+                    webhook_url: {
+                      type: 'string',
+                      format: 'uri',
+                      example: 'https://your-webhook-endpoint.com/webhook'
+                    },
+                    error: {
+                      type: 'string',
+                      nullable: true,
+                      example: null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          '401': {
+            description: 'Missing or invalid API key',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error'
+                }
+              }
+            }
+          },
+          '500': {
+            description: 'Internal server error',
             content: {
               'application/json': {
                 schema: {

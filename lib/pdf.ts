@@ -91,7 +91,9 @@ export async function generatePdfFromHtml(
   } catch (error) {
     console.error('[PDF] PDF generation error:', error)
     console.error('[PDF] Error stack:', error instanceof Error ? error.stack : 'N/A')
-    throw new Error(`Failed to generate PDF: ${error instanceof Error ? error.message : String(error)}`)
+    throw new Error(
+      `Failed to generate PDF: ${error instanceof Error ? error.message : String(error)}`
+    )
   } finally {
     if (browser) {
       try {
@@ -134,6 +136,12 @@ export async function renderCredentialPdf(data: {
 }): Promise<Buffer> {
   const primaryColor = data.primaryColor || '#0B5FFF'
 
+  // Convert relative logo URL to absolute URL for PDF generation
+  // Puppeteer needs absolute URLs to load images
+  const logoUrl = data.logoUrl?.startsWith('/')
+    ? `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}${data.logoUrl}`
+    : data.logoUrl
+
   // Generate HTML directly without React
   const evidenceHtml =
     data.evidence && data.evidence.length > 0
@@ -169,7 +177,7 @@ export async function renderCredentialPdf(data: {
     <html>
       <head>
         <meta charset="utf-8" />
-        <meta name="author" content="SkillsAware - What's Cookin' Inc." />
+        <meta name="author" content="SkillsAware" />
         <meta name="subject" content="Skill Endorsement Certificate" />
         <meta name="keywords" content="skill,endorsement,certificate,${data.skillCode}" />
         <meta name="creator" content="SkillsAware OBv3 Endorsement System" />
@@ -182,12 +190,12 @@ export async function renderCredentialPdf(data: {
         <div style="padding: 40px; font-family: Arial, sans-serif; color: #333;">
           <!-- Header -->
           <div style="border-bottom: 4px solid ${primaryColor}; padding-bottom: 20px; margin-bottom: 30px;">
-            ${data.logoUrl ? `<img src="${data.logoUrl}" alt="Logo" style="max-height: 60px; margin-bottom: 10px;" />` : ''}
+            ${logoUrl ? `<img src="${logoUrl}" alt="Logo" style="max-height: 60px; margin-bottom: 10px;" />` : ''}
             <h1 style="color: ${primaryColor}; font-size: 28px; margin: 10px 0;">
               Skill Endorsement Certificate
             </h1>
             <p style="font-size: 14px; color: #666; margin: 5px 0;">
-              Issued by: What's Cookin' Inc.
+              Issued by: SkillsAware
             </p>
             <p style="font-size: 12px; color: #999;">
               ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -261,7 +269,7 @@ export async function renderCredentialPdf(data: {
             <p style="font-size: 11px; color: #999;">
               Generated with SkillsAware OBv3 Endorsement System
               <br />
-              Powered by What's Cookin' Inc. | Standards-compliant Open Badges v3.0
+              Powered by SkillsAware | Standards-compliant Open Badges v3.0
             </p>
           </div>
         </div>
@@ -295,7 +303,7 @@ export async function renderCredentialPdf(data: {
     // Set PDF metadata
     pdfDoc.setTitle(`Skill Endorsement Certificate - ${data.skillName}`)
     pdfDoc.setSubject('Open Badges v3.0 Skill Endorsement')
-    pdfDoc.setAuthor("SkillsAware - What's Cookin' Inc.")
+    pdfDoc.setAuthor('SkillsAware')
     pdfDoc.setKeywords([
       'skill-endorsement',
       'open-badges-v3',
@@ -330,7 +338,7 @@ export async function renderCredentialPdf(data: {
       'SkillsAware-Timestamp': timestamp,
       'SkillsAware-ClaimID': data.claimId || 'unknown',
       'SkillsAware-Version': 'v1.0',
-      'SkillsAware-Issuer': "What's Cookin' Inc.",
+      'SkillsAware-Issuer': 'SkillsAware',
       'SkillsAware-ContentHash': contentHash,
       'SkillsAware-JWT': data.jwtToken || '', // Store JWT token for verification
       'SkillsAware-CredentialData': credentialDataJson // Store ALL credential data

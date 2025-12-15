@@ -3,6 +3,7 @@ import { extractTokenFromRequest, verifyToken } from '@/lib/jwt'
 import { getTenantConfig } from '@/lib/config'
 import { generateAchievementCredential, generateEndorsementCredential } from '@/lib/obv3'
 import { getPresignedPutUrl, uploadToS3 } from '@/lib/s3'
+import { renderCredentialPdf } from '@/lib/pdf'
 import { sendWebhook } from '@/lib/webhook'
 import { SubmitEndorsementSchema } from '@/lib/validation'
 
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
     // Attach endorsement to achievement credential
     achievementCred.endorsement = [endorsementCred]
 
-    // Prepare JSON content (fast, no PDF generation yet)
+    // Prepare JSON content
     const jsonContent = JSON.stringify(achievementCred, null, 2)
     const s3Prefix = tenant.s3_prefix || 'endorsements'
     const jsonKey = `${s3Prefix}/${payload.claim_id}/claim.obv3.json`
@@ -79,19 +80,56 @@ export async function POST(request: NextRequest) {
     // JSON is ready immediately (no base64 encoding needed)
     const jsonBase64 = Buffer.from(jsonContent).toString('base64')
 
-    // Optional: Upload JSON to S3 if configured (PDF uploaded on-demand)
+    // Generate PDF immediately for S3 upload
+    let pdfBuffer: Buffer | null = null
+    try {
+      pdfBuffer = await renderCredentialPdf({
+        skillName: payload.skill_name,
+        skillCode: payload.skill_code,
+        skillDescription: payload.skill_description,
+        claimantName: payload.claimant_name!,
+        narrative: payload.claimant_narrative!,
+        endorserName: payload.endorser_name!,
+        endorsementText: data.endorsement_text,
+        bonaFides: data.bona_fides,
+        signature: data.signature,
+        evidence: data.evidence_urls,
+        logoUrl: tenant.brand_logo_url,
+        primaryColor: tenant.brand_primary_color,
+        claimId: payload.claim_id,
+        jwtToken: token
+      })
+      console.log('[Submit] PDF generated successfully, size:', pdfBuffer.length, 'bytes')
+    } catch (pdfError) {
+      console.error('[Submit] PDF generation failed:', pdfError)
+      // Continue without PDF - it can be generated on-demand via download endpoint
+    }
+
+    // Upload both JSON and PDF to S3 if configured
     let s3Uploaded = false
     try {
       if (tenant.s3_bucket && tenant.s3_prefix) {
+        // Upload JSON to S3
         const jsonUrl = await getPresignedPutUrl(
           tenant.s3_bucket,
           jsonKey,
           'application/json'
         )
-
         await uploadToS3(jsonUrl, jsonContent, 'application/json')
-        s3Uploaded = true
         console.log('[Submit] JSON uploaded to S3:', jsonKey)
+
+        // Upload PDF to S3 if generated
+        if (pdfBuffer) {
+          const pdfUrl = await getPresignedPutUrl(
+            tenant.s3_bucket,
+            pdfKey,
+            'application/pdf'
+          )
+          await uploadToS3(pdfUrl, pdfBuffer, 'application/pdf')
+          console.log('[Submit] PDF uploaded to S3:', pdfKey)
+        }
+
+        s3Uploaded = true
       }
     } catch (s3Error) {
       console.warn('S3 upload failed, continuing without S3:', s3Error)
@@ -142,20 +180,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       claim_id: payload.claim_id,
-      message: 'Endorsement submitted successfully. Download your credentials using the links below.',
+      message:
+        'Endorsement submitted successfully. Download your credentials using the links below.',
       downloads: {
         json: {
           url: `${appUrl}/api/v1/endorsements/${payload.claim_id}/download/json?${downloadParams.toString()}`,
           filename: `${payload.skill_code}-${payload.claim_id}.obv3.json`,
-          ready: true,  // JSON is immediately available
+          ready: true, // JSON is immediately available
           size_estimate: '~2 KB'
         },
         pdf: {
           url: `${appUrl}/api/v1/endorsements/${payload.claim_id}/download/pdf?${downloadParams.toString()}`,
           filename: `${payload.skill_code}-${payload.claim_id}.pdf`,
-          ready: true,  // PDF generated on-demand when accessed
+          ready: pdfBuffer !== null, // PDF is ready if generated, otherwise on-demand
           size_estimate: '~180 KB',
-          note: 'PDF is generated when you access this URL (may take 5-10 seconds)'
+          note: pdfBuffer
+            ? 'PDF is ready for download'
+            : 'PDF will be generated when you access this URL (may take 5-10 seconds)'
         }
       },
       // Optional: include base64 JSON for immediate access if needed
@@ -181,7 +222,8 @@ export async function POST(request: NextRequest) {
           {
             error: 'PDF generation failed',
             details: error.message,
-            message: 'There was an error generating the PDF certificate. Please try again or contact support.'
+            message:
+              'There was an error generating the PDF certificate. Please try again or contact support.'
           },
           { status: 500 }
         )

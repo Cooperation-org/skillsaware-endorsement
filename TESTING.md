@@ -173,10 +173,24 @@ curl -X POST http://localhost:3000/api/v1/claims \
 {
   "success": true,
   "claim_id": "550e8400-e29b-41d4-a716-446655440000",
-  "artifacts": {
-    "obv3_json": "endorsements/550e8400-e29b-41d4-a716-446655440000/claim.obv3.json",
-    "pdf": "endorsements/550e8400-e29b-41d4-a716-446655440000/claim.pdf"
+  "message": "Endorsement submitted successfully. Download your credentials using the links below.",
+  "downloads": {
+    "json": {
+      "url": "http://localhost:3000/api/v1/endorsements/550e8400-e29b-41d4-a716-446655440000/download/json?token=...",
+      "filename": "ICTDSN403-550e8400-e29b-41d4-a716-446655440000.obv3.json",
+      "ready": true,
+      "size_estimate": "~2 KB"
+    },
+    "pdf": {
+      "url": "http://localhost:3000/api/v1/endorsements/550e8400-e29b-41d4-a716-446655440000/download/pdf?token=...",
+      "filename": "ICTDSN403-550e8400-e29b-41d4-a716-446655440000.pdf",
+      "ready": true,
+      "size_estimate": "~180 KB",
+      "note": "PDF is ready for download"
+    }
   },
+  "json_base64": "eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvbnMv...",
+  "s3_uploaded": true,
   "webhook_delivered": true
 }
 ```
@@ -185,8 +199,9 @@ curl -X POST http://localhost:3000/api/v1/claims \
 
 - ✅ Status code is 200
 - ✅ `success` is true
-- ✅ `artifacts` contains S3 keys for both JSON and PDF
-- ✅ `webhook_delivered` is true (if webhook endpoint is configured)
+- ✅ `downloads.json.url` and `downloads.pdf.url` look correct
+- ✅ `json_base64` is present for immediate access
+- ✅ `webhook_delivered` is true when webhook endpoint is configured
 - ✅ Browser shows success confirmation page
 
 ---
@@ -394,11 +409,11 @@ curl -X POST http://localhost:3000/api/v1/claims \
   "artifacts": [
     {
       "type": "obv3-json",
-      "s3_key": "endorsements/.../claim.obv3.json"
+      "s3_key": "endorsements/550e8400-e29b-41d4-a716-446655440000/claim.obv3.json"
     },
     {
       "type": "pdf",
-      "s3_key": "endorsements/.../claim.pdf"
+      "s3_key": "endorsements/550e8400-e29b-41d4-a716-446655440000/claim.pdf"
     }
   ],
   "timestamp": "2025-01-19T12:00:00.000Z"

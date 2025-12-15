@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { JwtPayload } from '@/types/jwt'
 
 interface EndorserFormClientProps {
@@ -164,6 +165,7 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
   if (success) {
     return (
       <div
+        className='container'
         style={{
           padding: '40px',
           maxWidth: '800px',
@@ -171,16 +173,25 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
           textAlign: 'center'
         }}
       >
-        <h1 style={{ color: '#0B5FFF', marginBottom: '20px' }}>
-          Endorsement Submitted Successfully!
-        </h1>
+        <div style={{ marginBottom: '30px' }}>
+          <Image
+            src='/logo/skillsaware-logo.svg'
+            alt='SkillsAware Logo'
+            width={200}
+            height={60}
+            className='skillsaware-logo'
+            style={{ margin: '0 auto 20px' }}
+          />
+        </div>
+        <h1>Endorsement Submitted Successfully!</h1>
         <div
-          style={{ backgroundColor: '#e8f5e9', padding: '30px', borderRadius: '10px' }}
+          className='alert alert-success'
+          style={{ padding: '30px', textAlign: 'left' }}
         >
           <svg
             style={{ width: '64px', height: '64px', marginBottom: '20px' }}
             fill='none'
-            stroke='#4caf50'
+            stroke='var(--skillsaware-success)'
             viewBox='0 0 24 24'
           >
             <path
@@ -190,8 +201,16 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
               d='M5 13l4 4L19 7'
             />
           </svg>
-          <h2 style={{ color: '#2e7d32', marginBottom: '10px' }}>Thank You!</h2>
-          <p style={{ fontSize: '16px', color: '#555', marginBottom: '30px' }}>
+          <h2 style={{ color: 'var(--skillsaware-success)', marginBottom: '10px' }}>
+            Thank You!
+          </h2>
+          <p
+            style={{
+              fontSize: '16px',
+              color: 'var(--skillsaware-text-secondary)',
+              marginBottom: '30px'
+            }}
+          >
             Your endorsement for <strong>{payload.claimant_name}</strong> has been
             recorded.
             <br />
@@ -200,7 +219,13 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
 
           {downloadLinks && (
             <div style={{ marginTop: '30px' }}>
-              <h3 style={{ fontSize: '18px', color: '#333', marginBottom: '20px' }}>
+              <h3
+                style={{
+                  fontSize: '18px',
+                  color: 'var(--skillsaware-text-primary)',
+                  marginBottom: '20px'
+                }}
+              >
                 Download Your Credentials
               </h3>
               <div
@@ -221,19 +246,8 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
                         'application/pdf'
                       )
                     }
-                    style={{
-                      backgroundColor: '#d32f2f',
-                      color: 'white',
-                      padding: '12px 24px',
-                      border: 'none',
-                      borderRadius: '5px',
-                      fontSize: '16px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px'
-                    }}
+                    className='btn'
+                    style={{ backgroundColor: 'var(--skillsaware-error)' }}
                   >
                     <svg width='20' height='20' fill='currentColor' viewBox='0 0 24 24'>
                       <path d='M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z' />
@@ -244,18 +258,10 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
                   <a
                     href={downloadLinks.pdfUrl}
                     download
+                    className='btn'
                     style={{
-                      backgroundColor: '#d32f2f',
-                      color: 'white',
-                      padding: '12px 24px',
-                      border: 'none',
-                      borderRadius: '5px',
-                      fontSize: '16px',
-                      textDecoration: 'none',
-                      fontWeight: 'bold',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '8px'
+                      backgroundColor: 'var(--skillsaware-error)',
+                      color: 'var(--skillsaware-text-inverse)'
                     }}
                   >
                     <svg width='20' height='20' fill='currentColor' viewBox='0 0 24 24'>
@@ -275,19 +281,7 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
                         'application/json'
                       )
                     }
-                    style={{
-                      backgroundColor: '#1976d2',
-                      color: 'white',
-                      padding: '12px 24px',
-                      border: 'none',
-                      borderRadius: '5px',
-                      fontSize: '16px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px'
-                    }}
+                    className='btn btn-primary'
                   >
                     <svg width='20' height='20' fill='currentColor' viewBox='0 0 24 24'>
                       <path d='M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z' />
@@ -295,23 +289,7 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
                     Download JSON Credential
                   </button>
                 ) : (
-                  <a
-                    href={downloadLinks.jsonUrl}
-                    download
-                    style={{
-                      backgroundColor: '#1976d2',
-                      color: 'white',
-                      padding: '12px 24px',
-                      border: 'none',
-                      borderRadius: '5px',
-                      fontSize: '16px',
-                      textDecoration: 'none',
-                      fontWeight: 'bold',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '8px'
-                    }}
-                  >
+                  <a href={downloadLinks.jsonUrl} download className='btn btn-primary'>
                     <svg width='20' height='20' fill='currentColor' viewBox='0 0 24 24'>
                       <path d='M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z' />
                     </svg>
@@ -320,7 +298,13 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
                 )}
               </div>
 
-              <p style={{ fontSize: '13px', color: '#666', marginTop: '20px' }}>
+              <p
+                style={{
+                  fontSize: '13px',
+                  color: 'var(--skillsaware-text-secondary)',
+                  marginTop: '20px'
+                }}
+              >
                 💡 <strong>Tip:</strong> The PDF is a human-readable certificate. The JSON
                 file contains the machine-readable credential in Open Badges v3 format.
               </p>
@@ -332,18 +316,24 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
   }
 
   return (
-    <div style={{ padding: '40px', maxWidth: '800px', margin: '0 auto' }}>
-      <h1 style={{ color: '#0B5FFF', marginBottom: '20px' }}>Skill Endorsement Form</h1>
+    <div
+      className='container'
+      style={{ padding: '40px', maxWidth: '800px', margin: '0 auto' }}
+    >
+      <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+        <Image
+          src='/logo/skillsaware-logo.svg'
+          alt='SkillsAware Logo'
+          width={200}
+          height={60}
+          className='skillsaware-logo'
+          style={{ margin: '0 auto 20px' }}
+        />
+      </div>
+      <h1>Skill Endorsement Form</h1>
 
       {/* Skill Information (Read-only) */}
-      <div
-        style={{
-          backgroundColor: '#f5f5f5',
-          padding: '20px',
-          borderRadius: '5px',
-          marginBottom: '30px'
-        }}
-      >
+      <div className='card mb-3'>
         <h2 style={{ fontSize: '18px', marginBottom: '10px' }}>Skill Information</h2>
         <p>
           <strong>Skill Name:</strong> {payload.skill_name}
@@ -357,24 +347,27 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
         <p style={{ marginTop: '10px' }}>
           <strong>Description:</strong>
         </p>
-        <p style={{ fontSize: '14px', color: '#666' }}>{payload.skill_description}</p>
+        <p style={{ fontSize: '14px', color: 'var(--skillsaware-text-secondary)' }}>
+          {payload.skill_description}
+        </p>
         <p style={{ marginTop: '10px' }}>
           <strong>Claimant&apos;s Narrative:</strong>
         </p>
-        <p style={{ fontSize: '14px', color: '#666', fontStyle: 'italic' }}>
+        <p
+          style={{
+            fontSize: '14px',
+            color: 'var(--skillsaware-text-secondary)',
+            fontStyle: 'italic'
+          }}
+        >
           &quot;{payload.claimant_narrative}&quot;
         </p>
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '20px' }}>
-          <label
-            htmlFor='bonaFides'
-            style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}
-          >
-            Your Credentials / Bona Fides *
-          </label>
+      <form onSubmit={handleSubmit} className='card'>
+        <div className='mb-2'>
+          <label htmlFor='bonaFides'>Your Credentials / Bona Fides *</label>
           <input
             type='text'
             id='bonaFides'
@@ -382,23 +375,11 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
             onChange={e => setBonaFides(e.target.value)}
             required
             placeholder='e.g., Senior Developer at Company X'
-            style={{
-              width: '100%',
-              padding: '10px',
-              fontSize: '14px',
-              border: '1px solid #ccc',
-              borderRadius: '5px'
-            }}
           />
         </div>
 
-        <div style={{ marginBottom: '20px' }}>
-          <label
-            htmlFor='endorsementText'
-            style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}
-          >
-            Endorsement Statement *
-          </label>
+        <div className='mb-2'>
+          <label htmlFor='endorsementText'>Endorsement Statement *</label>
           <textarea
             id='endorsementText'
             value={endorsementText}
@@ -406,20 +387,11 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
             required
             rows={6}
             placeholder='Describe how the claimant has demonstrated this skill...'
-            style={{
-              width: '100%',
-              padding: '10px',
-              fontSize: '14px',
-              border: '1px solid #ccc',
-              borderRadius: '5px'
-            }}
           />
         </div>
 
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-            Supporting Evidence (Optional)
-          </label>
+        <div className='mb-2'>
+          <label>Supporting Evidence (Optional)</label>
           {evidenceUrls.map((url, index) => (
             <div key={index} style={{ marginBottom: '10px' }}>
               <input
@@ -428,17 +400,13 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
                 onChange={e => updateEvidenceUrl(index, e.target.value)}
                 placeholder='https://example.com/evidence'
                 style={{
-                  width: '100%',
-                  padding: '10px',
-                  fontSize: '14px',
-                  border: urlErrors[index] ? '1px solid #c62828' : '1px solid #ccc',
-                  borderRadius: '5px'
+                  borderColor: urlErrors[index] ? 'var(--skillsaware-error)' : undefined
                 }}
               />
               {urlErrors[index] && (
                 <p
                   style={{
-                    color: '#c62828',
+                    color: 'var(--skillsaware-error)',
                     fontSize: '12px',
                     marginTop: '4px',
                     marginBottom: '0'
@@ -452,27 +420,15 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
           <button
             type='button'
             onClick={addEvidenceField}
-            style={{
-              backgroundColor: '#f0f0f0',
-              color: '#333',
-              padding: '8px 16px',
-              border: '1px solid #ccc',
-              borderRadius: '5px',
-              fontSize: '14px',
-              cursor: 'pointer'
-            }}
+            className='btn btn-secondary'
+            style={{ marginTop: '10px' }}
           >
             + Add Evidence URL
           </button>
         </div>
 
-        <div style={{ marginBottom: '20px' }}>
-          <label
-            htmlFor='signature'
-            style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}
-          >
-            Digital Signature (Type your full name) *
-          </label>
+        <div className='mb-2'>
+          <label htmlFor='signature'>Digital Signature (Type your full name) *</label>
           <input
             type='text'
             id='signature'
@@ -480,23 +436,21 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
             onChange={e => setSignature(e.target.value)}
             required
             placeholder='Your Full Name'
-            style={{
-              width: '100%',
-              padding: '10px',
-              fontSize: '14px',
-              border: '1px solid #ccc',
-              borderRadius: '5px'
-            }}
           />
         </div>
 
-        <div style={{ marginBottom: '20px' }}>
+        <div className='mb-2'>
           <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
             <input
               type='checkbox'
               checked={consent}
               onChange={e => setConsent(e.target.checked)}
-              style={{ marginRight: '10px', cursor: 'pointer' }}
+              style={{
+                marginRight: '10px',
+                cursor: 'pointer',
+                width: '18px',
+                height: '18px'
+              }}
             />
             <span style={{ fontSize: '14px' }}>
               I consent to this endorsement being recorded and shared. I confirm that the
@@ -505,35 +459,20 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
           </label>
         </div>
 
-        {error && (
-          <div
-            style={{
-              padding: '10px',
-              backgroundColor: '#ffebee',
-              color: '#c62828',
-              borderRadius: '5px',
-              marginBottom: '20px'
-            }}
-          >
-            {error}
-          </div>
-        )}
+        {error && <div className='alert alert-error'>{error}</div>}
 
-        <button
-          type='submit'
-          disabled={submitting}
-          style={{
-            backgroundColor: '#0B5FFF',
-            color: 'white',
-            padding: '12px 30px',
-            border: 'none',
-            borderRadius: '5px',
-            fontSize: '16px',
-            cursor: submitting ? 'not-allowed' : 'pointer',
-            opacity: submitting ? 0.6 : 1
-          }}
-        >
-          {submitting ? 'Submitting...' : 'Submit Endorsement'}
+        <button type='submit' disabled={submitting} className='btn btn-primary'>
+          {submitting ? (
+            <>
+              <span
+                className='loading'
+                style={{ width: '16px', height: '16px', borderWidth: '2px' }}
+              ></span>
+              Submitting...
+            </>
+          ) : (
+            'Submit Endorsement'
+          )}
         </button>
       </form>
     </div>

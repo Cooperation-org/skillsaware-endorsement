@@ -3,6 +3,8 @@ import { extractTokenFromRequest, verifyToken, createToken } from '@/lib/jwt'
 import crypto from 'crypto'
 import { GenerateEndorserLinkSchema } from '@/lib/validation'
 import { GenerateEndorserLinkRequest } from '@/types/api'
+import { sendEmail } from '@/lib/email'
+import { generateEndorserInvitationEmail } from '@/app/templates/email/endorser-invitation'
 
 export async function POST(
   request: NextRequest,
@@ -58,7 +60,31 @@ export async function POST(
       nonce: crypto.randomUUID()
     })
 
-    const magicLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/form/endorser?token=${endorserToken}`
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const magicLink = `${appUrl}/form/endorser?token=${endorserToken}`
+
+    // Send email to endorser (non-blocking - don't fail if email fails)
+    try {
+      const emailContent = generateEndorserInvitationEmail({
+        endorserName: data.endorser_name,
+        claimantName: payload.claimant_name!,
+        skillName: payload.skill_name,
+        skillCode: payload.skill_code,
+        endorserLink: magicLink,
+        appUrl
+      })
+
+      await sendEmail({
+        to: data.endorser_email,
+        subject: `Skill Endorsement Request: ${payload.skill_name}`,
+        htmlBody: emailContent.html,
+        textBody: emailContent.text
+      })
+      console.log(`✅ Endorser invitation email sent to ${data.endorser_email}`)
+    } catch (emailError) {
+      console.warn('⚠️  Failed to send endorser invitation email:', emailError)
+      // Continue - email failure shouldn't break the request
+    }
 
     return NextResponse.json({
       endorser_link: magicLink,

@@ -131,14 +131,26 @@ export default function VerifyPdfClient() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5', padding: '40px 20px' }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        backgroundColor: 'var(--skillsaware-bg-secondary)',
+        padding: '40px 20px'
+      }}
+    >
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <h1 style={{ color: '#0B5FFF', fontSize: '32px', marginBottom: '10px' }}>
+          <h1
+            style={{
+              color: 'var(--skillsaware-primary)',
+              fontSize: '32px',
+              marginBottom: '10px'
+            }}
+          >
             PDF Certificate Verifier
           </h1>
-          <p style={{ color: '#666', fontSize: '16px' }}>
+          <p style={{ color: 'var(--skillsaware-text-secondary)', fontSize: '16px' }}>
             Upload a SkillsAware PDF certificate to verify its authenticity and check for
             modifications
           </p>
@@ -147,7 +159,7 @@ export default function VerifyPdfClient() {
         {/* Upload Form */}
         <div
           style={{
-            backgroundColor: 'white',
+            backgroundColor: 'var(--skillsaware-bg-primary)',
             padding: '30px',
             borderRadius: '10px',
             boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
@@ -162,7 +174,7 @@ export default function VerifyPdfClient() {
                   display: 'block',
                   fontWeight: 'bold',
                   marginBottom: '10px',
-                  color: '#333'
+                  color: 'var(--skillsaware-text-primary)'
                 }}
               >
                 Select PDF Certificate *
@@ -175,31 +187,29 @@ export default function VerifyPdfClient() {
                 style={{
                   width: '100%',
                   padding: '12px',
-                  border: '2px dashed #0B5FFF',
+                  border: '2px dashed var(--skillsaware-primary)',
                   borderRadius: '8px',
                   fontSize: '14px',
                   cursor: 'pointer',
-                  backgroundColor: '#f8f9ff'
+                  backgroundColor: 'var(--skillsaware-hero-teal-light)'
                 }}
               />
               {file && (
-                <p style={{ marginTop: '8px', fontSize: '13px', color: '#666' }}>
+                <p
+                  style={{
+                    marginTop: '8px',
+                    fontSize: '13px',
+                    color: 'var(--skillsaware-text-secondary)'
+                  }}
+                >
                   Selected: {file.name} ({(file.size / 1024).toFixed(2)} KB)
                 </p>
               )}
             </div>
 
             {/* Info Box */}
-            <div
-              style={{
-                backgroundColor: '#e3f2fd',
-                padding: '15px',
-                borderRadius: '8px',
-                marginBottom: '20px',
-                borderLeft: '4px solid #0B5FFF'
-              }}
-            >
-              <p style={{ fontSize: '14px', color: '#1565c0', margin: 0 }}>
+            <div className='alert alert-info' style={{ marginBottom: '20px' }}>
+              <p style={{ fontSize: '14px', margin: 0 }}>
                 <strong>✨ Automatic Verification:</strong> All credential data is stored
                 in the PDF metadata and will be automatically verified. Just upload and
                 click verify!
@@ -211,15 +221,10 @@ export default function VerifyPdfClient() {
               <button
                 type='submit'
                 disabled={verifying || !file}
+                className='btn btn-primary'
                 style={{
                   flex: 1,
-                  backgroundColor: verifying ? '#ccc' : '#0B5FFF',
-                  color: 'white',
-                  padding: '14px',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  fontWeight: 'bold',
+                  opacity: verifying || !file ? 0.6 : 1,
                   cursor: verifying || !file ? 'not-allowed' : 'pointer'
                 }}
               >
@@ -229,14 +234,9 @@ export default function VerifyPdfClient() {
                 <button
                   type='button'
                   onClick={handleReset}
+                  className='btn btn-secondary'
                   style={{
-                    backgroundColor: '#666',
-                    color: 'white',
-                    padding: '14px 24px',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    cursor: 'pointer'
+                    padding: '14px 24px'
                   }}
                 >
                   Reset
@@ -248,19 +248,11 @@ export default function VerifyPdfClient() {
 
         {/* Error Message */}
         {error && (
-          <div
-            style={{
-              backgroundColor: '#ffebee',
-              border: '1px solid #ef5350',
-              padding: '20px',
-              borderRadius: '8px',
-              marginBottom: '30px'
-            }}
-          >
-            <h3 style={{ color: '#c62828', fontSize: '16px', marginBottom: '5px' }}>
+          <div className='alert alert-error' style={{ marginBottom: '30px' }}>
+            <h3 style={{ fontSize: '16px', marginBottom: '5px' }}>
               ❌ Verification Failed
             </h3>
-            <p style={{ color: '#d32f2f', fontSize: '14px', margin: 0 }}>{error}</p>
+            <p style={{ fontSize: '14px', margin: 0 }}>{error}</p>
           </div>
         )}
 
@@ -268,56 +260,56 @@ export default function VerifyPdfClient() {
         {result && (
           <div
             style={{
-              backgroundColor: 'white',
+              backgroundColor: 'var(--skillsaware-bg-primary)',
               padding: '30px',
               borderRadius: '10px',
               boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
             }}
           >
-            <h2 style={{ fontSize: '24px', marginBottom: '25px', color: '#333' }}>
+            <h2
+              style={{
+                fontSize: '24px',
+                marginBottom: '25px',
+                color: 'var(--skillsaware-text-primary)'
+              }}
+            >
               Verification Results
             </h2>
 
             {/* Basic Verification */}
             <div
-              style={{
-                backgroundColor: result.basicVerification.valid ? '#e8f5e9' : '#ffebee',
-                border: `2px solid ${result.basicVerification.valid ? '#4caf50' : '#ef5350'}`,
-                padding: '20px',
-                borderRadius: '8px',
-                marginBottom: '25px'
-              }}
+              className={
+                result.basicVerification.valid
+                  ? 'alert alert-success'
+                  : 'alert alert-error'
+              }
+              style={{ marginBottom: '25px' }}
             >
               <h3
                 style={{
                   fontSize: '18px',
-                  marginBottom: '10px',
-                  color: result.basicVerification.valid ? '#2e7d32' : '#c62828'
+                  marginBottom: '10px'
                 }}
               >
                 {result.basicVerification.valid
                   ? '✅ Verification: PASSED'
                   : '❌ Verification: FAILED'}
               </h3>
-              <p style={{ fontSize: '14px', color: '#555', margin: 0 }}>
+              <p
+                style={{
+                  fontSize: '14px',
+                  color: 'var(--skillsaware-text-secondary)',
+                  margin: 0
+                }}
+              >
                 {result.basicVerification.message}
               </p>
 
               {/* Tamper Detection Details - only show if tampering was detected */}
               {result.basicVerification.tamperDetails &&
                 result.basicVerification.tamperDetails.detected && (
-                  <div
-                    style={{
-                      marginTop: '15px',
-                      padding: '15px',
-                      backgroundColor: '#fff3e0',
-                      borderRadius: '6px',
-                      border: '2px solid #ff9800'
-                    }}
-                  >
-                    <h4
-                      style={{ fontSize: '16px', marginBottom: '12px', color: '#e65100' }}
-                    >
+                  <div className='alert alert-warning' style={{ marginTop: '15px' }}>
+                    <h4 style={{ fontSize: '16px', marginBottom: '12px' }}>
                       🔍 Tampering Details Detected:
                     </h4>
 
@@ -328,16 +320,16 @@ export default function VerifyPdfClient() {
                           style={{
                             marginBottom: '12px',
                             padding: '12px',
-                            backgroundColor: '#ffffff',
+                            backgroundColor: 'var(--skillsaware-bg-primary)',
                             borderRadius: '6px',
-                            borderLeft: '4px solid #ff9800'
+                            borderLeft: '4px solid var(--skillsaware-warning)'
                           }}
                         >
                           <div
                             style={{
                               marginBottom: '6px',
                               fontWeight: 'bold',
-                              color: '#e65100'
+                              color: 'var(--skillsaware-warning)'
                             }}
                           >
                             {change.field}:
@@ -349,15 +341,17 @@ export default function VerifyPdfClient() {
                               fontSize: '13px'
                             }}
                           >
-                            <strong style={{ color: '#666' }}>
+                            <strong
+                              style={{ color: 'var(--skillsaware-text-secondary)' }}
+                            >
                               Original (Expected):
                             </strong>{' '}
                             <span
                               style={{
-                                backgroundColor: '#e8f5e9',
+                                backgroundColor: 'var(--skillsaware-alert-success-bg)',
                                 padding: '2px 6px',
                                 borderRadius: '3px',
-                                color: '#2e7d32',
+                                color: 'var(--skillsaware-success)',
                                 fontFamily: 'monospace'
                               }}
                             >
@@ -371,13 +365,17 @@ export default function VerifyPdfClient() {
                               fontSize: '13px'
                             }}
                           >
-                            <strong style={{ color: '#666' }}>Current Status:</strong>{' '}
+                            <strong
+                              style={{ color: 'var(--skillsaware-text-secondary)' }}
+                            >
+                              Current Status:
+                            </strong>{' '}
                             <span
                               style={{
-                                backgroundColor: '#ffebee',
+                                backgroundColor: 'var(--skillsaware-alert-error-bg)',
                                 padding: '2px 6px',
                                 borderRadius: '3px',
-                                color: '#c62828',
+                                color: 'var(--skillsaware-error)',
                                 fontFamily: 'monospace'
                               }}
                             >
@@ -390,7 +388,7 @@ export default function VerifyPdfClient() {
                                 marginTop: '6px',
                                 paddingLeft: '10px',
                                 fontSize: '12px',
-                                color: '#666',
+                                color: 'var(--skillsaware-text-secondary)',
                                 fontStyle: 'italic'
                               }}
                             >
@@ -403,14 +401,8 @@ export default function VerifyPdfClient() {
 
                     {result.basicVerification.tamperDetails.warning && (
                       <div
-                        style={{
-                          marginTop: '12px',
-                          padding: '12px',
-                          backgroundColor: '#ffebee',
-                          borderRadius: '4px',
-                          color: '#c62828',
-                          fontSize: '13px'
-                        }}
+                        className='alert alert-error'
+                        style={{ marginTop: '12px', fontSize: '13px' }}
                       >
                         {result.basicVerification.tamperDetails.warning}
                       </div>
@@ -419,20 +411,14 @@ export default function VerifyPdfClient() {
                     {result.basicVerification.tamperDetails.contentModified &&
                       result.basicVerification.tamperDetails.storedHash && (
                         <div
-                          style={{
-                            marginTop: '12px',
-                            padding: '12px',
-                            backgroundColor: '#fff3e0',
-                            borderRadius: '4px',
-                            border: '1px solid #ff9800'
-                          }}
+                          className='alert alert-warning'
+                          style={{ marginTop: '12px' }}
                         >
                           <div
                             style={{
                               fontSize: '13px',
                               fontWeight: 'bold',
-                              marginBottom: '8px',
-                              color: '#e65100'
+                              marginBottom: '8px'
                             }}
                           >
                             🔐 Content Hash Verification:
@@ -441,29 +427,37 @@ export default function VerifyPdfClient() {
                             style={{
                               fontSize: '12px',
                               fontFamily: 'monospace',
-                              color: '#333'
+                              color: 'var(--skillsaware-text-primary)'
                             }}
                           >
                             <div style={{ marginBottom: '4px' }}>
-                              <strong style={{ color: '#666' }}>Original Hash:</strong>{' '}
-                              <span style={{ color: '#2e7d32' }}>
+                              <strong
+                                style={{ color: 'var(--skillsaware-text-secondary)' }}
+                              >
+                                Original Hash:
+                              </strong>{' '}
+                              <span style={{ color: 'var(--skillsaware-success)' }}>
                                 {result.basicVerification.tamperDetails.storedHash}
                               </span>
                             </div>
                             <div style={{ marginBottom: '8px' }}>
-                              <strong style={{ color: '#666' }}>Current Hash:</strong>{' '}
-                              <span style={{ color: '#c62828' }}>
+                              <strong
+                                style={{ color: 'var(--skillsaware-text-secondary)' }}
+                              >
+                                Current Hash:
+                              </strong>{' '}
+                              <span style={{ color: 'var(--skillsaware-error)' }}>
                                 {result.basicVerification.tamperDetails.currentHash}
                               </span>
                             </div>
                             <div
                               style={{
                                 fontSize: '11px',
-                                color: '#666',
+                                color: 'var(--skillsaware-text-secondary)',
                                 fontStyle: 'italic',
                                 marginTop: '8px',
                                 padding: '8px',
-                                backgroundColor: '#ffffff',
+                                backgroundColor: 'var(--skillsaware-bg-primary)',
                                 borderRadius: '3px'
                               }}
                             >
@@ -479,20 +473,12 @@ export default function VerifyPdfClient() {
                     {result.basicVerification.tamperDetails.extractedData &&
                       Object.keys(result.basicVerification.tamperDetails.extractedData)
                         .length > 0 && (
-                        <div
-                          style={{
-                            marginTop: '12px',
-                            padding: '12px',
-                            backgroundColor: '#e3f2fd',
-                            borderRadius: '4px'
-                          }}
-                        >
+                        <div className='alert alert-info' style={{ marginTop: '12px' }}>
                           <div
                             style={{
                               fontSize: '13px',
                               fontWeight: 'bold',
-                              marginBottom: '8px',
-                              color: '#1565c0'
+                              marginBottom: '8px'
                             }}
                           >
                             📝 Current PDF Content (What we can read):
@@ -501,7 +487,7 @@ export default function VerifyPdfClient() {
                             style={{
                               fontSize: '12px',
                               fontFamily: 'monospace',
-                              color: '#333'
+                              color: 'var(--skillsaware-text-primary)'
                             }}
                           >
                             {result.basicVerification.tamperDetails.extractedData
@@ -550,7 +536,7 @@ export default function VerifyPdfClient() {
                               style={{
                                 marginTop: '8px',
                                 fontSize: '11px',
-                                color: '#c62828',
+                                color: 'var(--skillsaware-error)',
                                 fontWeight: 'bold'
                               }}
                             >
@@ -567,19 +553,17 @@ export default function VerifyPdfClient() {
             {/* Full Verification (if performed) */}
             {result.fullVerification && (
               <div
-                style={{
-                  backgroundColor: result.fullVerification.valid ? '#e8f5e9' : '#ffebee',
-                  border: `2px solid ${result.fullVerification.valid ? '#4caf50' : '#ef5350'}`,
-                  padding: '20px',
-                  borderRadius: '8px',
-                  marginBottom: '25px'
-                }}
+                className={
+                  result.fullVerification.valid
+                    ? 'alert alert-success'
+                    : 'alert alert-error'
+                }
+                style={{ marginBottom: '25px' }}
               >
                 <h3
                   style={{
                     fontSize: '18px',
-                    marginBottom: '10px',
-                    color: result.fullVerification.valid ? '#2e7d32' : '#c62828'
+                    marginBottom: '10px'
                   }}
                 >
                   {result.fullVerification.valid
@@ -594,14 +578,14 @@ export default function VerifyPdfClient() {
                     style={{
                       marginTop: '15px',
                       padding: '15px',
-                      backgroundColor: 'white',
+                      backgroundColor: 'var(--skillsaware-bg-primary)',
                       borderRadius: '5px'
                     }}
                   >
                     <p
                       style={{
                         fontSize: '14px',
-                        color: '#2e7d32',
+                        color: 'var(--skillsaware-success)',
                         fontWeight: 'bold',
                         margin: 0
                       }}
@@ -615,14 +599,14 @@ export default function VerifyPdfClient() {
                     style={{
                       marginTop: '15px',
                       padding: '15px',
-                      backgroundColor: 'white',
+                      backgroundColor: 'var(--skillsaware-bg-primary)',
                       borderRadius: '5px'
                     }}
                   >
                     <p
                       style={{
                         fontSize: '14px',
-                        color: '#c62828',
+                        color: 'var(--skillsaware-error)',
                         fontWeight: 'bold',
                         margin: 0
                       }}
@@ -639,15 +623,25 @@ export default function VerifyPdfClient() {
                     style={{
                       marginTop: '15px',
                       padding: '15px',
-                      backgroundColor: '#f5f5f5',
+                      backgroundColor: 'var(--skillsaware-bg-secondary)',
                       borderRadius: '5px'
                     }}
                   >
-                    <h4 style={{ fontSize: '14px', marginBottom: '10px', color: '#333' }}>
+                    <h4
+                      style={{
+                        fontSize: '14px',
+                        marginBottom: '10px',
+                        color: 'var(--skillsaware-text-primary)'
+                      }}
+                    >
                       Verification Details:
                     </h4>
                     <div
-                      style={{ fontSize: '13px', color: '#555', fontFamily: 'monospace' }}
+                      style={{
+                        fontSize: '13px',
+                        color: 'var(--skillsaware-text-secondary)',
+                        fontFamily: 'monospace'
+                      }}
                     >
                       <div style={{ marginBottom: '8px' }}>
                         <strong>Skill Code:</strong>{' '}
@@ -670,7 +664,7 @@ export default function VerifyPdfClient() {
                         result.fullVerification.details.differences.length > 0 && (
                           <>
                             <div style={{ marginTop: '12px', marginBottom: '12px' }}>
-                              <strong style={{ color: '#c62828' }}>
+                              <strong style={{ color: 'var(--skillsaware-error)' }}>
                                 ❌ Found{' '}
                                 {result.fullVerification.details.differences.length}{' '}
                                 Difference(s):
@@ -680,19 +674,13 @@ export default function VerifyPdfClient() {
                               (diff: VerificationDifference, index: number) => (
                                 <div
                                   key={index}
-                                  style={{
-                                    marginBottom: '12px',
-                                    padding: '12px',
-                                    backgroundColor: '#ffebee',
-                                    borderRadius: '6px',
-                                    borderLeft: '4px solid #c62828'
-                                  }}
+                                  className='alert alert-error'
+                                  style={{ marginBottom: '12px' }}
                                 >
                                   <div
                                     style={{
                                       marginBottom: '6px',
-                                      fontWeight: 'bold',
-                                      color: '#c62828'
+                                      fontWeight: 'bold'
                                     }}
                                   >
                                     {diff.field}:
@@ -700,15 +688,19 @@ export default function VerifyPdfClient() {
                                   <div
                                     style={{ marginBottom: '4px', paddingLeft: '10px' }}
                                   >
-                                    <strong style={{ color: '#666' }}>
+                                    <strong
+                                      style={{
+                                        color: 'var(--skillsaware-text-secondary)'
+                                      }}
+                                    >
                                       You entered:
                                     </strong>{' '}
                                     <span
                                       style={{
-                                        backgroundColor: '#fff',
+                                        backgroundColor: 'var(--skillsaware-bg-primary)',
                                         padding: '2px 6px',
                                         borderRadius: '3px',
-                                        color: '#d32f2f',
+                                        color: 'var(--skillsaware-error)',
                                         fontWeight: 'bold'
                                       }}
                                     >
@@ -716,15 +708,19 @@ export default function VerifyPdfClient() {
                                     </span>
                                   </div>
                                   <div style={{ paddingLeft: '10px' }}>
-                                    <strong style={{ color: '#666' }}>
+                                    <strong
+                                      style={{
+                                        color: 'var(--skillsaware-text-secondary)'
+                                      }}
+                                    >
                                       PDF contains:
                                     </strong>{' '}
                                     <span
                                       style={{
-                                        backgroundColor: '#fff',
+                                        backgroundColor: 'var(--skillsaware-bg-primary)',
                                         padding: '2px 6px',
                                         borderRadius: '3px',
-                                        color: '#2e7d32',
+                                        color: 'var(--skillsaware-success)',
                                         fontWeight: 'bold'
                                       }}
                                     >

@@ -53,7 +53,7 @@ export default function CredentialTemplate({
           Skill Endorsement Certificate
         </h1>
         <p style={{ fontSize: '14px', color: '#666', margin: '5px 0' }}>
-          Issued by: What&apos;s Cookin&apos; Inc.
+          Issued by: SkillsAware
         </p>
         <p style={{ fontSize: '12px', color: '#999' }}>
           {new Date().toLocaleDateString('en-US', {
@@ -207,7 +207,7 @@ export default function CredentialTemplate({
         <p style={{ fontSize: '11px', color: '#999' }}>
           Generated with SkillsAware OBv3 Endorsement System
           <br />
-          Powered by What&apos;s Cookin&apos; Inc. | Standards-compliant Open Badges v3.0
+          Powered by SkillsAware | Standards-compliant Open Badges v3.0
         </p>
       </div>
     </div>

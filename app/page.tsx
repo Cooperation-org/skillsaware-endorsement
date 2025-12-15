@@ -1,32 +1,60 @@
+import Image from 'next/image'
+
 export default function Home() {
   return (
-    <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
+    <div
+      className='container'
+      style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}
+    >
       {/* Header */}
       <header
-        style={{
-          borderBottom: '4px solid #0B5FFF',
-          paddingBottom: '20px',
-          marginBottom: '40px'
-        }}
+        className='skillsaware-header'
+        style={{ padding: '30px', marginBottom: '40px', textAlign: 'center' }}
       >
-        <h1 style={{ color: '#0B5FFF', fontSize: '36px', marginBottom: '10px' }}>
-          SkillsAware OBv3 Endorsement System
+        <Image
+          src='/logo/skillsaware-logo.svg'
+          alt='SkillsAware Logo'
+          width={250}
+          height={75}
+          className='skillsaware-logo'
+          style={{ margin: '0 auto 20px', filter: 'brightness(0) invert(1)' }}
+        />
+        <h1
+          style={{
+            color: 'var(--skillsaware-text-inverse)',
+            fontSize: '36px',
+            marginBottom: '10px'
+          }}
+        >
+          OBv3 Endorsement System
         </h1>
-        <p style={{ fontSize: '18px', color: '#666' }}>
+        <p
+          style={{
+            fontSize: '18px',
+            color: 'var(--skillsaware-text-inverse)',
+            opacity: 0.9
+          }}
+        >
           Stateless, Standards-Compliant Skill Credential Platform
         </p>
       </header>
 
       {/* Overview */}
       <section style={{ marginBottom: '40px' }}>
-        <h2 style={{ color: '#333', fontSize: '24px', marginBottom: '15px' }}>
+        <h2
+          style={{
+            color: 'var(--skillsaware-text-primary)',
+            fontSize: '24px',
+            marginBottom: '15px'
+          }}
+        >
           Overview
         </h2>
         <p
           style={{
             fontSize: '16px',
             lineHeight: '1.6',
-            color: '#555',
+            color: 'var(--skillsaware-text-secondary)',
             marginBottom: '15px'
           }}
         >
@@ -34,22 +62,23 @@ export default function Home() {
           creation, endorser validation, and OBv3 credential generation—all without a
           database.
         </p>
-        <p style={{ fontSize: '16px', lineHeight: '1.6', color: '#555' }}>
+        <p
+          style={{
+            fontSize: '16px',
+            lineHeight: '1.6',
+            color: 'var(--skillsaware-text-secondary)'
+          }}
+        >
           Built with Next.js 15, powered by Open Badges v3.0 standards.
         </p>
       </section>
 
       {/* Verification Section */}
       <section
-        style={{
-          marginBottom: '40px',
-          backgroundColor: '#e8f5e9',
-          padding: '30px',
-          borderRadius: '8px',
-          border: '2px solid #4caf50'
-        }}
+        className='card mb-3'
+        style={{ borderLeft: '4px solid var(--skillsaware-success)' }}
       >
-        <h2 style={{ color: '#2e7d32', fontSize: '24px', marginBottom: '20px' }}>
+        <h2 style={{ fontSize: '24px', marginBottom: '20px' }}>
           🔐 PDF Certificate Verification
         </h2>
 
@@ -57,7 +86,7 @@ export default function Home() {
           style={{
             fontSize: '16px',
             lineHeight: '1.8',
-            color: '#555',
+            color: 'var(--skillsaware-text-secondary)',
             marginBottom: '20px'
           }}
         >
@@ -69,20 +98,26 @@ export default function Home() {
 
         <div
           style={{
-            backgroundColor: '#fff',
+            backgroundColor: 'var(--skillsaware-bg-primary)',
             padding: '20px',
             borderRadius: '6px',
             marginBottom: '20px'
           }}
         >
-          <h3 style={{ color: '#2e7d32', fontSize: '18px', marginBottom: '15px' }}>
+          <h3
+            style={{
+              color: 'var(--skillsaware-success)',
+              fontSize: '18px',
+              marginBottom: '15px'
+            }}
+          >
             How Verification Works
           </h3>
           <ul
             style={{
               fontSize: '15px',
               lineHeight: '1.8',
-              color: '#555',
+              color: 'var(--skillsaware-text-secondary)',
               paddingLeft: '20px',
               marginBottom: '0'
             }}
@@ -106,20 +141,11 @@ export default function Home() {
           </ul>
         </div>
 
-        <div
-          style={{
-            backgroundColor: '#fff3cd',
-            padding: '15px',
-            borderRadius: '6px',
-            marginBottom: '20px',
-            border: '1px solid #ffc107'
-          }}
-        >
-          <strong style={{ color: '#856404' }}>🛡️ Why Both Metadata and Content?</strong>
+        <div className='alert alert-warning' style={{ marginBottom: '20px' }}>
+          <strong>🛡️ Why Both Metadata and Content?</strong>
           <p
             style={{
               fontSize: '14px',
-              color: '#856404',
               marginTop: '8px',
               marginBottom: '0'
             }}
@@ -133,34 +159,10 @@ export default function Home() {
         </div>
 
         <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-          <a
-            href='/verify'
-            style={{
-              display: 'inline-block',
-              backgroundColor: '#4caf50',
-              color: 'white',
-              padding: '12px 24px',
-              borderRadius: '6px',
-              textDecoration: 'none',
-              fontSize: '16px',
-              fontWeight: 'bold'
-            }}
-          >
+          <a href='/verify' className='btn btn-success'>
             Verify Certificate (Web) →
           </a>
-          <a
-            href='/api-docs'
-            style={{
-              display: 'inline-block',
-              backgroundColor: '#2e7d32',
-              color: 'white',
-              padding: '12px 24px',
-              borderRadius: '6px',
-              textDecoration: 'none',
-              fontSize: '16px',
-              fontWeight: 'bold'
-            }}
-          >
+          <a href='/api-docs' className='btn btn-primary'>
             View Full API Documentation →
           </a>
         </div>
@@ -168,14 +170,20 @@ export default function Home() {
 
       {/* Features */}
       <section style={{ marginBottom: '40px' }}>
-        <h2 style={{ color: '#333', fontSize: '24px', marginBottom: '15px' }}>
+        <h2
+          style={{
+            color: 'var(--skillsaware-text-primary)',
+            fontSize: '24px',
+            marginBottom: '15px'
+          }}
+        >
           Features
         </h2>
         <ul
           style={{
             fontSize: '16px',
             lineHeight: '1.8',
-            color: '#555',
+            color: 'var(--skillsaware-text-secondary)',
             paddingLeft: '20px'
           }}
         >
@@ -193,22 +201,17 @@ export default function Home() {
 
       {/* API Documentation Section */}
       <section
-        style={{
-          marginBottom: '40px',
-          backgroundColor: '#e3f2fd',
-          padding: '30px',
-          borderRadius: '8px',
-          border: '2px solid #2196f3'
-        }}
+        className='card mb-3'
+        style={{ borderLeft: '4px solid var(--skillsaware-primary)' }}
       >
-        <h2 style={{ color: '#1565c0', fontSize: '24px', marginBottom: '20px' }}>
+        <h2 style={{ fontSize: '24px', marginBottom: '20px' }}>
           📚 Interactive API Documentation
         </h2>
         <p
           style={{
             fontSize: '16px',
             lineHeight: '1.8',
-            color: '#555',
+            color: 'var(--skillsaware-text-secondary)',
             marginBottom: '20px'
           }}
         >
@@ -217,35 +220,14 @@ export default function Home() {
           schemas, and learn about authentication requirements.
         </p>
         <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-          <a
-            href='/api-docs'
-            style={{
-              display: 'inline-block',
-              backgroundColor: '#2196f3',
-              color: 'white',
-              padding: '12px 24px',
-              borderRadius: '6px',
-              textDecoration: 'none',
-              fontSize: '16px',
-              fontWeight: 'bold'
-            }}
-          >
+          <a href='/api-docs' className='btn btn-primary'>
             Open Interactive API Docs →
           </a>
           <a
             href='/api/openapi'
             target='_blank'
             rel='noopener noreferrer'
-            style={{
-              display: 'inline-block',
-              backgroundColor: '#1565c0',
-              color: 'white',
-              padding: '12px 24px',
-              borderRadius: '6px',
-              textDecoration: 'none',
-              fontSize: '16px',
-              fontWeight: 'bold'
-            }}
+            className='btn btn-secondary'
           >
             Download OpenAPI Spec (JSON)
           </a>
@@ -254,23 +236,41 @@ export default function Home() {
 
       {/* API Endpoints */}
       <section id='verification-api' style={{ marginBottom: '40px' }}>
-        <h2 style={{ color: '#333', fontSize: '24px', marginBottom: '15px' }}>
+        <h2
+          style={{
+            color: 'var(--skillsaware-text-primary)',
+            fontSize: '24px',
+            marginBottom: '15px'
+          }}
+        >
           API Endpoints Overview
         </h2>
-        <div style={{ backgroundColor: '#f5f5f5', padding: '20px', borderRadius: '5px' }}>
+        <div
+          style={{
+            backgroundColor: 'var(--skillsaware-bg-secondary)',
+            padding: '20px',
+            borderRadius: '5px'
+          }}
+        >
           <div style={{ marginBottom: '15px' }}>
             <code
               style={{
                 fontSize: '14px',
-                color: '#c2185b',
-                backgroundColor: '#fff',
+                color: 'var(--skillsaware-accent-purple)',
+                backgroundColor: 'var(--skillsaware-bg-primary)',
                 padding: '4px 8px',
                 borderRadius: '3px'
               }}
             >
               POST /api/v1/claims
             </code>
-            <p style={{ fontSize: '14px', color: '#666', marginTop: '5px' }}>
+            <p
+              style={{
+                fontSize: '14px',
+                color: 'var(--skillsaware-text-secondary)',
+                marginTop: '5px'
+              }}
+            >
               Create a new skill claim and generate claimant magic link
             </p>
           </div>
@@ -278,15 +278,21 @@ export default function Home() {
             <code
               style={{
                 fontSize: '14px',
-                color: '#c2185b',
-                backgroundColor: '#fff',
+                color: 'var(--skillsaware-accent-purple)',
+                backgroundColor: 'var(--skillsaware-bg-primary)',
                 padding: '4px 8px',
                 borderRadius: '3px'
               }}
             >
               POST /api/v1/claims/[id]/endorser-link
             </code>
-            <p style={{ fontSize: '14px', color: '#666', marginTop: '5px' }}>
+            <p
+              style={{
+                fontSize: '14px',
+                color: 'var(--skillsaware-text-secondary)',
+                marginTop: '5px'
+              }}
+            >
               Generate endorser magic link after claimant submission
             </p>
           </div>
@@ -294,32 +300,30 @@ export default function Home() {
             <code
               style={{
                 fontSize: '14px',
-                color: '#c2185b',
-                backgroundColor: '#fff',
+                color: 'var(--skillsaware-accent-purple)',
+                backgroundColor: 'var(--skillsaware-bg-primary)',
                 padding: '4px 8px',
                 borderRadius: '3px'
               }}
             >
               POST /api/v1/endorsements/submit
             </code>
-            <p style={{ fontSize: '14px', color: '#666', marginTop: '5px' }}>
+            <p
+              style={{
+                fontSize: '14px',
+                color: 'var(--skillsaware-text-secondary)',
+                marginTop: '5px'
+              }}
+            >
               Submit endorsement and generate OBv3 credentials
             </p>
           </div>
-          <div
-            style={{
-              marginBottom: '15px',
-              backgroundColor: '#e8f5e9',
-              padding: '12px',
-              borderRadius: '5px',
-              border: '2px solid #4caf50'
-            }}
-          >
+          <div className='alert alert-success' style={{ marginBottom: '15px' }}>
             <code
               style={{
                 fontSize: '14px',
-                color: '#2e7d32',
-                backgroundColor: '#fff',
+                color: 'var(--skillsaware-success)',
+                backgroundColor: 'var(--skillsaware-bg-primary)',
                 padding: '4px 8px',
                 borderRadius: '3px',
                 fontWeight: 'bold'
@@ -330,22 +334,32 @@ export default function Home() {
             <p
               style={{
                 fontSize: '14px',
-                color: '#666',
+                color: 'var(--skillsaware-text-secondary)',
                 marginTop: '8px',
                 marginBottom: '8px'
               }}
             >
               <strong>Verify PDF certificate authenticity and detect tampering</strong>
             </p>
-            <details style={{ fontSize: '13px', color: '#555', marginTop: '8px' }}>
+            <details
+              style={{
+                fontSize: '13px',
+                color: 'var(--skillsaware-text-secondary)',
+                marginTop: '8px'
+              }}
+            >
               <summary
-                style={{ cursor: 'pointer', fontWeight: 'bold', color: '#2e7d32' }}
+                style={{
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  color: 'var(--skillsaware-success)'
+                }}
               >
                 Request Format (multipart/form-data)
               </summary>
               <pre
                 style={{
-                  backgroundColor: '#f9f9f9',
+                  backgroundColor: 'var(--skillsaware-bg-tertiary)',
                   padding: '10px',
                   borderRadius: '4px',
                   marginTop: '8px',
@@ -355,15 +369,25 @@ export default function Home() {
                 {`pdf: <File> (PDF file to verify)`}
               </pre>
             </details>
-            <details style={{ fontSize: '13px', color: '#555', marginTop: '8px' }}>
+            <details
+              style={{
+                fontSize: '13px',
+                color: 'var(--skillsaware-text-secondary)',
+                marginTop: '8px'
+              }}
+            >
               <summary
-                style={{ cursor: 'pointer', fontWeight: 'bold', color: '#2e7d32' }}
+                style={{
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  color: 'var(--skillsaware-success)'
+                }}
               >
                 Response Format
               </summary>
               <pre
                 style={{
-                  backgroundColor: '#f9f9f9',
+                  backgroundColor: 'var(--skillsaware-bg-tertiary)',
                   padding: '10px',
                   borderRadius: '4px',
                   marginTop: '8px',
@@ -398,15 +422,21 @@ export default function Home() {
             <code
               style={{
                 fontSize: '14px',
-                color: '#c2185b',
-                backgroundColor: '#fff',
+                color: 'var(--skillsaware-accent-purple)',
+                backgroundColor: 'var(--skillsaware-bg-primary)',
                 padding: '4px 8px',
                 borderRadius: '3px'
               }}
             >
               POST /api/v1/webhook/test
             </code>
-            <p style={{ fontSize: '14px', color: '#666', marginTop: '5px' }}>
+            <p
+              style={{
+                fontSize: '14px',
+                color: 'var(--skillsaware-text-secondary)',
+                marginTop: '5px'
+              }}
+            >
               Test webhook delivery with HMAC signature
             </p>
           </div>
@@ -415,7 +445,13 @@ export default function Home() {
 
       {/* System Status */}
       <section style={{ marginBottom: '40px' }}>
-        <h2 style={{ color: '#333', fontSize: '24px', marginBottom: '15px' }}>
+        <h2
+          style={{
+            color: 'var(--skillsaware-text-primary)',
+            fontSize: '24px',
+            marginBottom: '15px'
+          }}
+        >
           System Status
         </h2>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -423,24 +459,26 @@ export default function Home() {
             style={{
               width: '12px',
               height: '12px',
-              backgroundColor: '#4caf50',
+              backgroundColor: 'var(--skillsaware-success)',
               borderRadius: '50%'
             }}
           />
-          <span style={{ fontSize: '16px', color: '#555' }}>Operational</span>
+          <span style={{ fontSize: '16px', color: 'var(--skillsaware-text-secondary)' }}>
+            Operational
+          </span>
         </div>
       </section>
 
       {/* Footer */}
       <footer
         style={{
-          borderTop: '2px solid #e0e0e0',
+          borderTop: '2px solid var(--skillsaware-border)',
           paddingTop: '20px',
           textAlign: 'center'
         }}
       >
-        <p style={{ fontSize: '14px', color: '#999' }}>
-          Powered by What&apos;s Cookin&apos; Inc. | Standards-compliant Open Badges v3.0
+        <p style={{ fontSize: '14px', color: 'var(--skillsaware-text-tertiary)' }}>
+          Powered by SkillsAware | Standards-compliant Open Badges v3.0
           <br />
           Built with Next.js 15, jose, AWS SDK, and Puppeteer
         </p>

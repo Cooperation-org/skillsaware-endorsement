@@ -9,17 +9,13 @@ export default function TokenExpiredPage() {
       }}
     >
       <div
-        style={{
-          backgroundColor: '#fff3e0',
-          padding: '30px',
-          borderRadius: '10px',
-          border: '2px solid #ff9800'
-        }}
+        className='alert alert-warning'
+        style={{ padding: '30px', borderRadius: '10px' }}
       >
         <svg
           style={{ width: '64px', height: '64px', marginBottom: '20px' }}
           fill='none'
-          stroke='#ff9800'
+          stroke='var(--skillsaware-warning)'
           viewBox='0 0 24 24'
         >
           <path
@@ -29,13 +25,17 @@ export default function TokenExpiredPage() {
             d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
           />
         </svg>
-        <h1 style={{ color: '#e65100', fontSize: '24px', marginBottom: '10px' }}>
-          Token Expired
-        </h1>
-        <p style={{ fontSize: '16px', color: '#555', marginBottom: '20px' }}>
+        <h1 style={{ fontSize: '24px', marginBottom: '10px' }}>Token Expired</h1>
+        <p
+          style={{
+            fontSize: '16px',
+            color: 'var(--skillsaware-text-secondary)',
+            marginBottom: '20px'
+          }}
+        >
           Your magic link has expired for security reasons.
         </p>
-        <p style={{ fontSize: '14px', color: '#666' }}>
+        <p style={{ fontSize: '14px', color: 'var(--skillsaware-text-secondary)' }}>
           Please contact SkillsAware to request a new link.
         </p>
       </div>

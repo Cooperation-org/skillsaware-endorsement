@@ -1,0 +1,97 @@
+# SkillsAware Endorsement System - Serverless Framework Configuration
+# Copy this file to serverless.yml and update with your values
+
+service: skillsaware-endorsement
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-1 # Change to your preferred region
+  memorySize: 2048 # Required for PDF generation
+  timeout: 30 # API Gateway max is 29s, but Lambda can be higher
+  ephemeralStorageSize: 1024 # May need more for Chromium
+  environment:
+    NODE_ENV: production
+    AWS_REGION: ${self:provider.region}
+    S3_BUCKET: skillsaware-artifacts # Change to your bucket name
+    S3_PREFIX: endorsements
+    SES_FROM_EMAIL: noreply@skillsaware.com # Must be verified in SES
+    SES_FROM_NAME: SkillsAware
+    NEXT_PUBLIC_APP_URL: https://api.yourdomain.com # Change to your domain
+    JWT_EXPIRY_DAYS: 7
+    # Secrets from Parameter Store (recommended)
+    JWT_SECRET: ${ssm:/skillsaware/jwt-secret~true}
+    SKILLSAWARE_API_KEY: ${ssm:/skillsaware/api-key~true}
+    # Optional: Webhook configuration
+    # SKILLSAWARE_WEBHOOK_URL: ${ssm:/skillsaware/webhook-url~true}
+    # SKILLSAWARE_WEBHOOK_SECRET: ${ssm:/skillsaware/webhook-secret~true}
+    # Optional: Branding
+    BRAND_LOGO_URL: /logo/skillsaware-logo.svg
+    BRAND_PRIMARY_COLOR: '#0B5FFF'
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+      Resource: arn:aws:s3:::${self:custom.s3Bucket}/*
+    - Effect: Allow
+      Action:
+        - ses:SendEmail
+        - ses:SendRawEmail
+      Resource: '*'
+    - Effect: Allow
+      Action:
+        - ssm:GetParameter
+        - ssm:GetParameters
+      Resource: arn:aws:ssm:${self:provider.region}:*:parameter/skillsaware/*
+    - Effect: Allow
+      Action:
+        - secretsmanager:GetSecretValue
+      Resource: arn:aws:secretsmanager:${self:provider.region}:*:secret:skillsaware/*
+    - Effect: Allow
+      Action:
+        - logs:CreateLogGroup
+        - logs:CreateLogStream
+        - logs:PutLogEvents
+      Resource: '*'
+
+custom:
+  s3Bucket: skillsaware-artifacts # Change to your bucket name
+
+functions:
+  api:
+    handler: index.handler
+    events:
+      - http:
+          path: /{proxy+}
+          method: ANY
+          cors: true
+      - http:
+          path: /
+          method: ANY
+          cors: true
+
+plugins:
+  # Note: For Next.js on Lambda, you'll need a Next.js serverless adapter
+  # Options include:
+  # - @sls-next/lambda-at-edge
+  # - serverless-nextjs-plugin
+  # See Next.js documentation for serverless deployment options
+
+# Before deploying:
+# 1. Store secrets in Parameter Store:
+#    aws ssm put-parameter --name /skillsaware/jwt-secret --value "your-secret" --type SecureString
+#    aws ssm put-parameter --name /skillsaware/api-key --value "your-api-key" --type SecureString
+#
+# 2. Create S3 bucket:
+#    aws s3 mb s3://skillsaware-artifacts
+#
+# 3. Verify SES email/domain in AWS SES Console
+#
+# 4. Update NEXT_PUBLIC_APP_URL with your actual domain
+#
+# 5. Deploy:
+#    npm run build
+#    serverless deploy
+
+

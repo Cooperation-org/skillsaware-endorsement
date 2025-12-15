@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { JwtPayload } from '@/types/jwt'
 
 interface ClaimantFormClientProps {
@@ -56,35 +57,29 @@ export default function ClaimantFormClient({ payload, token }: ClaimantFormClien
 
   if (endorserLink) {
     return (
-      <div style={{ padding: '40px', maxWidth: '800px', margin: '0 auto' }}>
-        <h1 style={{ color: '#0B5FFF', marginBottom: '20px' }}>
-          Endorser Link Generated
-        </h1>
-        <p style={{ marginBottom: '20px' }}>
+      <div
+        className='container'
+        style={{ padding: '40px', maxWidth: '800px', margin: '0 auto' }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+          <Image
+            src='/logo/skillsaware-logo.svg'
+            alt='SkillsAware Logo'
+            width={200}
+            height={60}
+            className='skillsaware-logo'
+            style={{ margin: '0 auto 20px' }}
+          />
+        </div>
+        <h1>Endorser Link Generated</h1>
+        <p className='mb-2'>
           Share this link with your endorser to complete the skill endorsement process.
         </p>
-        <div
-          style={{
-            backgroundColor: '#f5f5f5',
-            padding: '20px',
-            borderRadius: '5px',
-            marginBottom: '20px'
-          }}
-        >
+        <div className='card'>
           <p style={{ fontSize: '14px', wordBreak: 'break-all', marginBottom: '10px' }}>
             {endorserLink}
           </p>
-          <button
-            onClick={copyToClipboard}
-            style={{
-              backgroundColor: '#0B5FFF',
-              color: 'white',
-              padding: '10px 20px',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer'
-            }}
-          >
+          <button onClick={copyToClipboard} className='btn btn-primary'>
             Copy to Clipboard
           </button>
         </div>
@@ -93,18 +88,24 @@ export default function ClaimantFormClient({ payload, token }: ClaimantFormClien
   }
 
   return (
-    <div style={{ padding: '40px', maxWidth: '800px', margin: '0 auto' }}>
-      <h1 style={{ color: '#0B5FFF', marginBottom: '20px' }}>Skill Claim Form</h1>
+    <div
+      className='container'
+      style={{ padding: '40px', maxWidth: '800px', margin: '0 auto' }}
+    >
+      <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+        <Image
+          src='/logo/skillsaware-logo.svg'
+          alt='SkillsAware Logo'
+          width={200}
+          height={60}
+          className='skillsaware-logo'
+          style={{ margin: '0 auto 20px' }}
+        />
+      </div>
+      <h1>Skill Claim Form</h1>
 
       {/* Skill Information (Read-only) */}
-      <div
-        style={{
-          backgroundColor: '#f5f5f5',
-          padding: '20px',
-          borderRadius: '5px',
-          marginBottom: '30px'
-        }}
-      >
+      <div className='card mb-3'>
         <h2 style={{ fontSize: '18px', marginBottom: '10px' }}>Skill Information</h2>
         <p>
           <strong>Skill Name:</strong> {payload.skill_name}
@@ -118,18 +119,13 @@ export default function ClaimantFormClient({ payload, token }: ClaimantFormClien
         <p style={{ marginTop: '10px' }}>
           <strong>Description:</strong>
         </p>
-        <p style={{ fontSize: '14px', color: '#666' }}>{payload.skill_description}</p>
+        <p style={{ fontSize: '14px' }}>{payload.skill_description}</p>
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '20px' }}>
-          <label
-            htmlFor='narrative'
-            style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}
-          >
-            Your Skill Narrative *
-          </label>
+      <form onSubmit={handleSubmit} className='card'>
+        <div className='mb-2'>
+          <label htmlFor='narrative'>Your Skill Narrative *</label>
           <textarea
             id='narrative'
             value={narrative}
@@ -137,23 +133,11 @@ export default function ClaimantFormClient({ payload, token }: ClaimantFormClien
             required
             rows={6}
             placeholder='Describe how you have demonstrated this skill...'
-            style={{
-              width: '100%',
-              padding: '10px',
-              fontSize: '14px',
-              border: '1px solid #ccc',
-              borderRadius: '5px'
-            }}
           />
         </div>
 
-        <div style={{ marginBottom: '20px' }}>
-          <label
-            htmlFor='endorserName'
-            style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}
-          >
-            Endorser Name *
-          </label>
+        <div className='mb-2'>
+          <label htmlFor='endorserName'>Endorser Name *</label>
           <input
             type='text'
             id='endorserName'
@@ -161,23 +145,11 @@ export default function ClaimantFormClient({ payload, token }: ClaimantFormClien
             onChange={e => setEndorserName(e.target.value)}
             required
             placeholder='Name of person who will endorse your skill'
-            style={{
-              width: '100%',
-              padding: '10px',
-              fontSize: '14px',
-              border: '1px solid #ccc',
-              borderRadius: '5px'
-            }}
           />
         </div>
 
-        <div style={{ marginBottom: '20px' }}>
-          <label
-            htmlFor='endorserEmail'
-            style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}
-          >
-            Endorser Email *
-          </label>
+        <div className='mb-2'>
+          <label htmlFor='endorserEmail'>Endorser Email *</label>
           <input
             type='email'
             id='endorserEmail'
@@ -185,45 +157,23 @@ export default function ClaimantFormClient({ payload, token }: ClaimantFormClien
             onChange={e => setEndorserEmail(e.target.value)}
             required
             placeholder='email@example.com'
-            style={{
-              width: '100%',
-              padding: '10px',
-              fontSize: '14px',
-              border: '1px solid #ccc',
-              borderRadius: '5px'
-            }}
           />
         </div>
 
-        {error && (
-          <div
-            style={{
-              padding: '10px',
-              backgroundColor: '#ffebee',
-              color: '#c62828',
-              borderRadius: '5px',
-              marginBottom: '20px'
-            }}
-          >
-            {error}
-          </div>
-        )}
+        {error && <div className='alert alert-error'>{error}</div>}
 
-        <button
-          type='submit'
-          disabled={submitting}
-          style={{
-            backgroundColor: '#0B5FFF',
-            color: 'white',
-            padding: '12px 30px',
-            border: 'none',
-            borderRadius: '5px',
-            fontSize: '16px',
-            cursor: submitting ? 'not-allowed' : 'pointer',
-            opacity: submitting ? 0.6 : 1
-          }}
-        >
-          {submitting ? 'Generating...' : 'Generate Endorser Link'}
+        <button type='submit' disabled={submitting} className='btn btn-primary'>
+          {submitting ? (
+            <>
+              <span
+                className='loading'
+                style={{ width: '16px', height: '16px', borderWidth: '2px' }}
+              ></span>
+              Generating...
+            </>
+          ) : (
+            'Generate Endorser Link'
+          )}
         </button>
       </form>
     </div>
