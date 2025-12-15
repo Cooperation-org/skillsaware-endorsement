@@ -270,8 +270,18 @@ Tokens are issued via magic links and expire after 7 days (configurable).
                   url: {
                     type: 'string',
                     format: 'uri',
+                    description:
+                      'Download URL (S3 presigned URL if S3 is configured, otherwise API endpoint URL)',
                     example:
-                      'http://localhost:3000/api/v1/endorsements/123e4567-e89b-12d3-a456-426614174000/download/json?token=...'
+                      'https://s3.amazonaws.com/bucket/endorsements/123e4567-e89b-12d3-a456-426614174000/claim.obv3.json?X-Amz-Algorithm=...'
+                  },
+                  s3_url: {
+                    type: 'string',
+                    format: 'uri',
+                    description:
+                      'Direct S3 presigned URL (7 days expiration). Use this for long-term storage. Only present if S3 is configured.',
+                    example:
+                      'https://s3.amazonaws.com/bucket/endorsements/123e4567-e89b-12d3-a456-426614174000/claim.obv3.json?X-Amz-Algorithm=...'
                   },
                   filename: {
                     type: 'string',
@@ -284,6 +294,17 @@ Tokens are issued via magic links and expire after 7 days (configurable).
                   size_estimate: {
                     type: 'string',
                     example: '~2 KB'
+                  },
+                  source: {
+                    type: 'string',
+                    enum: ['s3', 'api'],
+                    description: 'Source of the download URL (s3 for S3 presigned URL, api for API endpoint)',
+                    example: 's3'
+                  },
+                  expires_in: {
+                    type: 'string',
+                    description: 'Expiration time for the URL',
+                    example: '7 days'
                   }
                 }
               },
@@ -293,8 +314,18 @@ Tokens are issued via magic links and expire after 7 days (configurable).
                   url: {
                     type: 'string',
                     format: 'uri',
+                    description:
+                      'Download URL (S3 presigned URL if S3 is configured, otherwise API endpoint URL)',
                     example:
-                      'http://localhost:3000/api/v1/endorsements/123e4567-e89b-12d3-a456-426614174000/download/pdf?token=...'
+                      'https://s3.amazonaws.com/bucket/endorsements/123e4567-e89b-12d3-a456-426614174000/claim.pdf?X-Amz-Algorithm=...'
+                  },
+                  s3_url: {
+                    type: 'string',
+                    format: 'uri',
+                    description:
+                      'Direct S3 presigned URL (7 days expiration). Use this for long-term storage. Only present if S3 is configured.',
+                    example:
+                      'https://s3.amazonaws.com/bucket/endorsements/123e4567-e89b-12d3-a456-426614174000/claim.pdf?X-Amz-Algorithm=...'
                   },
                   filename: {
                     type: 'string',
@@ -307,6 +338,17 @@ Tokens are issued via magic links and expire after 7 days (configurable).
                   size_estimate: {
                     type: 'string',
                     example: '~180 KB'
+                  },
+                  source: {
+                    type: 'string',
+                    enum: ['s3', 'api'],
+                    description: 'Source of the download URL (s3 for S3 presigned URL, api for API endpoint)',
+                    example: 's3'
+                  },
+                  expires_in: {
+                    type: 'string',
+                    description: 'Expiration time for the URL',
+                    example: '7 days'
                   },
                   note: {
                     type: 'string',
@@ -326,6 +368,27 @@ Tokens are issued via magic links and expire after 7 days (configurable).
             type: 'boolean',
             description: 'Whether JSON/PDF were uploaded to S3 (if configured)',
             example: true
+          },
+          s3_keys: {
+            type: 'object',
+            description:
+              'S3 object keys for the uploaded files. Only present if S3 upload succeeded.',
+            properties: {
+              json: {
+                type: 'string',
+                description: 'S3 key for the JSON credential file',
+                example: 'endorsements/123e4567-e89b-12d3-a456-426614174000/claim.obv3.json'
+              },
+              pdf: {
+                type: 'string',
+                description: 'S3 key for the PDF certificate file',
+                example: 'endorsements/123e4567-e89b-12d3-a456-426614174000/claim.pdf'
+              }
+            },
+            example: {
+              json: 'endorsements/123e4567-e89b-12d3-a456-426614174000/claim.obv3.json',
+              pdf: 'endorsements/123e4567-e89b-12d3-a456-426614174000/claim.pdf'
+            }
           },
           webhook_delivered: {
             type: 'boolean',
@@ -905,6 +968,188 @@ If any content or metadata has been modified after issuance, the verification wi
           },
           '401': {
             description: 'Missing or invalid API key',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error'
+                }
+              }
+            }
+          },
+          '500': {
+            description: 'Internal server error',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error'
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    '/api/v1/test-token': {
+      post: {
+        tags: ['Claims'],
+        summary: 'Generate test JWT token (Development only)',
+        description: `
+**Development Only** - This endpoint generates test JWT tokens for API testing.
+
+**How to use:**
+1. Call this endpoint to generate a test token
+2. Copy the \`token\` from the response
+3. In Swagger UI, click the "Authorize" button (top right)
+4. Paste the token into the "BearerAuth" field (without "Bearer " prefix)
+5. Click "Authorize" and "Close"
+6. Now you can test endpoints that require authentication
+
+**Example Request:**
+\`\`\`json
+{
+  "role": "claimant",
+  "claim_id": "123e4567-e89b-12d3-a456-426614174000",
+  "skill_code": "TEST001",
+  "skill_name": "Test Skill",
+  "claimant_name": "Test User",
+  "claimant_email": "test@example.com"
+}
+\`\`\`
+
+**For endorser tokens:**
+\`\`\`json
+{
+  "role": "endorser",
+  "claim_id": "123e4567-e89b-12d3-a456-426614174000",
+  "endorser_name": "Test Endorser",
+  "endorser_email": "endorser@example.com"
+}
+\`\`\`
+        `,
+        operationId: 'generateTestToken',
+        requestBody: {
+          required: false,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  role: {
+                    type: 'string',
+                    enum: ['claimant', 'endorser'],
+                    default: 'claimant',
+                    description: 'Token role'
+                  },
+                  claim_id: {
+                    type: 'string',
+                    format: 'uuid',
+                    description: 'Claim ID (will be generated if not provided)'
+                  },
+                  tenant_id: {
+                    type: 'string',
+                    default: 'skillsaware',
+                    description: 'Tenant ID'
+                  },
+                  skill_code: {
+                    type: 'string',
+                    default: 'TEST001',
+                    description: 'Skill code'
+                  },
+                  skill_name: {
+                    type: 'string',
+                    default: 'Test Skill',
+                    description: 'Skill name'
+                  },
+                  skill_description: {
+                    type: 'string',
+                    default: 'A test skill for API testing',
+                    description: 'Skill description'
+                  },
+                  claimant_name: {
+                    type: 'string',
+                    default: 'Test Claimant',
+                    description: 'Claimant name'
+                  },
+                  claimant_email: {
+                    type: 'string',
+                    default: 'test@example.com',
+                    description: 'Claimant email'
+                  },
+                  endorser_name: {
+                    type: 'string',
+                    default: 'Test Endorser',
+                    description: 'Endorser name (for endorser tokens)'
+                  },
+                  endorser_email: {
+                    type: 'string',
+                    default: 'endorser@example.com',
+                    description: 'Endorser email (for endorser tokens)'
+                  },
+                  claimant_narrative: {
+                    type: 'string',
+                    default: 'Test narrative',
+                    description: 'Claimant narrative (for endorser tokens)'
+                  }
+                }
+              }
+            }
+          }
+        },
+        responses: {
+          '200': {
+            description: 'Test token generated successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    token: {
+                      type: 'string',
+                      description: 'JWT token to use in Authorization header'
+                    },
+                    claim_id: {
+                      type: 'string',
+                      format: 'uuid',
+                      description: 'Claim ID associated with the token'
+                    },
+                    role: {
+                      type: 'string',
+                      enum: ['claimant', 'endorser']
+                    },
+                    message: {
+                      type: 'string',
+                      example: 'Use this token in the Authorization header: Bearer <token>'
+                    },
+                    usage: {
+                      type: 'object',
+                      properties: {
+                        endpoint: {
+                          type: 'string',
+                          description: 'Endpoint this token can be used with'
+                        },
+                        header: {
+                          type: 'string',
+                          description: 'Example Authorization header'
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          '400': {
+            description: 'Invalid request',
+            content: {
+              'application/json': {
+                schema: {
+                  $ref: '#/components/schemas/Error'
+                }
+              }
+            }
+          },
+          '403': {
+            description: 'Endpoint only available in development mode',
             content: {
               'application/json': {
                 schema: {

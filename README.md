@@ -619,6 +619,32 @@ skillsaware/
 
 See [TESTING.md](./TESTING.md) for comprehensive testing scenarios.
 
+### Production Workflow Test (with S3)
+
+For testing the complete production workflow with S3 integration, use the automated test script:
+
+```bash
+# Test against production
+node test-production-workflow.js https://your-production-domain.com
+
+# Test against localhost
+node test-production-workflow.js http://localhost:3000
+```
+
+**What it tests:**
+
+- ✅ Complete workflow: Create claim → Generate endorser link → Submit endorsement
+- ✅ S3 upload verification
+- ✅ Webhook delivery (if configured)
+- ✅ File downloads (JSON and PDF)
+
+**Prerequisites:**
+
+- Set environment variables: `SKILLSAWARE_API_KEY`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_BUCKET`, etc.
+- Server must be running
+
+See [TEST_PRODUCTION.md](./TEST_PRODUCTION.md) for detailed instructions.
+
 ### Quick Test (Complete Workflow)
 
 **Option 1: Using the Client Demo**

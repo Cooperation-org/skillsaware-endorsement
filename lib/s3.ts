@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import * as fs from 'fs/promises'
 import * as path from 'path'
@@ -92,4 +92,39 @@ export function generateS3Key(
 ): string {
   const extension = fileType === 'json' ? 'obv3.json' : 'pdf'
   return `${tenantId}/endorsements/${claimId}/claim.${extension}`
+}
+
+/**
+ * Generate a presigned GET URL for downloading an S3 object
+ * @param bucket S3 bucket name
+ * @param key S3 object key
+ * @param expiresIn Expiration time in seconds (default: 7 days)
+ * @returns Presigned URL for downloading the object
+ */
+export async function getPresignedGetUrl(
+  bucket: string,
+  key: string,
+  expiresIn = 604800 // 7 days default
+): Promise<string | null> {
+  // Development fallback: return null if no AWS credentials
+  if (!hasAwsCredentials && isDevelopment) {
+    return null
+  }
+
+  if (!s3Client) {
+    return null
+  }
+
+  try {
+    const command = new GetObjectCommand({
+      Bucket: bucket,
+      Key: key
+    })
+
+    const url = await getSignedUrl(s3Client, command, { expiresIn })
+    return url
+  } catch (error) {
+    console.warn(`[S3] Failed to generate presigned GET URL for ${key}:`, error)
+    return null
+  }
 }

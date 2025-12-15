@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { extractTokenFromRequest, verifyToken } from '@/lib/jwt'
 import { getTenantConfig } from '@/lib/config'
 import { generateAchievementCredential, generateEndorsementCredential } from '@/lib/obv3'
-import { getPresignedPutUrl, uploadToS3 } from '@/lib/s3'
+import { getPresignedPutUrl, getPresignedGetUrl, uploadToS3 } from '@/lib/s3'
 import { renderCredentialPdf } from '@/lib/pdf'
 import { sendWebhook } from '@/lib/webhook'
 import { SubmitEndorsementSchema } from '@/lib/validation'
@@ -15,7 +15,13 @@ export async function POST(request: NextRequest) {
     // Extract and verify JWT
     const token = extractTokenFromRequest(request)
     if (!token) {
-      return NextResponse.json({ error: 'Missing authentication token' }, { status: 401 })
+      return NextResponse.json(
+        {
+          error: 'Missing authentication token',
+          hint: 'Include a JWT token in the Authorization header: Authorization: Bearer <token>. You can generate a test token using POST /api/v1/test-token'
+        },
+        { status: 401 }
+      )
     }
 
     const payload = await verifyToken(token)
@@ -107,26 +113,35 @@ export async function POST(request: NextRequest) {
 
     // Upload both JSON and PDF to S3 if configured
     let s3Uploaded = false
+    let s3JsonUrl: string | null = null
+    let s3PdfUrl: string | null = null
+    
     try {
       if (tenant.s3_bucket && tenant.s3_prefix) {
         // Upload JSON to S3
-        const jsonUrl = await getPresignedPutUrl(
+        const jsonPutUrl = await getPresignedPutUrl(
           tenant.s3_bucket,
           jsonKey,
           'application/json'
         )
-        await uploadToS3(jsonUrl, jsonContent, 'application/json')
+        await uploadToS3(jsonPutUrl, jsonContent, 'application/json')
         console.log('[Submit] JSON uploaded to S3:', jsonKey)
+
+        // Generate presigned GET URL for JSON (7 days expiration)
+        s3JsonUrl = await getPresignedGetUrl(tenant.s3_bucket, jsonKey, 604800) // 7 days
 
         // Upload PDF to S3 if generated
         if (pdfBuffer) {
-          const pdfUrl = await getPresignedPutUrl(
+          const pdfPutUrl = await getPresignedPutUrl(
             tenant.s3_bucket,
             pdfKey,
             'application/pdf'
           )
-          await uploadToS3(pdfUrl, pdfBuffer, 'application/pdf')
+          await uploadToS3(pdfPutUrl, pdfBuffer, 'application/pdf')
           console.log('[Submit] PDF uploaded to S3:', pdfKey)
+
+          // Generate presigned GET URL for PDF (7 days expiration)
+          s3PdfUrl = await getPresignedGetUrl(tenant.s3_bucket, pdfKey, 604800) // 7 days
         }
 
         s3Uploaded = true
@@ -136,30 +151,38 @@ export async function POST(request: NextRequest) {
       // Continue without S3 - files will be available via download endpoints
     }
 
-    // Send webhook only if S3 upload succeeded
+    // Send webhook only if S3 upload succeeded (non-blocking - fire and forget)
+    // Don't await - let it run in background so it doesn't block the HTTP response
     let webhookResult = { success: false }
     if (s3Uploaded && tenant.webhook_url && tenant.webhook_secret) {
-      try {
-        webhookResult = await sendWebhook(
-          tenant.webhook_url,
-          {
-            event: 'claim.endorsed',
-            claim_id: payload.claim_id,
-            skill_code: payload.skill_code,
-            skill_name: payload.skill_name,
-            claimant_name: payload.claimant_name!,
-            endorser_name: payload.endorser_name!,
-            artifacts: [
-              { type: 'obv3-json', s3_key: jsonKey },
-              { type: 'pdf', s3_key: pdfKey }
-            ],
-            timestamp: new Date().toISOString()
-          },
-          tenant.webhook_secret
-        )
-      } catch (webhookError) {
-        console.warn('Webhook delivery failed:', webhookError)
-      }
+      // Fire and forget - don't block the response
+      sendWebhook(
+        tenant.webhook_url,
+        {
+          event: 'claim.endorsed',
+          claim_id: payload.claim_id,
+          skill_code: payload.skill_code,
+          skill_name: payload.skill_name,
+          claimant_name: payload.claimant_name!,
+          endorser_name: payload.endorser_name!,
+          artifacts: [
+            { type: 'obv3-json', s3_key: jsonKey },
+            { type: 'pdf', s3_key: pdfKey }
+          ],
+          timestamp: new Date().toISOString()
+        },
+        tenant.webhook_secret
+      )
+        .then(result => {
+          webhookResult = result
+          if (result.success) {
+            console.log('[Submit] Webhook delivered successfully')
+          }
+        })
+        .catch(error => {
+          console.warn('[Submit] Webhook delivery error:', error)
+        })
+      // Note: webhook_delivered will be false initially, but webhook will retry in background
     }
 
     // Build the app URL for download links
@@ -177,6 +200,10 @@ export async function POST(request: NextRequest) {
       downloadParams.append('evidence_urls', JSON.stringify(data.evidence_urls))
     }
 
+    // Build download URLs - prefer S3 URLs if available, fallback to token-based URLs
+    const jsonDownloadUrl = s3JsonUrl || `${appUrl}/api/v1/endorsements/${payload.claim_id}/download/json?${downloadParams.toString()}`
+    const pdfDownloadUrl = s3PdfUrl || `${appUrl}/api/v1/endorsements/${payload.claim_id}/download/pdf?${downloadParams.toString()}`
+
     return NextResponse.json({
       success: true,
       claim_id: payload.claim_id,
@@ -184,24 +211,38 @@ export async function POST(request: NextRequest) {
         'Endorsement submitted successfully. Download your credentials using the links below.',
       downloads: {
         json: {
-          url: `${appUrl}/api/v1/endorsements/${payload.claim_id}/download/json?${downloadParams.toString()}`,
+          url: jsonDownloadUrl,
+          s3_url: s3JsonUrl || undefined, // Include S3 URL if available
           filename: `${payload.skill_code}-${payload.claim_id}.obv3.json`,
           ready: true, // JSON is immediately available
-          size_estimate: '~2 KB'
+          size_estimate: '~2 KB',
+          expires_in: s3JsonUrl ? '7 days' : '7 days (JWT expiry)',
+          source: s3JsonUrl ? 's3' : 'api'
         },
         pdf: {
-          url: `${appUrl}/api/v1/endorsements/${payload.claim_id}/download/pdf?${downloadParams.toString()}`,
+          url: pdfDownloadUrl,
+          s3_url: s3PdfUrl || undefined, // Include S3 URL if available
           filename: `${payload.skill_code}-${payload.claim_id}.pdf`,
           ready: pdfBuffer !== null, // PDF is ready if generated, otherwise on-demand
           size_estimate: '~180 KB',
+          expires_in: s3PdfUrl ? '7 days' : '7 days (JWT expiry)',
+          source: s3PdfUrl ? 's3' : 'api',
           note: pdfBuffer
-            ? 'PDF is ready for download'
+            ? s3PdfUrl
+              ? 'PDF is ready for download from S3'
+              : 'PDF is ready for download'
             : 'PDF will be generated when you access this URL (may take 5-10 seconds)'
         }
       },
       // Optional: include base64 JSON for immediate access if needed
       json_base64: jsonBase64,
       s3_uploaded: s3Uploaded,
+      s3_keys: s3Uploaded
+        ? {
+            json: jsonKey,
+            pdf: pdfKey
+          }
+        : undefined,
       webhook_delivered: webhookResult.success
     })
   } catch (error) {

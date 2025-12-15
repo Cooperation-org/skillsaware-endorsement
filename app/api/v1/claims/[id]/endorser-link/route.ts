@@ -16,7 +16,13 @@ export async function POST(
     // Extract and verify JWT
     const token = extractTokenFromRequest(request)
     if (!token) {
-      return NextResponse.json({ error: 'Missing authentication token' }, { status: 401 })
+      return NextResponse.json(
+        {
+          error: 'Missing authentication token',
+          hint: 'Include a JWT token in the Authorization header: Authorization: Bearer <token>. You can generate a test token using POST /api/v1/test-token'
+        },
+        { status: 401 }
+      )
     }
 
     const payload = await verifyToken(token)

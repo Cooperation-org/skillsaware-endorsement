@@ -21,6 +21,10 @@ export async function createToken(
 
 export async function verifyToken(token: string): Promise<JwtPayload> {
   try {
+    if (!token || token.trim() === '') {
+      throw new Error('TOKEN_INVALID: Token is empty or missing')
+    }
+    
     const { payload } = await jwtVerify(token, JWT_SECRET)
     return payload as unknown as JwtPayload
   } catch (error) {
@@ -28,8 +32,11 @@ export async function verifyToken(token: string): Promise<JwtPayload> {
       if (error.message.includes('expired')) {
         throw new Error('TOKEN_EXPIRED')
       }
+      if (error.message.includes('signature') || error.message.includes('invalid')) {
+        throw new Error('TOKEN_INVALID: Token signature verification failed. Make sure you are using a valid token from a claim creation or endorser link.')
+      }
     }
-    throw new Error('TOKEN_INVALID')
+    throw new Error('TOKEN_INVALID: Token verification failed. Ensure you have a valid JWT token from the API.')
   }
 }
 
