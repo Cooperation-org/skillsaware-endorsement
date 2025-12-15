@@ -1,12 +1,9 @@
 'use client'
 
-import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { swaggerSpec } from '@/lib/swagger'
 import 'swagger-ui-react/swagger-ui.css'
-
-// Dynamically import SwaggerUI to avoid SSR issues
-const SwaggerUI = dynamic(() => import('swagger-ui-react'), { ssr: false })
+import { SwaggerUIWrapper } from './swagger-wrapper'
 
 export default function ApiDocsPage() {
   return (
@@ -218,7 +215,7 @@ export default function ApiDocsPage() {
         </div>
       </div>
 
-      <SwaggerUI spec={swaggerSpec} />
+      <SwaggerUIWrapper spec={swaggerSpec} />
     </div>
   )
 }
