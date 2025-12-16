@@ -153,9 +153,11 @@ export async function POST(request: NextRequest) {
 
     // Send webhook only if S3 upload succeeded (non-blocking - fire and forget)
     // Don't await - let it run in background so it doesn't block the HTTP response
-    let webhookResult = { success: false }
+    const webhookResult = { success: false } // Always false initially since webhook is async
     if (s3Uploaded && tenant.webhook_url && tenant.webhook_secret) {
       // Fire and forget - don't block the response
+      // Webhook will retry in background if it fails (this is expected behavior)
+      console.log(`[Submit] Sending webhook to ${tenant.webhook_url} (non-blocking, will retry in background if needed)`)
       sendWebhook(
         tenant.webhook_url,
         {
@@ -165,6 +167,7 @@ export async function POST(request: NextRequest) {
           skill_name: payload.skill_name,
           claimant_name: payload.claimant_name!,
           endorser_name: payload.endorser_name!,
+          tenant_id: payload.tenant, // Include tenant ID for webhook routing
           artifacts: [
             { type: 'obv3-json', s3_key: jsonKey },
             { type: 'pdf', s3_key: pdfKey }
@@ -174,15 +177,19 @@ export async function POST(request: NextRequest) {
         tenant.webhook_secret
       )
         .then(result => {
-          webhookResult = result
           if (result.success) {
-            console.log('[Submit] Webhook delivered successfully')
+            console.log('[Submit] ✅ Webhook delivered successfully')
+          } else {
+            console.log(`[Submit] ⚠️  Webhook delivery failed (will retry in background): ${result.lastError || 'Unknown error'}`)
           }
         })
         .catch(error => {
-          console.warn('[Submit] Webhook delivery error:', error)
+          console.warn('[Submit] Webhook delivery error (will retry in background):', error)
         })
       // Note: webhook_delivered will be false initially, but webhook will retry in background
+      // This is expected behavior - webhook retries don't block the API response
+    } else if (s3Uploaded && !tenant.webhook_url) {
+      console.log('[Submit] ℹ️  Webhook not configured (SKILLSAWARE_WEBHOOK_URL not set)')
     }
 
     // Build the app URL for download links

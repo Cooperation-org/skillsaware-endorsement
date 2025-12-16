@@ -87,13 +87,16 @@ See [CHANGES_SUMMARY.md](./CHANGES_SUMMARY.md) for detailed technical changes.
    # IAM user/role needs ses:SendEmail permission
    ```
 
-   **Optional - Webhook notifications:**
+   **Optional - Webhook notifications (for SkillsAware integration):**
 
    ```bash
-   # Webhook URL and secret for HMAC signing
-   SKILLSAWARE_WEBHOOK_URL=https://your-webhook-endpoint.com/webhook
-   SKILLSAWARE_WEBHOOK_SECRET=your-webhook-secret
+   # Webhook URL pointing to SkillsAware main system endpoint
+   # This endpoint will receive notifications when endorsements are completed
+   SKILLSAWARE_WEBHOOK_URL=https://skillsaware-main-system.com/api/webhooks/endorsements
+   SKILLSAWARE_WEBHOOK_SECRET=your-webhook-secret-for-hmac-signing
    ```
+
+   **Note:** See [Webhook Endpoint](#5-webhook-endpoint-skillsaware-integration) section below for implementation guide. An example webhook endpoint is available at `app/api/webhook/route.ts` for reference.
 
    **Optional - Branding:**
 
@@ -361,10 +364,12 @@ The email is sent asynchronously and failures are logged but don't break the req
    - Files are immediately available for download
 
 4. **Webhook Notification** (if S3 upload succeeds):
-   - HMAC-signed webhook sent to configured endpoint
+   - HMAC-signed webhook sent to SkillsAware main system
    - Includes claim details and S3 keys for artifacts
+   - Non-blocking (runs in background, doesn't delay API response)
+   - Automatic retries if delivery fails
 
-5. **Response**: Returns download URLs and base64 data for immediate access
+5. **Response**: Returns download URLs (S3 presigned URLs if available), base64 data, and S3 keys
 
 **Download Methods:**
 
@@ -392,7 +397,88 @@ GET /api/v1/endorsements/abc-123/download/pdf?token=eyJhbGc...
 - Works on all devices (PC, mobile, tablets)
 - Files valid for 7 days (or JWT expiry setting)
 
-### 5. Test Webhook
+### 5. Webhook Endpoint (SkillsAware Integration)
+
+---
+
+# ⚠️ **IMPORTANT: WEBHOOK IMPLEMENTATION REQUIRED** ⚠️
+
+## 🚨 **THIS ENDPOINT IS FOR TESTING/DEMO ONLY - NOT FOR PRODUCTION** 🚨
+
+The webhook endpoint at `POST /api/webhook` in this codebase is **ONLY for testing and demonstration purposes**.
+
+**SkillsAware developers MUST implement the webhook endpoint in the MAIN SKILLSAWARE WEBSITE.**
+
+**DO NOT use this endpoint in production!**
+
+---
+
+**Endpoint:** `POST /api/webhook`
+
+This endpoint receives notifications when endorsements are completed. **This is an example/test implementation** - SkillsAware developers **MUST** implement a similar endpoint in the main SkillsAware system.
+
+**When it's called:**
+
+- Automatically after successful S3 upload
+- Non-blocking (runs in background)
+- Retries automatically if delivery fails
+
+**Request Headers:**
+
+- `Content-Type: application/json`
+- `X-Signature: sha256=<hmac-signature>` (HMAC-SHA256 signature for verification)
+- `X-Tenant: skillsaware`
+- `X-Event-Id: <unique-event-id>`
+
+**Request Body:**
+
+```json
+{
+  "event": "claim.endorsed",
+  "claim_id": "815dbda6-de57-4a2e-8077-cf2e9752dc56",
+  "skill_code": "TEST-PROD-1765829489489",
+  "skill_name": "Production Test Skill",
+  "claimant_name": "Test Claimant",
+  "endorser_name": "Test Endorser",
+  "artifacts": [
+    {
+      "type": "obv3-json",
+      "s3_key": "endorsements/815dbda6-de57-4a2e-8077-cf2e9752dc56/claim.obv3.json"
+    },
+    {
+      "type": "pdf",
+      "s3_key": "endorsements/815dbda6-de57-4a2e-8077-cf2e9752dc56/claim.pdf"
+    }
+  ],
+  "timestamp": "2025-01-19T12:00:00.000Z"
+}
+```
+
+**Response:**
+
+- Return `200 OK` with `{"success": true}` to indicate successful processing
+- Any other status code will trigger automatic retries
+
+**Security:**
+
+- Always verify the `X-Signature` header using HMAC-SHA256
+- Use `SKILLSAWARE_WEBHOOK_SECRET` to verify signatures
+- See `app/api/webhook/route.ts` for example implementation
+
+**⚠️ SkillsAware Implementation Guide (MANDATORY FOR PRODUCTION):**
+
+1. **✅ Create webhook endpoint** in SkillsAware main system (similar to `app/api/webhook/route.ts`)
+2. **✅ Verify HMAC signature** before processing
+3. **✅ Store endorsement record** in SkillsAware database
+4. **✅ Update SKILLSAWARE_WEBHOOK_URL** to point to SkillsAware main system endpoint
+5. **✅ Test webhook delivery** using `POST /api/v1/webhook/test`
+6. **✅ Remove or disable** the test endpoint (`/api/webhook`) in production
+
+**🚨 CRITICAL REMINDER:** The endpoint at `app/api/webhook/route.ts` is **FOR TESTING/DEMO ONLY** - do not use it in production!
+
+See `WEBHOOK_USAGE.md` for detailed implementation guide and examples.
+
+### 6. Test Webhook
 
 **Endpoint:** `POST /api/v1/webhook/test`
 

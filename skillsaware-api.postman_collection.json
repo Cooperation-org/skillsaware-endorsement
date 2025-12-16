@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "SkillsAware OBv3 Endorsement API",
-    "description": "Complete API collection for SkillsAware endorsement workflow with OBv3 credential generation",
+    "description": "Complete API collection for SkillsAware endorsement workflow with OBv3 credential generation, S3 integration, and webhook notifications",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "12345678"
   },
@@ -41,7 +41,7 @@
           },
           {
             "key": "x-api-key",
-            "value": "8f33e3a4fd9322e89dc15300f603d91654d7eb38802f0cef0440ca292bf2c3f5",
+            "value": "{{api_key}}",
             "type": "text"
           }
         ],
@@ -114,7 +114,7 @@
           "host": ["{{base_url}}"],
           "path": ["api", "v1", "claims", "{{claim_id}}", "endorser-link"]
         },
-        "description": "Generates endorser magic link after claimant submits their narrative.\n\n**Required Headers:**\n- `Authorization: Bearer <claimant_token>`\n\n**Prerequisites:**\n- Must run \"1. Create Claim\" first to get claimant_token\n\n**Response:**\n- `endorser_link`: Magic link JWT for endorser to submit endorsement\n- `expires_at`: Token expiration timestamp"
+        "description": "Generates endorser magic link after claimant submits their narrative.\n\n**Required Headers:**\n- `Authorization: Bearer <claimant_token>`\n\n**Prerequisites:**\n- Must run \"1. Create Claim\" first to get claimant_token\n\n**Response:**\n- `endorser_link`: Magic link JWT for endorser to submit endorsement\n- `expires_at`: Token expiration timestamp\n\n**Email Notification:**\nIf AWS SES is configured, an email is automatically sent to the endorser with the link."
       },
       "response": []
     },
@@ -125,14 +125,38 @@
           "listen": "test",
           "script": {
             "exec": [
-              "// Verify endorsement submission",
+              "// Verify endorsement submission and save download URLs",
               "if (pm.response.code === 200) {",
               "    const response = pm.response.json();",
-              "    console.log('Endorsement submitted successfully!');",
+              "    console.log('✅ Endorsement submitted successfully!');",
               "    console.log('Claim ID:', response.claim_id);",
-              "    console.log('OBv3 JSON artifact:', response.artifacts.obv3_json);",
-              "    console.log('PDF artifact:', response.artifacts.pdf);",
-              "    console.log('Webhook delivered:', response.webhook_delivered);",
+              "    console.log('S3 Uploaded:', response.s3_uploaded);",
+              "    console.log('Webhook Delivered:', response.webhook_delivered);",
+              "    ",
+              "    // Save download URLs",
+              "    if (response.downloads) {",
+              "        if (response.downloads.json) {",
+              "            pm.environment.set('json_download_url', response.downloads.json.url);",
+              "            if (response.downloads.json.s3_url) {",
+              "                pm.environment.set('json_s3_url', response.downloads.json.s3_url);",
+              "                console.log('✅ S3 JSON URL available:', response.downloads.json.s3_url.substring(0, 80) + '...');",
+              "            }",
+              "        }",
+              "        if (response.downloads.pdf) {",
+              "            pm.environment.set('pdf_download_url', response.downloads.pdf.url);",
+              "            if (response.downloads.pdf.s3_url) {",
+              "                pm.environment.set('pdf_s3_url', response.downloads.pdf.s3_url);",
+              "                console.log('✅ S3 PDF URL available:', response.downloads.pdf.s3_url.substring(0, 80) + '...');",
+              "            }",
+              "        }",
+              "    }",
+              "    ",
+              "    // Save S3 keys if available",
+              "    if (response.s3_keys) {",
+              "        pm.environment.set('s3_json_key', response.s3_keys.json);",
+              "        pm.environment.set('s3_pdf_key', response.s3_keys.pdf);",
+              "        console.log('S3 Keys:', response.s3_keys);",
+              "    }",
               "}"
             ],
             "type": "text/javascript"
@@ -166,12 +190,106 @@
           "host": ["{{base_url}}"],
           "path": ["api", "v1", "endorsements", "submit"]
         },
-        "description": "Submits the endorsement and generates OBv3 credentials.\n\n**Required Headers:**\n- `Authorization: Bearer <endorser_token>`\n\n**Prerequisites:**\n- Must run \"2. Generate Endorser Link\" first to get endorser_token\n\n**Process:**\n1. Validates endorser JWT\n2. Generates OBv3 AchievementCredential JSON-LD\n3. Generates OBv3 EndorsementCredential JSON-LD\n4. Renders professional PDF certificate\n5. Uploads both artifacts to S3\n6. Sends HMAC-signed webhook to SkillsAware\n\n**Response:**\n- `success`: Boolean indicating success\n- `claim_id`: The claim identifier\n- `artifacts.obv3_json`: S3 key for JSON-LD credential\n- `artifacts.pdf`: S3 key for PDF certificate\n- `webhook_delivered`: Boolean indicating webhook delivery status"
+        "description": "Submits the endorsement and generates OBv3 credentials.\n\n**Required Headers:**\n- `Authorization: Bearer <endorser_token>`\n\n**Prerequisites:**\n- Must run \"2. Generate Endorser Link\" first to get endorser_token\n\n**Process:**\n1. Validates endorser JWT\n2. Generates OBv3 AchievementCredential JSON-LD\n3. Generates OBv3 EndorsementCredential JSON-LD\n4. Renders professional PDF certificate\n5. Uploads both artifacts to S3 (if configured)\n6. Sends HMAC-signed webhook to SkillsAware (if S3 upload succeeds)\n\n**Response:**\n- `success`: Boolean indicating success\n- `claim_id`: The claim identifier\n- `downloads.json.url`: Download URL (S3 presigned URL if available, otherwise API endpoint)\n- `downloads.json.s3_url`: Direct S3 presigned URL (7 days expiration) - only if S3 configured\n- `downloads.pdf.url`: Download URL (S3 presigned URL if available, otherwise API endpoint)\n- `downloads.pdf.s3_url`: Direct S3 presigned URL (7 days expiration) - only if S3 configured\n- `s3_uploaded`: Boolean indicating if files were uploaded to S3\n- `s3_keys`: Object with S3 keys (json, pdf) - only if S3 upload succeeded\n- `webhook_delivered`: Boolean indicating webhook delivery status\n- `json_base64`: Base64-encoded OBv3 JSON for immediate access\n\n**Note:** This endpoint may take 30-60 seconds (PDF generation + S3 upload)"
       },
       "response": []
     },
     {
-      "name": "4. Verify PDF Certificate",
+      "name": "4. Download JSON Credential",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{endorser_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/endorsements/{{claim_id}}/download/json?token={{endorser_token}}&endorsement_text=I+have+had+the+pleasure+of+working+directly+with+Jane+Doe&bona_fides=Senior+Technical+Lead+at+TechCorp&signature=John+Manager&evidence_urls=[\"https://github.com/example/microservices-project\"]",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "endorsements", "{{claim_id}}", "download", "json"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{endorser_token}}",
+              "description": "JWT token from endorser"
+            },
+            {
+              "key": "endorsement_text",
+              "value": "I have had the pleasure of working directly with Jane Doe",
+              "description": "Endorsement text"
+            },
+            {
+              "key": "bona_fides",
+              "value": "Senior Technical Lead at TechCorp",
+              "description": "Endorser credentials"
+            },
+            {
+              "key": "signature",
+              "value": "John Manager",
+              "description": "Digital signature"
+            },
+            {
+              "key": "evidence_urls",
+              "value": "[\"https://github.com/example/microservices-project\"]",
+              "description": "JSON array of evidence URLs"
+            }
+          ]
+        },
+        "description": "Downloads the OBv3 JSON credential file.\n\n**Required Headers:**\n- `Authorization: Bearer <endorser_token>` (optional, can also use token query param)\n\n**Query Parameters:**\n- `token`: JWT token from endorser\n- `endorsement_text`: Endorsement statement\n- `bona_fides`: Endorser credentials\n- `signature`: Digital signature\n- `evidence_urls`: JSON array of evidence URLs (optional)\n\n**Response:**\n- Downloads the OBv3 JSON-LD credential file\n- Content-Type: `application/json`\n- Filename: `{skill_code}-{claim_id}.obv3.json`\n\n**Alternative:** Use the S3 URL from the submit response for direct S3 access (7 days expiration)"
+      },
+      "response": []
+    },
+    {
+      "name": "5. Download PDF Certificate",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{endorser_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v1/endorsements/{{claim_id}}/download/pdf?token={{endorser_token}}&endorsement_text=I+have+had+the+pleasure+of+working+directly+with+Jane+Doe&bona_fides=Senior+Technical+Lead+at+TechCorp&signature=John+Manager&evidence_urls=[\"https://github.com/example/microservices-project\"]",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "endorsements", "{{claim_id}}", "download", "pdf"],
+          "query": [
+            {
+              "key": "token",
+              "value": "{{endorser_token}}",
+              "description": "JWT token from endorser"
+            },
+            {
+              "key": "endorsement_text",
+              "value": "I have had the pleasure of working directly with Jane Doe",
+              "description": "Endorsement text"
+            },
+            {
+              "key": "bona_fides",
+              "value": "Senior Technical Lead at TechCorp",
+              "description": "Endorser credentials"
+            },
+            {
+              "key": "signature",
+              "value": "John Manager",
+              "description": "Digital signature"
+            },
+            {
+              "key": "evidence_urls",
+              "value": "[\"https://github.com/example/microservices-project\"]",
+              "description": "JSON array of evidence URLs"
+            }
+          ]
+        },
+        "description": "Downloads the PDF certificate file.\n\n**Required Headers:**\n- `Authorization: Bearer <endorser_token>` (optional, can also use token query param)\n\n**Query Parameters:**\n- `token`: JWT token from endorser\n- `endorsement_text`: Endorsement statement\n- `bona_fides`: Endorser credentials\n- `signature`: Digital signature\n- `evidence_urls`: JSON array of evidence URLs (optional)\n\n**Response:**\n- Downloads the PDF certificate file\n- Content-Type: `application/pdf`\n- Filename: `{skill_code}-{claim_id}.pdf`\n- Size: ~180 KB\n\n**Note:** PDF may take 5-10 seconds to generate if not already cached\n\n**Alternative:** Use the S3 URL from the submit response for direct S3 access (7 days expiration)"
+      },
+      "response": []
+    },
+    {
+      "name": "6. Verify PDF Certificate",
       "request": {
         "method": "POST",
         "header": [],
@@ -191,7 +309,82 @@
           "host": ["{{base_url}}"],
           "path": ["api", "v1", "verify-pdf"]
         },
-        "description": "Verifies PDF certificate authenticity and detects tampering using multi-layer cryptographic verification.\n\n**Multi-Layer Verification Process:**\n1. **Metadata Integrity** - Verifies HMAC-SHA256 signature and content hash stored in PDF metadata\n2. **Creator Validation** - Ensures the PDF was created by SkillsAware and not modified with external editors\n3. **Content Verification** - Extracts and validates actual PDF text against stored credential data\n4. **Context-Aware Matching** - Checks that all fields appear in their expected locations\n\n**Fields Verified (10 total):**\n• Skill Name\n• Skill Code\n• Skill Description\n• Claimant Name\n• Claimant Narrative\n• Endorser Name\n• Endorser Credentials (Bona Fides)\n• Endorsement Statement\n• Digital Signature\n• Evidence URLs\n\n**Request Format:**\n- Content-Type: `multipart/form-data`\n- Field: `pdf` (File upload)\n\n**Response Format (Tampering Detected):**\n```json\n{\n  \"basicVerification\": {\n    \"valid\": false,\n    \"message\": \"⚠️ CONTENT TAMPERING DETECTED - Found 2 field(s) that have been modified\",\n    \"tamperDetails\": {\n      \"detected\": true,\n      \"contentModified\": true,\n      \"changes\": [\n        {\n          \"field\": \"Skill Code\",\n          \"original\": \"ICTDSN403\",\n          \"status\": \"NOT FOUND IN EXPECTED LOCATION\"\n        },\n        {\n          \"field\": \"Digital Signature\",\n          \"original\": \"John Manager\",\n          \"current\": \"John Manager2\",\n          \"status\": \"SIGNATURE MODIFIED OR REMOVED\"\n        }\n      ],\n      \"warning\": \"⚠️ CONTENT TAMPERING DETECTED - The PDF text has been modified...\"\n    }\n  },\n  \"metadata\": {\n    \"title\": \"Skill Endorsement Certificate - Design and Develop Complex ICT Solutions\",\n    \"author\": \"SkillsAware - What's Cookin' Inc.\",\n    \"creator\": \"SkillsAware OBv3 Endorsement System\",\n    \"customFields\": {\n      \"SkillsAware-Signature\": \"a1b2c3d4...\",\n      \"SkillsAware-Timestamp\": \"2025-10-24T...\",\n      \"SkillsAware-ClaimID\": \"91ff17dc-2b54-45dc-9079-3d439acdad47\",\n      \"SkillsAware-Version\": \"v1.0\",\n      \"SkillsAware-ContentHash\": \"sha256hash...\"\n    }\n  }\n}\n```\n\n**Response Format (Valid Certificate):**\n```json\n{\n  \"basicVerification\": {\n    \"valid\": true,\n    \"message\": \"✅ PDF VERIFIED - Cryptographic signature, metadata, and PDF content are authentic and unmodified\",\n    \"tamperDetails\": {\n      \"detected\": false,\n      \"verified\": true\n    }\n  },\n  \"metadata\": { ... }\n}\n```\n\n**Verification Outcomes:**\n- ✅ **Valid** - All checks passed, certificate is authentic\n- ⚠️ **Metadata Tampered** - Cryptographic signature or hash invalid\n- ⚠️ **Content Tampered** - PDF text has been modified (shows which fields)\n- ❌ **Invalid Creator** - PDF was not created by SkillsAware\n- ❌ **No Metadata** - Missing required verification metadata"
+        "description": "Verifies PDF certificate authenticity and detects tampering using multi-layer cryptographic verification.\n\n**Multi-Layer Verification Process:**\n1. **Metadata Integrity** - Verifies HMAC-SHA256 signature and content hash stored in PDF metadata\n2. **Creator Validation** - Ensures the PDF was created by SkillsAware and not modified with external editors\n3. **Content Verification** - Extracts and validates actual PDF text against stored credential data\n4. **Context-Aware Matching** - Checks that all fields appear in their expected locations\n\n**Fields Verified (10 total):**\n• Skill Name\n• Skill Code\n• Skill Description\n• Claimant Name\n• Claimant Narrative\n• Endorser Name\n• Endorser Credentials (Bona Fides)\n• Endorsement Statement\n• Digital Signature\n• Evidence URLs\n\n**Request Format:**\n- Content-Type: `multipart/form-data`\n- Field: `pdf` (File upload)\n\n**Response Format (Valid Certificate):**\n```json\n{\n  \"basicVerification\": {\n    \"valid\": true,\n    \"message\": \"✅ PDF VERIFIED - Cryptographic signature, metadata, and PDF content are authentic and unmodified\"\n  },\n  \"metadata\": { ... }\n}\n```\n\n**Response Format (Tampering Detected):**\n```json\n{\n  \"basicVerification\": {\n    \"valid\": false,\n    \"message\": \"⚠️ CONTENT TAMPERING DETECTED\",\n    \"tamperDetails\": {\n      \"detected\": true,\n      \"changes\": [\n        {\n          \"field\": \"Skill Code\",\n          \"status\": \"NOT FOUND IN EXPECTED LOCATION\"\n        }\n      ]\n    }\n  }\n}\n```"
+      },
+      "response": []
+    },
+    {
+      "name": "7. Test Token Generation",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"role\": \"endorser\",\n  \"claim_id\": \"{{claim_id}}\",\n  \"skill_code\": \"ICTDSN403\",\n  \"skill_name\": \"Design and Develop Complex ICT Solutions\",\n  \"claimant_name\": \"Jane Doe\",\n  \"endorser_name\": \"John Manager\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/test-token",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "test-token"]
+        },
+        "description": "Generates test JWT tokens for API testing. **Only available in development mode.**\n\n**Request Body:**\n- `role`: \"claimant\" or \"endorser\"\n- `claim_id`: Optional claim ID (generates new one if not provided)\n- `skill_code`, `skill_name`, etc.: Optional skill details\n\n**Response:**\n- `token`: JWT token for testing\n- `claim_id`: Claim ID used\n- `role`: Token role\n- `usage`: Example usage instructions\n\n**Note:** This endpoint is disabled in production for security reasons."
+      },
+      "response": []
+    },
+    {
+      "name": "8. Test Webhook Delivery",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-api-key",
+            "value": "{{api_key}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/webhook/test",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "webhook", "test"]
+        },
+        "description": "Tests webhook delivery to the configured webhook URL.\n\n**Required Headers:**\n- `x-api-key`: API key for tenant authentication\n\n**Response:**\n- `success`: Boolean indicating if webhook was delivered\n- `webhook_url`: The webhook URL that was tested\n- `error`: Error message if delivery failed\n\n**Note:** This sends a test webhook payload to verify the webhook endpoint is working correctly."
+      },
+      "response": []
+    },
+    {
+      "name": "9. Get OpenAPI Specification",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/openapi",
+          "host": ["{{base_url}}"],
+          "path": ["api", "openapi"]
+        },
+        "description": "Returns the OpenAPI 3.0 specification (JSON) for the API.\n\n**Response:**\n- OpenAPI 3.0 JSON specification\n- Can be imported into Postman, Insomnia, or other API clients\n\n**Alternative:** Visit `{{base_url}}/api-docs` for interactive Swagger UI documentation"
       },
       "response": []
     },
@@ -239,7 +432,7 @@
           },
           {
             "key": "x-api-key",
-            "value": "8f33e3a4fd9322e89dc15300f603d91654d7eb38802f0cef0440ca292bf2c3f5",
+            "value": "{{api_key}}",
             "type": "text"
           }
         ],
@@ -316,6 +509,36 @@
     },
     {
       "key": "endorser_link",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "json_download_url",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "pdf_download_url",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "json_s3_url",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "pdf_s3_url",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "s3_json_key",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "s3_pdf_key",
       "value": "",
       "type": "string"
     }

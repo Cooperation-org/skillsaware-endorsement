@@ -85,12 +85,15 @@ export async function sendWebhook(
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
 
+      // Extract tenant_id from payload if available, otherwise default to 'skillsaware'
+      const tenantId = (payload as { tenant_id?: string }).tenant_id || 'skillsaware'
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Signature': `sha256=${signature}`,
-          'X-Tenant': payload.claim_id.split('/')[0], // Extract tenant from claim_id
+          'X-Tenant': tenantId,
           'X-Event-Id': eventId
         },
         body: payloadString,
@@ -100,20 +103,33 @@ export async function sendWebhook(
       clearTimeout(timeoutId)
 
       if (response.ok) {
-        console.log(`[Webhook] Successfully delivered to ${new URL(url).hostname} (attempt ${attempt + 1})`)
+        console.log(
+          `[Webhook] Successfully delivered to ${new URL(url).hostname} (attempt ${attempt + 1})`
+        )
         return { success: true }
       }
 
       // Log failure and retry
       const errorMsg = `HTTP ${response.status}: ${response.statusText}`
       lastError = errorMsg
-      console.error(`[Webhook] Attempt ${attempt + 1}/${maxRetries} failed: ${errorMsg}`)
+      // Use info level for expected failures (404 = endpoint not configured)
+      if (response.status === 404) {
+        console.log(
+          `[Webhook] Attempt ${attempt + 1}/${maxRetries} failed: ${errorMsg} (Webhook endpoint not found - this is expected if webhook URL is not configured correctly)`
+        )
+      } else {
+        console.error(
+          `[Webhook] Attempt ${attempt + 1}/${maxRetries} failed: ${errorMsg}`
+        )
+      }
     } catch (error) {
       const errorMsg = getErrorMessage(error, url)
       lastError = errorMsg
-      
+
       if (error instanceof Error && error.name === 'AbortError') {
-        console.error(`[Webhook] Attempt ${attempt + 1}/${maxRetries} timed out after 30 seconds`)
+        console.error(
+          `[Webhook] Attempt ${attempt + 1}/${maxRetries} timed out after 30 seconds`
+        )
       } else {
         console.error(`[Webhook] Attempt ${attempt + 1}/${maxRetries} error: ${errorMsg}`)
       }
@@ -123,7 +139,10 @@ export async function sendWebhook(
     if (attempt < maxRetries - 1) {
       const delayMs = retryDelays[attempt] * 1000
       const delayMinutes = delayMs / 60000
-      console.log(`[Webhook] Retrying in ${delayMinutes} minute(s)...`)
+      // Only log retry delays for non-404 errors (404s are expected if webhook not configured)
+      if (lastError && !lastError.includes('404')) {
+        console.log(`[Webhook] Retrying in ${delayMinutes} minute(s)...`)
+      }
       await new Promise(resolve => setTimeout(resolve, delayMs))
     }
   }
