@@ -7,8 +7,9 @@
 ## 🚨 **THE WEBHOOK ENDPOINT IN THIS CODEBASE IS FOR TESTING/DEMO ONLY** 🚨
 
 **The webhook endpoint at `/api/webhook` in this repository is provided ONLY for:**
+
 - ✅ Testing webhook delivery during development
-- ✅ Understanding webhook payload structure  
+- ✅ Understanding webhook payload structure
 - ✅ Verifying HMAC signature validation
 - ✅ Demo purposes
 
@@ -25,6 +26,7 @@ The webhook is an **optional notification system** that sends a POST request to 
 ## Purpose
 
 The webhook allows **external systems** (like your main application, database, or notification service) to be notified when:
+
 - ✅ An endorsement is successfully submitted
 - ✅ Files are uploaded to S3
 - ✅ Credentials are ready for download
@@ -32,6 +34,7 @@ The webhook allows **external systems** (like your main application, database, o
 ## When is it Called?
 
 The webhook is triggered **automatically** when:
+
 1. An endorsement is submitted via `POST /api/v1/endorsements/submit`
 2. S3 upload succeeds (both JSON and PDF files)
 3. Webhook URL and secret are configured
@@ -69,22 +72,24 @@ The webhook sends a JSON payload with the following structure:
 The webhook includes HMAC-SHA256 signature for verification:
 
 **Headers:**
+
 - `Content-Type: application/json`
 - `X-Signature: sha256=<hmac-signature>`
 - `X-Tenant: skillsaware`
 - `X-Event-Id: <unique-event-id>`
 
 **Verification Example (Node.js):**
+
 ```javascript
-const crypto = require('crypto');
+const crypto = require('crypto')
 
 function verifyWebhook(payload, signature, secret) {
   const expectedSig = crypto
     .createHmac('sha256', secret)
     .update(JSON.stringify(payload))
-    .digest('hex');
-  
-  return signature === `sha256=${expectedSig}`;
+    .digest('hex')
+
+  return signature === `sha256=${expectedSig}`
 }
 
 // Usage
@@ -92,21 +97,23 @@ const isValid = verifyWebhook(
   req.body,
   req.headers['x-signature'],
   process.env.SKILLSAWARE_WEBHOOK_SECRET
-);
+)
 ```
 
 ## Use Cases
 
 ### 1. **Database Integration**
+
 Notify your main application to store endorsement records:
+
 ```javascript
 // Your webhook endpoint
 app.post('/api/webhook', async (req, res) => {
   // Verify signature
   if (!verifyWebhook(req.body, req.headers['x-signature'], secret)) {
-    return res.status(401).json({ error: 'Invalid signature' });
+    return res.status(401).json({ error: 'Invalid signature' })
   }
-  
+
   // Store in database
   await db.endorsements.create({
     claimId: req.body.claim_id,
@@ -114,44 +121,48 @@ app.post('/api/webhook', async (req, res) => {
     s3JsonKey: req.body.artifacts[0].s3_key,
     s3PdfKey: req.body.artifacts[1].s3_key,
     timestamp: req.body.timestamp
-  });
-  
-  res.json({ success: true });
-});
+  })
+
+  res.json({ success: true })
+})
 ```
 
 ### 2. **Notification Service**
+
 Send emails, SMS, or push notifications:
+
 ```javascript
 app.post('/api/webhook', async (req, res) => {
   // Verify signature...
-  
+
   // Send notification
   await sendEmail({
     to: 'admin@example.com',
     subject: 'New Endorsement Completed',
     body: `Claim ${req.body.claim_id} has been endorsed for ${req.body.skill_name}`
-  });
-  
-  res.json({ success: true });
-});
+  })
+
+  res.json({ success: true })
+})
 ```
 
 ### 3. **Analytics & Reporting**
+
 Track endorsement metrics:
+
 ```javascript
 app.post('/api/webhook', async (req, res) => {
   // Verify signature...
-  
+
   // Track analytics
   await analytics.track('endorsement.completed', {
     claimId: req.body.claim_id,
     skillCode: req.body.skill_code,
     timestamp: req.body.timestamp
-  });
-  
-  res.json({ success: true });
-});
+  })
+
+  res.json({ success: true })
+})
 ```
 
 ## Configuration
@@ -164,6 +175,7 @@ SKILLSAWARE_WEBHOOK_SECRET=your-secret-key-for-hmac-signing
 ```
 
 **Important:** The webhook URL must:
+
 - ✅ Accept POST requests
 - ✅ Return 2xx status code on success
 - ✅ Be publicly accessible (not localhost unless using ngrok)
@@ -172,6 +184,7 @@ SKILLSAWARE_WEBHOOK_SECRET=your-secret-key-for-hmac-signing
 ## Retry Logic
 
 If the webhook fails, it automatically retries with exponential backoff:
+
 - Attempt 1: Immediate
 - Attempt 2: After 1 minute
 - Attempt 3: After 5 minutes
@@ -195,38 +208,38 @@ If you want to receive webhooks, create an endpoint that accepts POST:
 
 ```typescript
 // app/api/webhook/route.ts (in your external system)
-import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
+import { NextRequest, NextResponse } from 'next/server'
+import crypto from 'crypto'
 
 export async function POST(request: NextRequest) {
   try {
-    const payload = await request.json();
-    const signature = request.headers.get('x-signature');
-    const secret = process.env.SKILLSAWARE_WEBHOOK_SECRET!;
-    
+    const payload = await request.json()
+    const signature = request.headers.get('x-signature')
+    const secret = process.env.SKILLSAWARE_WEBHOOK_SECRET!
+
     // Verify signature
     const expectedSig = crypto
       .createHmac('sha256', secret)
       .update(JSON.stringify(payload))
-      .digest('hex');
-    
+      .digest('hex')
+
     if (signature !== `sha256=${expectedSig}`) {
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
-    
+
     // Process webhook
-    console.log('Webhook received:', payload);
-    
+    console.log('Webhook received:', payload)
+
     // Your business logic here
     // - Store in database
     // - Send notifications
     // - Update records
     // etc.
-    
-    return NextResponse.json({ success: true });
+
+    return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Webhook error:', error);
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+    console.error('Webhook error:', error)
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
 }
 ```
@@ -255,6 +268,7 @@ curl -X POST http://localhost:3000/api/v1/webhook/test \
 ```
 
 Or use a webhook testing service:
+
 - https://webhook.site (temporary webhook URLs for testing)
 - https://requestbin.com (inspect webhook payloads)
 
@@ -268,4 +282,3 @@ Or use a webhook testing service:
 - **Optional:** System works perfectly without webhooks
 
 The 405 error means your endpoint doesn't accept POST requests. Either create a proper webhook handler or disable webhooks if you don't need them.
-

@@ -1,0 +1,75 @@
+{
+  "name": "SkillsAware - Skill Endorsement System",
+  "short_name": "SkillsAware",
+  "description": "SkillsAware OBv3 Endorsement System - Create, validate, and issue standards-compliant skill credentials",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#0b5fff",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/logo/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "productivity", "business"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Verify Certificate",
+      "short_name": "Verify",
+      "description": "Verify a SkillsAware certificate",
+      "url": "/verify",
+      "icons": [
+        {
+          "src": "/logo/android-chrome-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "API Documentation",
+      "short_name": "API Docs",
+      "description": "View API documentation",
+      "url": "/api-docs",
+      "icons": [
+        {
+          "src": "/logo/android-chrome-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "dir": "ltr",
+  "lang": "en-US"
+}

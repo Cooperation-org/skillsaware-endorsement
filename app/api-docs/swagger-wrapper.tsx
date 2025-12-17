@@ -21,7 +21,7 @@ export function SwaggerUIWrapper(props: SwaggerUIWrapperProps) {
     // Override console.warn to filter out the specific warnings
     console.warn = (...args: unknown[]) => {
       const message = typeof args[0] === 'string' ? args[0] : String(args[0])
-      
+
       // Suppress warnings about UNSAFE_componentWillReceiveProps from swagger-ui-react components
       if (
         message.includes('UNSAFE_componentWillReceiveProps') &&
@@ -47,4 +47,3 @@ export function SwaggerUIWrapper(props: SwaggerUIWrapperProps) {
 
   return <SwaggerUI {...props} />
 }
-

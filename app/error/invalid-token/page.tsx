@@ -1,3 +1,36 @@
+import type { Metadata } from 'next'
+
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://endorse.skillsaware.com'
+
+export const metadata: Metadata = {
+  title: 'Invalid Token',
+  description: 'The link you are trying to access is invalid or has been tampered with.',
+  robots: {
+    index: false,
+    follow: false
+  },
+  openGraph: {
+    title: 'Invalid Token | SkillsAware',
+    description:
+      'The link you are trying to access is invalid or has been tampered with.',
+    images: [
+      {
+        url: '/logo/og-images/default.png',
+        width: 1200,
+        height: 630,
+        alt: 'SkillsAware Invalid Token Error'
+      }
+    ]
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Invalid Token | SkillsAware',
+    description:
+      'The link you are trying to access is invalid or has been tampered with.',
+    images: ['/logo/og-images/default.png']
+  }
+}
+
 export default function InvalidTokenPage() {
   return (
     <div

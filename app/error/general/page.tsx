@@ -1,3 +1,34 @@
+import type { Metadata } from 'next'
+
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://endorse.skillsaware.com'
+
+export const metadata: Metadata = {
+  title: 'Error',
+  description: 'An unexpected error occurred while processing your request.',
+  robots: {
+    index: false,
+    follow: false
+  },
+  openGraph: {
+    title: 'Error | SkillsAware',
+    description: 'An unexpected error occurred while processing your request.',
+    images: [
+      {
+        url: '/logo/og-images/default.png',
+        width: 1200,
+        height: 630,
+        alt: 'SkillsAware Error'
+      }
+    ]
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Error | SkillsAware',
+    description: 'An unexpected error occurred while processing your request.',
+    images: ['/logo/og-images/default.png']
+  }
+}
+
 export default function GeneralErrorPage() {
   return (
     <div

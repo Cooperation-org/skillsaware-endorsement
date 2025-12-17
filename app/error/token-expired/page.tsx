@@ -1,3 +1,37 @@
+import type { Metadata } from 'next'
+
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://endorse.skillsaware.com'
+
+export const metadata: Metadata = {
+  title: 'Token Expired',
+  description:
+    'Your magic link has expired for security reasons. Please contact SkillsAware to request a new link.',
+  robots: {
+    index: false,
+    follow: false
+  },
+  openGraph: {
+    title: 'Token Expired | SkillsAware',
+    description:
+      'Your magic link has expired for security reasons. Please contact SkillsAware to request a new link.',
+    images: [
+      {
+        url: '/logo/og-images/default.png',
+        width: 1200,
+        height: 630,
+        alt: 'SkillsAware Token Expired Error'
+      }
+    ]
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Token Expired | SkillsAware',
+    description:
+      'Your magic link has expired for security reasons. Please contact SkillsAware to request a new link.',
+    images: ['/logo/og-images/default.png']
+  }
+}
+
 export default function TokenExpiredPage() {
   return (
     <div

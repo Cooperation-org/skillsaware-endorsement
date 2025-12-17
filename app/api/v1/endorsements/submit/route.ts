@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     let s3Uploaded = false
     let s3JsonUrl: string | null = null
     let s3PdfUrl: string | null = null
-    
+
     try {
       if (tenant.s3_bucket && tenant.s3_prefix) {
         // Upload JSON to S3
@@ -157,7 +157,9 @@ export async function POST(request: NextRequest) {
     if (s3Uploaded && tenant.webhook_url && tenant.webhook_secret) {
       // Fire and forget - don't block the response
       // Webhook will retry in background if it fails (this is expected behavior)
-      console.log(`[Submit] Sending webhook to ${tenant.webhook_url} (non-blocking, will retry in background if needed)`)
+      console.log(
+        `[Submit] Sending webhook to ${tenant.webhook_url} (non-blocking, will retry in background if needed)`
+      )
       sendWebhook(
         tenant.webhook_url,
         {
@@ -180,11 +182,16 @@ export async function POST(request: NextRequest) {
           if (result.success) {
             console.log('[Submit] ✅ Webhook delivered successfully')
           } else {
-            console.log(`[Submit] ⚠️  Webhook delivery failed (will retry in background): ${result.lastError || 'Unknown error'}`)
+            console.log(
+              `[Submit] ⚠️  Webhook delivery failed (will retry in background): ${result.lastError || 'Unknown error'}`
+            )
           }
         })
         .catch(error => {
-          console.warn('[Submit] Webhook delivery error (will retry in background):', error)
+          console.warn(
+            '[Submit] Webhook delivery error (will retry in background):',
+            error
+          )
         })
       // Note: webhook_delivered will be false initially, but webhook will retry in background
       // This is expected behavior - webhook retries don't block the API response
@@ -208,8 +215,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Build download URLs - prefer S3 URLs if available, fallback to token-based URLs
-    const jsonDownloadUrl = s3JsonUrl || `${appUrl}/api/v1/endorsements/${payload.claim_id}/download/json?${downloadParams.toString()}`
-    const pdfDownloadUrl = s3PdfUrl || `${appUrl}/api/v1/endorsements/${payload.claim_id}/download/pdf?${downloadParams.toString()}`
+    const jsonDownloadUrl =
+      s3JsonUrl ||
+      `${appUrl}/api/v1/endorsements/${payload.claim_id}/download/json?${downloadParams.toString()}`
+    const pdfDownloadUrl =
+      s3PdfUrl ||
+      `${appUrl}/api/v1/endorsements/${payload.claim_id}/download/pdf?${downloadParams.toString()}`
 
     return NextResponse.json({
       success: true,

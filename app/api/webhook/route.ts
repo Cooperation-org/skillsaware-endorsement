@@ -2,28 +2,28 @@
  * ═══════════════════════════════════════════════════════════════════════════
  * ⚠️  IMPORTANT: THIS IS FOR TESTING AND DEMO PURPOSES ONLY ⚠️
  * ═══════════════════════════════════════════════════════════════════════════
- * 
+ *
  * 🚨 THIS WEBHOOK ENDPOINT IS NOT FOR PRODUCTION USE 🚨
- * 
+ *
  * This endpoint is provided ONLY for:
  * - Testing webhook delivery during development
  * - Understanding webhook payload structure
  * - Verifying HMAC signature validation
  * - Demo purposes
- * 
+ *
  * ═══════════════════════════════════════════════════════════════════════════
  * ✅ PRODUCTION IMPLEMENTATION REQUIRED ✅
  * ═══════════════════════════════════════════════════════════════════════════
- * 
+ *
  * SkillsAware developers MUST:
- * 
+ *
  * 1. ✅ Implement a similar webhook endpoint in the MAIN SKILLSAWARE WEBSITE
  * 2. ✅ Update SKILLSAWARE_WEBHOOK_URL to point to the SkillsAware main system
  * 3. ✅ Remove or disable this test endpoint in production
- * 
+ *
  * DO NOT use this endpoint in production!
  * The webhook MUST be implemented in the SkillsAware main website.
- * 
+ *
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     // Try to get tenant from payload first, then header, then default
     const headerTenantId = request.headers.get('x-tenant')
     const eventId = request.headers.get('x-event-id')
-    
+
     // Get tenant ID from payload if available (more reliable)
     const payloadTenantId = (payload as { tenant_id?: string }).tenant_id
     const tenantId = payloadTenantId || headerTenantId || 'skillsaware'
@@ -59,10 +59,7 @@ export async function POST(request: NextRequest) {
 
     if (!signature) {
       console.error('[Webhook] ❌ Missing X-Signature header')
-      return NextResponse.json(
-        { error: 'Missing X-Signature header' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Missing X-Signature header' }, { status: 401 })
     }
 
     // Get tenant config to retrieve webhook secret
@@ -77,7 +74,9 @@ export async function POST(request: NextRequest) {
       )
     }
     if (!tenant.webhook_secret) {
-      console.error(`[Webhook] ❌ Webhook secret not configured for tenant: "${tenantId}"`)
+      console.error(
+        `[Webhook] ❌ Webhook secret not configured for tenant: "${tenantId}"`
+      )
       return NextResponse.json(
         { error: 'Webhook secret not configured for tenant' },
         { status: 500 }
@@ -94,11 +93,10 @@ export async function POST(request: NextRequest) {
     )
 
     if (!isValid) {
-      console.error('[Webhook] ❌ Invalid signature received - signature verification failed')
-      return NextResponse.json(
-        { error: 'Invalid signature' },
-        { status: 401 }
+      console.error(
+        '[Webhook] ❌ Invalid signature received - signature verification failed'
       )
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
 
     // Log signature verification success
@@ -117,9 +115,9 @@ export async function POST(request: NextRequest) {
     // ============================================
     // YOUR BUSINESS LOGIC HERE
     // ============================================
-    // 
+    //
     // This is where SkillsAware developers should implement:
-    // 
+    //
     // 1. Store endorsement record in database
     //    await db.endorsements.create({
     //      claimId: payload.claim_id,
@@ -159,17 +157,17 @@ export async function POST(request: NextRequest) {
     // ═══════════════════════════════════════════════════════════════════════
     // ⚠️  THIS IS A TEST/DEMO ENDPOINT - NOT FOR PRODUCTION ⚠️
     // ═══════════════════════════════════════════════════════════════════════
-    // 
+    //
     // SkillsAware developers: This endpoint is for testing only.
-    // 
+    //
     // YOU MUST implement a similar endpoint in the MAIN SKILLSAWARE WEBSITE
     // with your actual business logic:
-    // 
+    //
     // 1. Store endorsement record in SkillsAware database
     // 2. Send notifications to relevant users
     // 3. Update analytics and reporting
     // 4. Trigger downstream processes
-    // 
+    //
     // DO NOT use this endpoint in production!
     // ═══════════════════════════════════════════════════════════════════════
 
@@ -185,7 +183,10 @@ export async function POST(request: NextRequest) {
       received_at: new Date().toISOString()
     }
 
-    console.log('[Webhook] ✅ Webhook processed successfully, returning response:', response)
+    console.log(
+      '[Webhook] ✅ Webhook processed successfully, returning response:',
+      response
+    )
     console.log('='.repeat(60) + '\n')
 
     return NextResponse.json(response)
@@ -212,7 +213,7 @@ export async function POST(request: NextRequest) {
 
 /**
  * Example webhook payload structure:
- * 
+ *
  * {
  *   "event": "claim.endorsed",
  *   "claim_id": "815dbda6-de57-4a2e-8077-cf2e9752dc56",
@@ -232,11 +233,10 @@ export async function POST(request: NextRequest) {
  *   ],
  *   "timestamp": "2025-01-19T12:00:00.000Z"
  * }
- * 
+ *
  * Headers:
  * - Content-Type: application/json
  * - X-Signature: sha256=<hmac-signature>
  * - X-Tenant: skillsaware
  * - X-Event-Id: <unique-event-id>
  */
-

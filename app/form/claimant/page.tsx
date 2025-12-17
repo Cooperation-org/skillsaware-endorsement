@@ -1,7 +1,40 @@
+import type { Metadata } from 'next'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { verifyToken } from '@/lib/jwt'
 import ClaimantFormClient from './client'
+
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://endorse.skillsaware.com'
+
+export const metadata: Metadata = {
+  title: 'Claimant Form',
+  description:
+    'Complete your skill endorsement claim. Verify your identity and accept the skill endorsement credential.',
+  robots: {
+    index: false,
+    follow: false
+  },
+  openGraph: {
+    title: 'Claimant Form | SkillsAware',
+    description:
+      'Complete your skill endorsement claim. Verify your identity and accept the skill endorsement credential.',
+    images: [
+      {
+        url: '/logo/og-images/default.png',
+        width: 1200,
+        height: 630,
+        alt: 'SkillsAware Claimant Form'
+      }
+    ]
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Claimant Form | SkillsAware',
+    description:
+      'Complete your skill endorsement claim. Verify your identity and accept the skill endorsement credential.',
+    images: ['/logo/og-images/default.png']
+  }
+}
 
 export default async function ClaimantFormPage() {
   const cookieStore = await cookies()

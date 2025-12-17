@@ -7,17 +7,18 @@ This guide explains how to test the complete endorsement workflow in production 
 ### Prerequisites
 
 1. **Environment Variables Set:**
+
    ```bash
    # Required
    SKILLSAWARE_API_KEY=your-api-key
-   
+
    # For S3 testing
    AWS_ACCESS_KEY_ID=your-access-key
    AWS_SECRET_ACCESS_KEY=your-secret-key
    AWS_REGION=us-east-1
    S3_BUCKET=your-bucket-name
    S3_PREFIX=endorsements
-   
+
    # Optional - for webhook testing
    SKILLSAWARE_WEBHOOK_URL=https://your-webhook-endpoint.com/webhook
    SKILLSAWARE_WEBHOOK_SECRET=your-webhook-secret
@@ -30,6 +31,7 @@ This guide explains how to test the complete endorsement workflow in production 
 ### Running the Test
 
 **Option 1: Test against localhost (development)**
+
 ```bash
 node test-production-workflow.js
 # or
@@ -37,11 +39,13 @@ node test-production-workflow.js http://localhost:3000
 ```
 
 **Option 2: Test against production**
+
 ```bash
 node test-production-workflow.js https://your-production-domain.com
 ```
 
 **Option 3: Using environment variable**
+
 ```bash
 export API_BASE_URL=https://your-production-domain.com
 node test-production-workflow.js
@@ -161,11 +165,13 @@ file test-claim.pdf  # Should show "PDF document"
 ### Test Fails at "Create Claim"
 
 **Possible causes:**
+
 - API key is incorrect
 - Server is not running
 - Base URL is wrong
 
 **Solutions:**
+
 ```bash
 # Verify API key
 echo $SKILLSAWARE_API_KEY
@@ -180,11 +186,13 @@ curl https://your-production-domain.com/api/v1/claims \
 ### S3 Upload Fails
 
 **Possible causes:**
+
 - AWS credentials incorrect
 - S3 bucket doesn't exist
 - IAM permissions insufficient
 
 **Solutions:**
+
 ```bash
 # Verify AWS credentials
 aws sts get-caller-identity
@@ -199,11 +207,13 @@ aws s3 cp test.txt s3://your-bucket-name/test.txt
 ### Webhook Not Delivered
 
 **Possible causes:**
+
 - Webhook URL not configured
 - Webhook endpoint not accessible
 - S3 upload failed (webhooks only sent after successful S3 upload)
 
 **Solutions:**
+
 - Check `SKILLSAWARE_WEBHOOK_URL` is set
 - Verify webhook endpoint is accessible
 - Ensure S3 upload succeeded first
@@ -211,11 +221,13 @@ aws s3 cp test.txt s3://your-bucket-name/test.txt
 ### Downloads Fail
 
 **Possible causes:**
+
 - JWT token expired
 - Download endpoint has issues
 - Network connectivity problems
 
 **Solutions:**
+
 - Check server logs for errors
 - Verify download URLs are accessible
 - Test download URLs manually in browser
@@ -262,4 +274,3 @@ You can integrate this test into your CI/CD pipeline:
 - [TESTING.md](./TESTING.md) - Comprehensive testing scenarios
 - [README.md](./README.md) - System overview and API documentation
 - [DEPLOYMENT.md](./DEPLOYMENT.md) - Deployment guide
-
