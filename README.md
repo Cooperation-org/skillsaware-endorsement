@@ -343,7 +343,7 @@ The email is sent asynchronously and failures are logged but don't break the req
 
 1. **OBV3 JSON Generation**: Creates AchievementCredential with:
    - Schema references in `@context` array
-   - Proper DID:Web format for subject IDs (e.g., `did:web:endorse.skillsaware.com:users:base64email`)
+   - Proper DID:Web format for subject IDs (e.g., `did:web:skillsaware-endorsement.vercel.app:users:base64email`)
    - Claimant narrative in `credentialSubject.narrative`
    - Evidence URLs in `evidence` array
    - Embedded EndorsementCredential
@@ -977,7 +977,7 @@ const TENANT_CONFIGS: Record<string, TenantConfig> = {
     brand_primary_color: process.env.BRAND_PRIMARY_COLOR || '#0B5FFF',
 
     // Required:
-    issuer_id: 'https://endorse.skillsaware.com/issuers/whatscookin',
+    issuer_id: 'https://skillsaware-endorsement.vercel.app/issuers/whatscookin',
     issuer_name: 'SkillsAware'
   }
   // Add new tenants here
@@ -1006,7 +1006,7 @@ const retryDelays = [60, 300, 1800, 21600, 86400] // seconds
   - `https://purl.imsglobal.org/spec/ob/v3p0/schema/achievement-credential-3.0.3.json` (schema reference)
 - **Spec**: https://www.imsglobal.org/spec/ob/v3p0
 - **Credential types**: AchievementCredential, EndorsementCredential
-- **DID Format**: Uses DID:Web method (e.g., `did:web:endorse.skillsaware.com:users:base64email`)
+- **DID Format**: Uses DID:Web method (e.g., `did:web:skillsaware-endorsement.vercel.app:users:base64email`)
   - Domain extracted from issuer ID
   - Email encoded in base64url format
   - Compliant with W3C DID specification

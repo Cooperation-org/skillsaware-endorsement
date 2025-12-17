@@ -474,7 +474,7 @@ const isValid = verifyWebhook(
   "type": ["VerifiableCredential", "AchievementCredential"],
   "id": "urn:uuid:...",
   "issuer": {
-    "id": "https://endorse.skillsaware.com/issuers/whatscookin",
+    "id": "https://skillsaware-endorsement.vercel.app/issuers/whatscookin",
     "type": "Profile",
     "name": "What's Cookin' Inc."
   },
@@ -500,7 +500,7 @@ const isValid = verifyWebhook(
       "type": ["VerifiableCredential", "EndorsementCredential"],
       "id": "urn:uuid:...",
       "issuer": {
-        "id": "https://endorse.skillsaware.com/issuers/whatscookin",
+        "id": "https://skillsaware-endorsement.vercel.app/issuers/whatscookin",
         "type": "Profile",
         "name": "John Manager"
       },

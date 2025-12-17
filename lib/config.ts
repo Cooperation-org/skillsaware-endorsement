@@ -16,7 +16,7 @@ const TENANT_CONFIGS: Record<string, TenantConfig> = {
     s3_bucket: process.env.S3_BUCKET,
     s3_prefix: process.env.S3_PREFIX,
     s3_region: process.env.AWS_REGION,
-    issuer_id: 'https://endorse.skillsaware.com/issuers/whatscookin',
+    issuer_id: 'https://skillsaware-endorsement.vercel.app/issuers/whatscookin',
     issuer_name: 'SkillsAware',
     brand_logo_url: process.env.BRAND_LOGO_URL || '/logo/skillsaware-logo.svg',
     brand_primary_color: process.env.BRAND_PRIMARY_COLOR || '#0B5FFF'

@@ -13,7 +13,7 @@ const OBV3_CONTEXT = [
  */
 function generateDidWeb(email: string, issuerId: string): string {
   try {
-    // Extract domain from issuer ID (e.g., https://endorse.skillsaware.com/issuers/whatscookin)
+    // Extract domain from issuer ID (e.g., https://skillsaware-endorsement.vercel.app/issuers/whatscookin)
     const issuerUrl = new URL(issuerId)
     const domain = issuerUrl.hostname
 

@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import './globals.css'
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://endorse.skillsaware.com'
+const baseUrl =
+  process.env.NEXT_PUBLIC_BASE_URL || 'https://skillsaware-endorsement.vercel.app'
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),

@@ -9,6 +9,6 @@ export interface TenantConfig {
   s3_region?: string // Optional: AWS region
   brand_logo_url?: string
   brand_primary_color?: string
-  issuer_id: string // e.g., "https://endorse.skillsaware.com/issuers/whatscookin"
+  issuer_id: string // e.g., "https://skillsaware-endorsement.vercel.app/issuers/whatscookin"
   issuer_name: string // e.g., "What's Cookin' Inc."
 }

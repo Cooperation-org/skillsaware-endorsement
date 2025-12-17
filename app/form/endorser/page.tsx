@@ -4,7 +4,8 @@ import { redirect } from 'next/navigation'
 import { verifyToken } from '@/lib/jwt'
 import EndorserFormClient from './client'
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://endorse.skillsaware.com'
+const baseUrl =
+  process.env.NEXT_PUBLIC_BASE_URL || 'https://skillsaware-endorsement.vercel.app'
 
 export const metadata: Metadata = {
   title: 'Endorser Form',

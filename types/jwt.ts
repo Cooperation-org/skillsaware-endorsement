@@ -1,5 +1,5 @@
 export interface JwtPayload {
-  iss: string // Issuer: https://endorse.skillsaware.com
+  iss: string // Issuer: https://skillsaware-endorsement.vercel.app
   aud: string // Audience: skillsaware
   tenant: string // Tenant ID
   claim_id: string // UUID for this claim
