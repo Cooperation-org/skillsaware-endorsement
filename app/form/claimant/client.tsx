@@ -29,17 +29,29 @@ export default function ClaimantFormClient({ payload, token }: ClaimantFormClien
     setSubmitting(true)
 
     try {
+      const requestBody: {
+        claimant_narrative: string
+        endorser_name?: string
+        endorser_email?: string
+      } = {
+        claimant_narrative: narrative
+      }
+
+      // Only include endorser fields if they have values
+      if (endorserName.trim()) {
+        requestBody.endorser_name = endorserName.trim()
+      }
+      if (endorserEmail.trim()) {
+        requestBody.endorser_email = endorserEmail.trim()
+      }
+
       const response = await fetch(`/api/v1/claims/${payload.claim_id}/endorser-link`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({
-          claimant_narrative: narrative,
-          endorser_name: endorserName,
-          endorser_email: endorserEmail
-        })
+        body: JSON.stringify(requestBody)
       })
 
       if (!response.ok) {
@@ -139,14 +151,21 @@ export default function ClaimantFormClient({ payload, token }: ClaimantFormClien
                   className='mb-6 max-w-md mx-auto'
                   style={{ color: 'var(--skillsaware-text-secondary)' }}
                 >
-                  Your claim has been prepared. Send the magic link below to{' '}
-                  <span
-                    className='font-medium'
-                    style={{ color: 'var(--skillsaware-text-primary)' }}
-                  >
-                    {endorserName}
-                  </span>{' '}
-                  to verify your skill.
+                  Your claim has been prepared.{' '}
+                  {endorserName ? (
+                    <>
+                      Send the magic link below to{' '}
+                      <span
+                        className='font-medium'
+                        style={{ color: 'var(--skillsaware-text-primary)' }}
+                      >
+                        {endorserName}
+                      </span>{' '}
+                      to verify your skill.
+                    </>
+                  ) : (
+                    'Copy and share the magic link below with your endorser to verify your skill.'
+                  )}
                 </p>
                 <div className='flex flex-col sm:flex-row gap-2 max-w-lg mx-auto'>
                   <div className='relative flex-grow'>
@@ -368,8 +387,7 @@ export default function ClaimantFormClient({ payload, token }: ClaimantFormClien
                     htmlFor='endorser-name'
                     style={{ color: 'var(--skillsaware-text-primary)' }}
                   >
-                    Endorser Name{' '}
-                    <span style={{ color: 'var(--skillsaware-error)' }}>*</span>
+                    Endorser Name
                   </label>
                   <div className='relative'>
                     <input
@@ -378,7 +396,6 @@ export default function ClaimantFormClient({ payload, token }: ClaimantFormClien
                       type='text'
                       value={endorserName}
                       onChange={e => setEndorserName(e.target.value)}
-                      required
                       placeholder='e.g. Alex Smith'
                       style={{
                         borderColor: fieldErrors.endorser_name
@@ -399,6 +416,12 @@ export default function ClaimantFormClient({ payload, token }: ClaimantFormClien
                       }}
                     />
                   </div>
+                  <p
+                    className='text-xs'
+                    style={{ color: 'var(--skillsaware-text-secondary)' }}
+                  >
+                    Optional - used only for sending invitation email
+                  </p>
                   {fieldErrors.endorser_name && (
                     <p
                       className='text-xs flex items-center gap-1 mt-1'
@@ -422,8 +445,7 @@ export default function ClaimantFormClient({ payload, token }: ClaimantFormClien
                     htmlFor='endorser-email'
                     style={{ color: 'var(--skillsaware-text-primary)' }}
                   >
-                    Endorser Email{' '}
-                    <span style={{ color: 'var(--skillsaware-error)' }}>*</span>
+                    Endorser Email
                   </label>
                   <div className='relative'>
                     <input
@@ -432,7 +454,6 @@ export default function ClaimantFormClient({ payload, token }: ClaimantFormClien
                       type='email'
                       value={endorserEmail}
                       onChange={e => setEndorserEmail(e.target.value)}
-                      required
                       placeholder='name@company.com'
                       style={{
                         borderColor: fieldErrors.endorser_email
@@ -453,6 +474,12 @@ export default function ClaimantFormClient({ payload, token }: ClaimantFormClien
                       }}
                     />
                   </div>
+                  <p
+                    className='text-xs'
+                    style={{ color: 'var(--skillsaware-text-secondary)' }}
+                  >
+                    Optional - used only for sending invitation email
+                  </p>
                   {fieldErrors.endorser_email && (
                     <p
                       className='text-xs flex items-center gap-1 mt-1'

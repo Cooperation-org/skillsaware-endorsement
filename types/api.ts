@@ -15,8 +15,8 @@ export interface CreateClaimResponse {
 
 export interface GenerateEndorserLinkRequest {
   claimant_narrative: string
-  endorser_name: string
-  endorser_email: string
+  endorser_name?: string
+  endorser_email?: string
 }
 
 export interface GenerateEndorserLinkResponse {

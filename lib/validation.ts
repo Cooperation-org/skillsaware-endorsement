@@ -11,8 +11,8 @@ export const CreateClaimSchema = z.object({
 
 export const GenerateEndorserLinkSchema = z.object({
   claimant_narrative: z.string().min(10),
-  endorser_name: z.string().min(1),
-  endorser_email: z.string().email()
+  endorser_name: z.string().min(1).optional(),
+  endorser_email: z.string().email().optional()
 })
 
 export const SubmitEndorsementSchema = z.object({
