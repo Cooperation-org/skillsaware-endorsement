@@ -1,15 +1,16 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 
 export default function Home() {
   const [formData, setFormData] = useState({
-    claimant_name: 'Jane Doe',
-    claimant_email: 'jane.doe@example.com',
-    skill_name: 'Apply innovative thinking and practices in digital environments',
-    skill_code: 'ICTDSN403',
+    claimant_name: 'Alice Smith',
+    claimant_email: 'alice@example.com',
+    skill_name: 'Advanced JavaScript',
+    skill_code: 'JS-ADV',
     skill_description:
-      'Demonstrates the ability to apply innovative thinking and practices in digital environments'
+      'Demonstrates mastery of closures, async/await, and prototypes within a production environment.'
   })
 
   const [loading, setLoading] = useState(false)
@@ -52,208 +53,615 @@ export default function Home() {
     }
   }
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+    alert('Copied to clipboard!')
+  }
+
   return (
-    <div className='min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4'>
-      <div className='max-w-2xl mx-auto'>
-        <div className='bg-white rounded-lg shadow-xl p-8'>
-          <h1 className='text-3xl font-bold text-gray-900 mb-2'>
-            SkillsAware Endorsement Client
-          </h1>
-          <p className='text-gray-600 mb-8'>
-            Create a skill claim and generate magic links for the endorsement workflow
-          </p>
+    <div
+      className='relative flex h-auto min-h-screen w-full flex-col'
+      style={{
+        backgroundColor: 'var(--skillsaware-bg-secondary)',
+        overflowX: 'hidden',
+        width: '100%',
+        maxWidth: '100vw'
+      }}
+    >
+      {/* Navigation */}
+      <header
+        className='sticky top-0 z-50 w-full backdrop-blur-sm border-b flex items-center justify-between'
+        style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          borderColor: 'var(--skillsaware-border)',
+          padding: '0.75rem 1.5rem',
+          maxWidth: '1400px',
+          margin: '0 auto',
+          width: '100%'
+        }}
+      >
+        <div className='flex items-center gap-4'>
+          <Image
+            src='/logo/skillsaware-nav.svg'
+            alt='SkillsAware Logo'
+            width={120}
+            height={30}
+            className='skillsaware-logo'
+            style={{
+              width: '6.25vw',
+              minHeight: '20px',
+              height: 'auto',
+              minWidth: '75px'
+            }}
+          />
+        </div>
+      </header>
 
-          <form onSubmit={handleSubmit} className='space-y-6'>
-            {/* Claimant Name */}
-            <div>
-              <label
-                htmlFor='claimant_name'
-                className='block text-sm font-medium text-gray-700 mb-2'
+      {/* Main Layout */}
+      <div
+        className='flex h-full grow flex-col py-8'
+        style={{
+          paddingLeft: '1.5rem',
+          paddingRight: '1.5rem',
+          maxWidth: '1400px',
+          margin: '0 auto',
+          width: '100%',
+          boxSizing: 'border-box',
+          overflowX: 'hidden'
+        }}
+      >
+        {/* Page Heading */}
+        <div className='mb-8 max-w-[960px] mx-auto w-full' style={{ marginTop: '2rem' }}>
+          <div className='flex flex-wrap justify-between gap-3'>
+            <div className='flex min-w-72 flex-col gap-2'>
+              <h1
+                className='text-3xl md:text-4xl font-black leading-tight'
+                style={{
+                  color: 'var(--skillsaware-text-primary)',
+                  letterSpacing: '-0.033em'
+                }}
               >
-                Claimant Name *
-              </label>
-              <input
-                type='text'
-                id='claimant_name'
-                required
-                className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                value={formData.claimant_name}
-                onChange={e =>
-                  setFormData({ ...formData, claimant_name: e.target.value })
-                }
-                placeholder='Jane Doe'
-              />
-            </div>
-
-            {/* Claimant Email */}
-            <div>
-              <label
-                htmlFor='claimant_email'
-                className='block text-sm font-medium text-gray-700 mb-2'
+                Endorsement Client
+              </h1>
+              <p
+                className='text-base font-normal leading-normal max-w-2xl'
+                style={{ color: 'var(--skillsaware-text-secondary)' }}
               >
-                Claimant Email *
-              </label>
-              <input
-                type='email'
-                id='claimant_email'
-                required
-                className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                value={formData.claimant_email}
-                onChange={e =>
-                  setFormData({ ...formData, claimant_email: e.target.value })
-                }
-                placeholder='jane@example.com'
-              />
+                This page has only one purpose: to test the workflow and only to test.
+              </p>
             </div>
+          </div>
+        </div>
 
-            {/* Skill Code */}
-            <div>
-              <label
-                htmlFor='skill_code'
-                className='block text-sm font-medium text-gray-700 mb-2'
+        {/* Content Grid */}
+        <div
+          className='grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-[960px] mx-auto w-full'
+          style={{ boxSizing: 'border-box', overflowX: 'hidden' }}
+        >
+          {/* Left Column: Form & Actions (Span 2) */}
+          <div className='lg:col-span-2 flex flex-col gap-6'>
+            {result ? (
+              /* Success Result Section */
+              <div
+                className='border rounded-xl p-6 md:p-8'
+                style={{
+                  backgroundColor: 'rgba(54, 179, 126, 0.05)',
+                  borderColor: 'rgba(54, 179, 126, 0.2)'
+                }}
               >
-                Skill Code *
-              </label>
-              <input
-                type='text'
-                id='skill_code'
-                required
-                className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                value={formData.skill_code}
-                onChange={e => setFormData({ ...formData, skill_code: e.target.value })}
-              />
-            </div>
-
-            {/* Skill Name */}
-            <div>
-              <label
-                htmlFor='skill_name'
-                className='block text-sm font-medium text-gray-700 mb-2'
-              >
-                Skill Name *
-              </label>
-              <input
-                type='text'
-                id='skill_name'
-                required
-                className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                value={formData.skill_name}
-                onChange={e => setFormData({ ...formData, skill_name: e.target.value })}
-              />
-            </div>
-
-            {/* Skill Description */}
-            <div>
-              <label
-                htmlFor='skill_description'
-                className='block text-sm font-medium text-gray-700 mb-2'
-              >
-                Skill Description *
-              </label>
-              <textarea
-                id='skill_description'
-                required
-                rows={3}
-                className='w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                value={formData.skill_description}
-                onChange={e =>
-                  setFormData({ ...formData, skill_description: e.target.value })
-                }
-              />
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type='submit'
-              disabled={loading}
-              className='w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors'
-            >
-              {loading ? 'Creating Claim...' : 'Create Claim & Generate Magic Link'}
-            </button>
-          </form>
-
-          {/* Error Display */}
-          {error && (
-            <div className='mt-6 p-4 bg-red-50 border border-red-200 rounded-lg'>
-              <h3 className='text-red-800 font-medium mb-1'>Error</h3>
-              <p className='text-red-600 text-sm'>{error}</p>
-            </div>
-          )}
-
-          {/* Success Result */}
-          {result && (
-            <div className='mt-6 p-6 bg-green-50 border border-green-200 rounded-lg'>
-              <h3 className='text-green-800 font-bold text-lg mb-4'>
-                ✓ Claim Created Successfully!
-              </h3>
-
-              <div className='space-y-4'>
-                <div>
-                  <p className='text-sm font-medium text-gray-700 mb-1'>Claim ID:</p>
-                  <code className='block bg-white px-3 py-2 rounded border border-gray-200 text-sm'>
-                    {result.claim_id}
-                  </code>
+                <div
+                  className='flex items-center gap-3 mb-6 border-b pb-4'
+                  style={{ borderColor: 'rgba(54, 179, 126, 0.2)' }}
+                >
+                  <div
+                    className='rounded-full p-2 flex items-center justify-center'
+                    style={{
+                      backgroundColor: 'rgba(54, 179, 126, 0.2)',
+                      color: 'var(--skillsaware-success)'
+                    }}
+                  >
+                    <span className='material-symbols-outlined'>check_circle</span>
+                  </div>
+                  <div>
+                    <h3
+                      className='text-lg font-bold'
+                      style={{ color: 'var(--skillsaware-success)' }}
+                    >
+                      Claim Successfully Created
+                    </h3>
+                    <p
+                      className='text-sm'
+                      style={{ color: 'var(--skillsaware-success)' }}
+                    >
+                      Share the magic link below with the claimant.
+                    </p>
+                  </div>
                 </div>
-
-                <div>
-                  <p className='text-sm font-medium text-gray-700 mb-1'>
-                    Claimant Magic Link:
-                  </p>
-                  <div className='bg-white px-3 py-2 rounded border border-gray-200'>
+                <div className='grid gap-6'>
+                  {/* Claim ID */}
+                  <div className='flex flex-col gap-1'>
+                    <span
+                      className='text-xs font-semibold uppercase tracking-wider'
+                      style={{ color: 'var(--skillsaware-text-secondary)' }}
+                    >
+                      Claim ID
+                    </span>
+                    <div
+                      className='font-mono text-sm border rounded px-3 py-2 w-fit'
+                      style={{
+                        backgroundColor: 'var(--skillsaware-bg-primary)',
+                        borderColor: 'var(--skillsaware-border)',
+                        color: 'var(--skillsaware-text-primary)'
+                      }}
+                    >
+                      {result.claim_id}
+                    </div>
+                  </div>
+                  {/* Magic Link */}
+                  <div className='flex flex-col gap-1'>
+                    <span
+                      className='text-xs font-semibold uppercase tracking-wider'
+                      style={{ color: 'var(--skillsaware-text-secondary)' }}
+                    >
+                      Claimant Magic Link
+                    </span>
+                    <div className='flex gap-2' style={{ minWidth: 0 }}>
+                      <div
+                        className='flex-1 font-mono text-sm border rounded px-3 py-2'
+                        style={{
+                          backgroundColor: 'var(--skillsaware-bg-primary)',
+                          borderColor: 'var(--skillsaware-border)',
+                          color: 'var(--skillsaware-primary)',
+                          overflow: 'hidden',
+                          wordBreak: 'break-all',
+                          overflowWrap: 'break-word',
+                          minWidth: 0
+                        }}
+                      >
+                        {result.claimant_link}
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard(result.claimant_link)}
+                        className='border rounded px-3 flex items-center justify-center transition-colors'
+                        style={{
+                          borderColor: 'var(--skillsaware-border)',
+                          backgroundColor: 'var(--skillsaware-bg-primary)',
+                          color: 'var(--skillsaware-text-secondary)'
+                        }}
+                        title='Copy to clipboard'
+                      >
+                        <span
+                          className='material-symbols-outlined'
+                          style={{ fontSize: '20px' }}
+                        >
+                          content_copy
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                  {/* Expiration */}
+                  <div className='flex flex-col gap-1'>
+                    <span
+                      className='text-xs font-semibold uppercase tracking-wider'
+                      style={{ color: 'var(--skillsaware-text-secondary)' }}
+                    >
+                      Expires At
+                    </span>
+                    <div
+                      className='text-sm flex items-center gap-2'
+                      style={{ color: 'var(--skillsaware-text-primary)' }}
+                    >
+                      <span
+                        className='material-symbols-outlined'
+                        style={{
+                          fontSize: '18px',
+                          color: 'var(--skillsaware-text-secondary)'
+                        }}
+                      >
+                        schedule
+                      </span>
+                      {new Date(result.expires_at).toLocaleString()} UTC
+                    </div>
+                  </div>
+                  {/* CTA */}
+                  <div className='pt-2'>
                     <a
                       href={result.claimant_link}
                       target='_blank'
                       rel='noopener noreferrer'
-                      className='text-blue-600 hover:text-blue-800 text-sm break-all'
+                      className='flex items-center gap-2 text-sm font-semibold transition-colors'
+                      style={{ color: 'var(--skillsaware-primary)' }}
                     >
-                      {result.claimant_link}
+                      Open Claimant Form
+                      <span
+                        className='material-symbols-outlined'
+                        style={{ fontSize: '18px' }}
+                      >
+                        open_in_new
+                      </span>
                     </a>
                   </div>
                 </div>
-
-                <div>
-                  <p className='text-sm font-medium text-gray-700 mb-1'>Expires At:</p>
-                  <code className='block bg-white px-3 py-2 rounded border border-gray-200 text-sm'>
-                    {new Date(result.expires_at).toLocaleString()}
-                  </code>
-                </div>
-
-                <div className='pt-2'>
-                  <a
-                    href={result.claimant_link}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='inline-block bg-green-600 text-white py-2 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors'
+              </div>
+            ) : (
+              /* Form Card */
+              <div
+                className='card rounded-xl shadow-sm border p-6 md:p-8'
+                style={{
+                  backgroundColor: 'var(--skillsaware-bg-primary)',
+                  borderColor: 'var(--skillsaware-border)'
+                }}
+              >
+                <h3
+                  className='text-xl font-bold mb-6 flex items-center gap-2'
+                  style={{ color: 'var(--skillsaware-text-primary)' }}
+                >
+                  <span
+                    className='material-symbols-outlined'
+                    style={{ color: 'var(--skillsaware-primary)' }}
                   >
-                    Open Claimant Form →
-                  </a>
+                    edit_document
+                  </span>
+                  Claim Creation Form
+                </h3>
+                <form onSubmit={handleSubmit} className='flex flex-col gap-5'>
+                  {/* Claimant Name */}
+                  <label className='flex flex-col'>
+                    <p
+                      className='text-sm font-medium leading-normal pb-2'
+                      style={{ color: 'var(--skillsaware-text-primary)' }}
+                    >
+                      Claimant Name
+                    </p>
+                    <input
+                      className='flex w-full rounded-lg text-base font-normal leading-normal transition-all h-12 placeholder:text-sm px-4 focus:outline-0 focus:ring-2 focus:ring-primary/50 border'
+                      placeholder='e.g. John Doe'
+                      value={formData.claimant_name}
+                      onChange={e =>
+                        setFormData({ ...formData, claimant_name: e.target.value })
+                      }
+                      required
+                      style={{
+                        borderColor: 'var(--skillsaware-border)',
+                        backgroundColor: 'var(--skillsaware-bg-primary)',
+                        color: 'var(--skillsaware-text-primary)'
+                      }}
+                      onFocus={e => {
+                        e.target.style.borderColor = 'var(--skillsaware-primary)'
+                      }}
+                      onBlur={e => {
+                        e.target.style.borderColor = 'var(--skillsaware-border)'
+                      }}
+                    />
+                  </label>
+                  {/* Claimant Email */}
+                  <label className='flex flex-col'>
+                    <p
+                      className='text-sm font-medium leading-normal pb-2'
+                      style={{ color: 'var(--skillsaware-text-primary)' }}
+                    >
+                      Claimant Email
+                    </p>
+                    <input
+                      className='flex w-full rounded-lg text-base font-normal leading-normal transition-all h-12 placeholder:text-sm px-4 focus:outline-0 focus:ring-2 focus:ring-primary/50 border'
+                      placeholder='e.g. john@company.com'
+                      type='email'
+                      value={formData.claimant_email}
+                      onChange={e =>
+                        setFormData({ ...formData, claimant_email: e.target.value })
+                      }
+                      required
+                      style={{
+                        borderColor: 'var(--skillsaware-border)',
+                        backgroundColor: 'var(--skillsaware-bg-primary)',
+                        color: 'var(--skillsaware-text-primary)'
+                      }}
+                      onFocus={e => {
+                        e.target.style.borderColor = 'var(--skillsaware-primary)'
+                      }}
+                      onBlur={e => {
+                        e.target.style.borderColor = 'var(--skillsaware-border)'
+                      }}
+                    />
+                  </label>
+                  {/* Skill Code */}
+                  <label className='flex flex-col'>
+                    <p
+                      className='text-sm font-medium leading-normal pb-2'
+                      style={{ color: 'var(--skillsaware-text-primary)' }}
+                    >
+                      Skill Code
+                    </p>
+                    <div className='relative'>
+                      <input
+                        className='flex w-full rounded-lg text-base font-normal leading-normal transition-all h-12 placeholder:text-sm pl-10 pr-4 focus:outline-0 focus:ring-2 focus:ring-primary/50 border'
+                        placeholder='e.g. SK-001'
+                        value={formData.skill_code}
+                        onChange={e =>
+                          setFormData({ ...formData, skill_code: e.target.value })
+                        }
+                        required
+                        style={{
+                          borderColor: 'var(--skillsaware-border)',
+                          backgroundColor: 'var(--skillsaware-bg-primary)',
+                          color: 'var(--skillsaware-text-primary)'
+                        }}
+                        onFocus={e => {
+                          e.target.style.borderColor = 'var(--skillsaware-primary)'
+                        }}
+                        onBlur={e => {
+                          e.target.style.borderColor = 'var(--skillsaware-border)'
+                        }}
+                      />
+                    </div>
+                  </label>
+                  {/* Skill Name */}
+                  <label className='flex flex-col'>
+                    <p
+                      className='text-sm font-medium leading-normal pb-2'
+                      style={{ color: 'var(--skillsaware-text-primary)' }}
+                    >
+                      Skill Name
+                    </p>
+                    <input
+                      className='flex w-full rounded-lg text-base font-normal leading-normal transition-all h-12 placeholder:text-sm px-4 focus:outline-0 focus:ring-2 focus:ring-primary/50 border'
+                      placeholder='e.g. Project Management'
+                      value={formData.skill_name}
+                      onChange={e =>
+                        setFormData({ ...formData, skill_name: e.target.value })
+                      }
+                      required
+                      style={{
+                        borderColor: 'var(--skillsaware-border)',
+                        backgroundColor: 'var(--skillsaware-bg-primary)',
+                        color: 'var(--skillsaware-text-primary)'
+                      }}
+                      onFocus={e => {
+                        e.target.style.borderColor = 'var(--skillsaware-primary)'
+                      }}
+                      onBlur={e => {
+                        e.target.style.borderColor = 'var(--skillsaware-border)'
+                      }}
+                    />
+                  </label>
+                  {/* Skill Description */}
+                  <label className='flex flex-col'>
+                    <p
+                      className='text-sm font-medium leading-normal pb-2'
+                      style={{ color: 'var(--skillsaware-text-primary)' }}
+                    >
+                      Skill Description
+                    </p>
+                    <textarea
+                      className='flex w-full rounded-lg text-base font-normal leading-normal transition-all min-h-32 placeholder:text-sm p-4 focus:outline-0 focus:ring-2 focus:ring-primary/50 border resize-none'
+                      placeholder='Describe the competencies validated by this skill...'
+                      value={formData.skill_description}
+                      onChange={e =>
+                        setFormData({ ...formData, skill_description: e.target.value })
+                      }
+                      required
+                      style={{
+                        borderColor: 'var(--skillsaware-border)',
+                        backgroundColor: 'var(--skillsaware-bg-primary)',
+                        color: 'var(--skillsaware-text-primary)'
+                      }}
+                      onFocus={e => {
+                        e.target.style.borderColor = 'var(--skillsaware-primary)'
+                      }}
+                      onBlur={e => {
+                        e.target.style.borderColor = 'var(--skillsaware-border)'
+                      }}
+                    />
+                  </label>
+                  {error && (
+                    <div
+                      className='p-4 border rounded-lg'
+                      style={{
+                        backgroundColor: 'rgba(222, 53, 11, 0.1)',
+                        borderColor: 'rgba(222, 53, 11, 0.2)',
+                        color: 'var(--skillsaware-error)'
+                      }}
+                    >
+                      <p className='font-bold text-sm mb-1'>Submission Error</p>
+                      <p className='text-sm'>{error}</p>
+                    </div>
+                  )}
+                  <div className='pt-4'>
+                    <button
+                      type='submit'
+                      disabled={loading}
+                      className='w-full flex items-center justify-center gap-2 font-bold h-12 rounded-lg transition-colors focus:ring-4 focus:ring-primary/30'
+                      style={{
+                        backgroundColor: loading
+                          ? 'var(--skillsaware-text-tertiary)'
+                          : 'var(--skillsaware-primary)',
+                        color: 'white',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        opacity: loading ? 0.6 : 1
+                      }}
+                    >
+                      <span className='material-symbols-outlined'>auto_fix_high</span>
+                      {loading
+                        ? 'Creating Claim...'
+                        : 'Create Claim & Generate Magic Link'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column: Info & Help (Span 1) */}
+          <div className='flex flex-col gap-6'>
+            {/* Info Card */}
+            <div
+              className='card rounded-xl shadow-sm border p-6 sticky'
+              style={{
+                top: '96px',
+                backgroundColor: 'var(--skillsaware-bg-primary)',
+                borderColor: 'var(--skillsaware-border)'
+              }}
+            >
+              <div className='mb-5 text-center'>
+                <h4
+                  className='text-lg font-bold flex items-center justify-center gap-2'
+                  style={{ color: 'var(--skillsaware-text-primary)' }}
+                >
+                  <span
+                    className='material-symbols-outlined'
+                    style={{ color: 'var(--skillsaware-text-secondary)' }}
+                  >
+                    info
+                  </span>
+                  How it works
+                </h4>
+              </div>
+              <ol
+                className='relative space-y-8'
+                style={{
+                  borderColor: 'var(--skillsaware-border)',
+                  listStyle: 'none',
+                  paddingLeft: 0,
+                  marginLeft: 0,
+                  textAlign: 'center'
+                }}
+              >
+                <li>
+                  <div className='flex flex-col items-center gap-3'>
+                    <div className='flex items-center gap-3'>
+                      <span
+                        className='flex items-center justify-center rounded-full shrink-0'
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          backgroundColor: 'rgba(19, 127, 236, 0.15)',
+                          border: '2px solid var(--skillsaware-primary)',
+                          color: 'var(--skillsaware-primary)',
+                          fontSize: '14px',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        1
+                      </span>
+                      <h3
+                        className='text-sm font-semibold'
+                        style={{
+                          color: 'var(--skillsaware-text-primary)'
+                        }}
+                      >
+                        Define Skill Claim
+                      </h3>
+                    </div>
+                    <p
+                      className='text-sm font-normal max-w-xs'
+                      style={{ color: 'var(--skillsaware-text-secondary)' }}
+                    >
+                      Enter the claimant&apos;s details and the specific skill attributes
+                      in the form.
+                    </p>
+                  </div>
+                </li>
+                <li>
+                  <div className='flex flex-col items-center gap-3'>
+                    <div className='flex items-center gap-3'>
+                      <span
+                        className='flex items-center justify-center rounded-full shrink-0'
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          backgroundColor: 'rgba(19, 127, 236, 0.15)',
+                          border: '2px solid var(--skillsaware-primary)',
+                          color: 'var(--skillsaware-primary)',
+                          fontSize: '14px',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        2
+                      </span>
+                      <h3
+                        className='text-sm font-semibold'
+                        style={{ color: 'var(--skillsaware-text-primary)' }}
+                      >
+                        Generate Magic Link
+                      </h3>
+                    </div>
+                    <p
+                      className='text-sm font-normal max-w-xs'
+                      style={{ color: 'var(--skillsaware-text-secondary)' }}
+                    >
+                      The system creates a signed, time-sensitive URL containing the claim
+                      data.
+                    </p>
+                  </div>
+                </li>
+                <li>
+                  <div className='flex flex-col items-center gap-3'>
+                    <div className='flex items-center gap-3'>
+                      <span
+                        className='flex items-center justify-center rounded-full shrink-0'
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          backgroundColor: 'rgba(19, 127, 236, 0.15)',
+                          border: '2px solid var(--skillsaware-primary)',
+                          color: 'var(--skillsaware-primary)',
+                          fontSize: '14px',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        3
+                      </span>
+                      <h3
+                        className='text-sm font-semibold'
+                        style={{ color: 'var(--skillsaware-text-primary)' }}
+                      >
+                        Send to Claimant
+                      </h3>
+                    </div>
+                    <p
+                      className='text-sm font-normal max-w-xs'
+                      style={{ color: 'var(--skillsaware-text-secondary)' }}
+                    >
+                      Share the link. The claimant will verify their identity and accept
+                      the endorsement.
+                    </p>
+                  </div>
+                </li>
+              </ol>
+              {/* Stateless Note Highlight */}
+              <div
+                className='mt-8 border rounded-lg p-4 text-center'
+                style={{
+                  backgroundColor: 'rgba(19, 127, 236, 0.05)',
+                  borderColor: 'rgba(19, 127, 236, 0.2)'
+                }}
+              >
+                <div className='flex flex-col items-center gap-2'>
+                  <span
+                    className='material-symbols-outlined text-sm'
+                    style={{ color: 'var(--skillsaware-primary)' }}
+                  >
+                    lightbulb
+                  </span>
+                  <div>
+                    <p
+                      className='text-xs font-bold mb-1'
+                      style={{ color: 'var(--skillsaware-primary)' }}
+                    >
+                      Direct File Delivery
+                    </p>
+                    <p
+                      className='text-xs leading-relaxed max-w-xs mx-auto'
+                      style={{ color: 'var(--skillsaware-text-secondary)' }}
+                    >
+                      This system is <strong>stateless</strong>. We do not store claimant
+                      PII on our servers. All necessary data is embedded directly into the
+                      signed magic link.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          )}
-        </div>
-
-        {/* Info Box */}
-        <div className='mt-6 bg-blue-50 border border-blue-200 rounded-lg p-6'>
-          <h3 className='text-blue-900 font-bold mb-2'>How it works:</h3>
-          <ol className='text-blue-800 text-sm space-y-2 list-decimal list-inside'>
-            <li>Fill in the claimant details above</li>
-            <li>Click &ldquo;Create Claim&rdquo; to generate a magic link</li>
-            <li>Send the claimant link to the person claiming the skill</li>
-            <li>They submit their narrative and generate an endorser link</li>
-            <li>The endorser completes the endorsement form</li>
-            <li>PDF certificate and JSON credentials are generated</li>
-            <li>Files are available for immediate download (no S3 required!)</li>
-            <li>
-              Optional: Files can also be stored in S3 and webhook sent if configured
-            </li>
-          </ol>
-
-          <div className='mt-4 p-3 bg-green-50 border border-green-300 rounded'>
-            <p className='text-green-900 text-sm'>
-              <strong>✨ New:</strong> The system now works without AWS S3! Files are
-              delivered directly to users for download.
-            </p>
           </div>
         </div>
       </div>

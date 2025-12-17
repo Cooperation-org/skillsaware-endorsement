@@ -4,7 +4,6 @@ export const swaggerSpec = {
     title: 'SkillsAware Endorsement API',
     version: '1.0.0',
     description: `
-# SkillsAware Endorsement API
 
 A secure, serverless API for issuing and verifying Open Badge v3.0-compliant skill endorsement credentials.
 
@@ -298,7 +297,8 @@ Tokens are issued via magic links and expire after 7 days (configurable).
                   source: {
                     type: 'string',
                     enum: ['s3', 'api'],
-                    description: 'Source of the download URL (s3 for S3 presigned URL, api for API endpoint)',
+                    description:
+                      'Source of the download URL (s3 for S3 presigned URL, api for API endpoint)',
                     example: 's3'
                   },
                   expires_in: {
@@ -342,7 +342,8 @@ Tokens are issued via magic links and expire after 7 days (configurable).
                   source: {
                     type: 'string',
                     enum: ['s3', 'api'],
-                    description: 'Source of the download URL (s3 for S3 presigned URL, api for API endpoint)',
+                    description:
+                      'Source of the download URL (s3 for S3 presigned URL, api for API endpoint)',
                     example: 's3'
                   },
                   expires_in: {
@@ -377,7 +378,8 @@ Tokens are issued via magic links and expire after 7 days (configurable).
               json: {
                 type: 'string',
                 description: 'S3 key for the JSON credential file',
-                example: 'endorsements/123e4567-e89b-12d3-a456-426614174000/claim.obv3.json'
+                example:
+                  'endorsements/123e4567-e89b-12d3-a456-426614174000/claim.obv3.json'
               },
               pdf: {
                 type: 'string',
@@ -1118,7 +1120,8 @@ If any content or metadata has been modified after issuance, the verification wi
                     },
                     message: {
                       type: 'string',
-                      example: 'Use this token in the Authorization header: Bearer <token>'
+                      example:
+                        'Use this token in the Authorization header: Bearer <token>'
                     },
                     usage: {
                       type: 'object',

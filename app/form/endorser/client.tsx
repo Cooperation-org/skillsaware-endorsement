@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
 import { JwtPayload } from '@/types/jwt'
+import Navbar from '../../components/Navbar'
 
 interface EndorserFormClientProps {
   payload: JwtPayload
@@ -12,7 +12,7 @@ interface EndorserFormClientProps {
 export default function EndorserFormClient({ payload, token }: EndorserFormClientProps) {
   const [endorsementText, setEndorsementText] = useState('')
   const [bonaFides, setBonaFides] = useState('')
-  const [evidenceUrls, setEvidenceUrls] = useState<string[]>([''])
+  const [evidenceUrls, setEvidenceUrls] = useState<string[]>([])
   const [signature, setSignature] = useState('')
   const [consent, setConsent] = useState(false)
   const [error, setError] = useState('')
@@ -111,6 +111,23 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
     setEvidenceUrls([...evidenceUrls, ''])
   }
 
+  const removeEvidenceField = (index: number) => {
+    const newUrls = evidenceUrls.filter((_, i) => i !== index)
+    setEvidenceUrls(newUrls)
+    // Reindex errors for remaining fields
+    const reindexedErrors: { [key: number]: string } = {}
+    Object.keys(urlErrors).forEach(key => {
+      const oldIndex = parseInt(key)
+      if (oldIndex > index) {
+        reindexedErrors[oldIndex - 1] = urlErrors[oldIndex]
+      } else if (oldIndex < index) {
+        reindexedErrors[oldIndex] = urlErrors[oldIndex]
+      }
+      // Skip the deleted index
+    })
+    setUrlErrors(reindexedErrors)
+  }
+
   const updateEvidenceUrl = (index: number, value: string) => {
     const newUrls = [...evidenceUrls]
     newUrls[index] = value
@@ -165,151 +182,145 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
   if (success) {
     return (
       <div
-        className='container'
-        style={{
-          padding: '40px',
-          maxWidth: '800px',
-          margin: '0 auto',
-          textAlign: 'center'
-        }}
+        className='min-h-screen flex flex-col'
+        style={{ backgroundColor: 'var(--skillsaware-bg-secondary)' }}
       >
-        <div style={{ marginBottom: '30px' }}>
-          <Image
-            src='/logo/skillsaware-logo.svg'
-            alt='SkillsAware Logo'
-            width={200}
-            height={60}
-            className='skillsaware-logo'
-            style={{ margin: '0 auto 20px' }}
-          />
-        </div>
-        <h1>Endorsement Submitted Successfully!</h1>
-        <div
-          className='alert alert-success'
-          style={{ padding: '30px', textAlign: 'left' }}
-        >
-          <svg
-            style={{ width: '64px', height: '64px', marginBottom: '20px' }}
-            fill='none'
-            stroke='var(--skillsaware-success)'
-            viewBox='0 0 24 24'
-          >
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth={2}
-              d='M5 13l4 4L19 7'
-            />
-          </svg>
-          <h2 style={{ color: 'var(--skillsaware-success)', marginBottom: '10px' }}>
-            Thank You!
-          </h2>
-          <p
-            style={{
-              fontSize: '16px',
-              color: 'var(--skillsaware-text-secondary)',
-              marginBottom: '30px'
-            }}
-          >
-            Your endorsement for <strong>{payload.claimant_name}</strong> has been
-            recorded.
-            <br />
-            The credential and PDF certificate have been generated.
-          </p>
+        <Navbar />
 
-          {downloadLinks && (
-            <div style={{ marginTop: '30px' }}>
-              <h3
-                style={{
-                  fontSize: '18px',
-                  color: 'var(--skillsaware-text-primary)',
-                  marginBottom: '20px'
-                }}
-              >
-                Download Your Credentials
-              </h3>
+        {/* Main Content */}
+        <div className='flex flex-1 flex-col items-center py-8 md:py-12 px-4 md:px-8'>
+          <div className='flex flex-col max-w-[800px] w-full gap-8'>
+            {/* Success State */}
+            <div
+              className='flex flex-col items-center justify-center p-8 md:p-12 card rounded-xl shadow-lg border text-center'
+              style={{ borderColor: 'var(--skillsaware-border)' }}
+            >
               <div
-                style={{
-                  display: 'flex',
-                  gap: '15px',
-                  justifyContent: 'center',
-                  flexWrap: 'wrap'
-                }}
+                className='size-16 rounded-full flex items-center justify-center mb-6'
+                style={{ backgroundColor: 'rgba(54, 179, 126, 0.1)' }}
               >
-                {/* PDF Download Button */}
-                {downloadLinks.pdfBase64 ? (
-                  <button
-                    onClick={() =>
-                      downloadBase64File(
-                        downloadLinks.pdfBase64!,
-                        `${payload.skill_code}-${payload.claim_id}.pdf`,
-                        'application/pdf'
-                      )
-                    }
-                    className='btn'
-                    style={{ backgroundColor: 'var(--skillsaware-error)' }}
-                  >
-                    <svg width='20' height='20' fill='currentColor' viewBox='0 0 24 24'>
-                      <path d='M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z' />
-                    </svg>
-                    Download PDF Certificate
-                  </button>
-                ) : (
-                  <a
-                    href={downloadLinks.pdfUrl}
-                    download
-                    className='btn'
-                    style={{
-                      backgroundColor: 'var(--skillsaware-error)',
-                      color: 'var(--skillsaware-text-inverse)'
-                    }}
-                  >
-                    <svg width='20' height='20' fill='currentColor' viewBox='0 0 24 24'>
-                      <path d='M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z' />
-                    </svg>
-                    Download PDF Certificate
-                  </a>
-                )}
-
-                {/* JSON Download Button */}
-                {downloadLinks.jsonBase64 ? (
-                  <button
-                    onClick={() =>
-                      downloadBase64File(
-                        downloadLinks.jsonBase64!,
-                        `${payload.skill_code}-${payload.claim_id}.obv3.json`,
-                        'application/json'
-                      )
-                    }
-                    className='btn btn-primary'
-                  >
-                    <svg width='20' height='20' fill='currentColor' viewBox='0 0 24 24'>
-                      <path d='M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z' />
-                    </svg>
-                    Download JSON Credential
-                  </button>
-                ) : (
-                  <a href={downloadLinks.jsonUrl} download className='btn btn-primary'>
-                    <svg width='20' height='20' fill='currentColor' viewBox='0 0 24 24'>
-                      <path d='M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z' />
-                    </svg>
-                    Download JSON Credential
-                  </a>
-                )}
+                <span
+                  className='material-symbols-outlined'
+                  style={{ fontSize: '40px', color: 'var(--skillsaware-success)' }}
+                >
+                  check_circle
+                </span>
               </div>
-
-              <p
-                style={{
-                  fontSize: '13px',
-                  color: 'var(--skillsaware-text-secondary)',
-                  marginTop: '20px'
-                }}
+              <h2
+                className='text-2xl font-bold mb-2'
+                style={{ color: 'var(--skillsaware-text-primary)' }}
               >
-                💡 <strong>Tip:</strong> The PDF is a human-readable certificate. The JSON
-                file contains the machine-readable credential in Open Badges v3 format.
+                Endorsement Submitted Successfully!
+              </h2>
+              <p
+                className='max-w-md mx-auto mb-8'
+                style={{ color: 'var(--skillsaware-text-secondary)' }}
+              >
+                Thank you for verifying this claim. The credential has been
+                cryptographically signed and issued to the claimant.
               </p>
+              {downloadLinks && (
+                <div className='flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center items-center'>
+                  {downloadLinks.pdfBase64 ? (
+                    <button
+                      onClick={() =>
+                        downloadBase64File(
+                          downloadLinks.pdfBase64!,
+                          `${payload.skill_code}-${payload.claim_id}.pdf`,
+                          'application/pdf'
+                        )
+                      }
+                      className='flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg border hover:bg-slate-50 transition-colors text-sm font-semibold'
+                      style={{
+                        borderColor: 'var(--skillsaware-border)',
+                        backgroundColor: 'var(--skillsaware-bg-primary)',
+                        color: 'var(--skillsaware-text-primary)',
+                        minWidth: '250px',
+                        maxWidth: '300px'
+                      }}
+                    >
+                      <span
+                        className='material-symbols-outlined'
+                        style={{ fontSize: '20px', color: 'var(--skillsaware-error)' }}
+                      >
+                        picture_as_pdf
+                      </span>
+                      Download Certificate
+                    </button>
+                  ) : (
+                    <a
+                      href={downloadLinks.pdfUrl}
+                      download
+                      className='flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg border hover:bg-slate-50 transition-colors text-sm font-semibold'
+                      style={{
+                        borderColor: 'var(--skillsaware-border)',
+                        backgroundColor: 'var(--skillsaware-bg-primary)',
+                        color: 'var(--skillsaware-text-primary)',
+                        minWidth: '250px',
+                        maxWidth: '300px'
+                      }}
+                    >
+                      <span
+                        className='material-symbols-outlined'
+                        style={{ fontSize: '20px', color: 'var(--skillsaware-error)' }}
+                      >
+                        picture_as_pdf
+                      </span>
+                      Download Certificate
+                    </a>
+                  )}
+                  {downloadLinks.jsonBase64 ? (
+                    <button
+                      onClick={() =>
+                        downloadBase64File(
+                          downloadLinks.jsonBase64!,
+                          `${payload.skill_code}-${payload.claim_id}.obv3.json`,
+                          'application/json'
+                        )
+                      }
+                      className='flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg border hover:bg-slate-50 transition-colors text-sm font-semibold'
+                      style={{
+                        borderColor: 'var(--skillsaware-border)',
+                        backgroundColor: 'var(--skillsaware-bg-primary)',
+                        color: 'var(--skillsaware-text-primary)',
+                        minWidth: '250px',
+                        maxWidth: '300px'
+                      }}
+                    >
+                      <span
+                        className='material-symbols-outlined'
+                        style={{ fontSize: '20px', color: 'var(--skillsaware-warning)' }}
+                      >
+                        data_object
+                      </span>
+                      Download JSON Credential
+                    </button>
+                  ) : (
+                    <a
+                      href={downloadLinks.jsonUrl}
+                      download
+                      className='flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg border hover:bg-slate-50 transition-colors text-sm font-semibold'
+                      style={{
+                        borderColor: 'var(--skillsaware-border)',
+                        backgroundColor: 'var(--skillsaware-bg-primary)',
+                        color: 'var(--skillsaware-text-primary)',
+                        minWidth: '250px',
+                        maxWidth: '300px'
+                      }}
+                    >
+                      <span
+                        className='material-symbols-outlined'
+                        style={{ fontSize: '20px', color: 'var(--skillsaware-warning)' }}
+                      >
+                        data_object
+                      </span>
+                      Download JSON Credential
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     )
@@ -317,164 +328,538 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
 
   return (
     <div
-      className='container'
-      style={{ padding: '40px', maxWidth: '800px', margin: '0 auto' }}
+      className='min-h-screen flex flex-col'
+      style={{ backgroundColor: 'var(--skillsaware-bg-secondary)' }}
     >
-      <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-        <Image
-          src='/logo/skillsaware-logo.svg'
-          alt='SkillsAware Logo'
-          width={200}
-          height={60}
-          className='skillsaware-logo'
-          style={{ margin: '0 auto 20px' }}
-        />
-      </div>
-      <h1>Skill Endorsement Form</h1>
+      <Navbar />
 
-      {/* Skill Information (Read-only) */}
-      <div className='card mb-3'>
-        <h2 style={{ fontSize: '18px', marginBottom: '10px' }}>Skill Information</h2>
-        <p>
-          <strong>Skill Name:</strong> {payload.skill_name}
-        </p>
-        <p>
-          <strong>Skill Code:</strong> {payload.skill_code}
-        </p>
-        <p>
-          <strong>Claimant:</strong> {payload.claimant_name}
-        </p>
-        <p style={{ marginTop: '10px' }}>
-          <strong>Description:</strong>
-        </p>
-        <p style={{ fontSize: '14px', color: 'var(--skillsaware-text-secondary)' }}>
-          {payload.skill_description}
-        </p>
-        <p style={{ marginTop: '10px' }}>
-          <strong>Claimant&apos;s Narrative:</strong>
-        </p>
-        <p
-          style={{
-            fontSize: '14px',
-            color: 'var(--skillsaware-text-secondary)',
-            fontStyle: 'italic'
-          }}
+      {/* Main Content */}
+      <div className='flex flex-1 flex-col items-center py-8 md:py-12 px-4 md:px-8'>
+        <div
+          className='flex flex-col max-w-[800px] w-full gap-8'
+          style={{ marginTop: '2rem' }}
         >
-          &quot;{payload.claimant_narrative}&quot;
-        </p>
-      </div>
+          {/* Page Heading */}
+          <div className='flex flex-col gap-2 text-center md:text-left'>
+            <h1
+              className='tracking-tight text-3xl md:text-[32px] font-bold leading-tight'
+              style={{ color: 'var(--skillsaware-text-primary)' }}
+            >
+              Skill Endorsement
+            </h1>
+            <p
+              className='text-sm md:text-base font-normal leading-normal'
+              style={{ color: 'var(--skillsaware-text-secondary)' }}
+            >
+              You have been requested to review and endorse a skill claim. Please verify
+              the information below and submit your professional attestation.
+            </p>
+          </div>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className='card'>
-        <div className='mb-2'>
-          <label htmlFor='bonaFides'>Your Credentials / Bona Fides *</label>
-          <input
-            type='text'
-            id='bonaFides'
-            value={bonaFides}
-            onChange={e => setBonaFides(e.target.value)}
-            required
-            placeholder='e.g., Senior Developer at Company X'
-          />
-        </div>
-
-        <div className='mb-2'>
-          <label htmlFor='endorsementText'>Endorsement Statement *</label>
-          <textarea
-            id='endorsementText'
-            value={endorsementText}
-            onChange={e => setEndorsementText(e.target.value)}
-            required
-            rows={6}
-            placeholder='Describe how the claimant has demonstrated this skill...'
-          />
-        </div>
-
-        <div className='mb-2'>
-          <label>Supporting Evidence (Optional)</label>
-          {evidenceUrls.map((url, index) => (
-            <div key={index} style={{ marginBottom: '10px' }}>
-              <input
-                type='url'
-                value={url}
-                onChange={e => updateEvidenceUrl(index, e.target.value)}
-                placeholder='https://example.com/evidence'
-                style={{
-                  borderColor: urlErrors[index] ? 'var(--skillsaware-error)' : undefined
-                }}
-              />
-              {urlErrors[index] && (
+          {/* Read-Only Context Section */}
+          <section
+            className='flex flex-col rounded-xl border overflow-hidden shadow-sm'
+            style={{
+              borderColor: 'var(--skillsaware-border)',
+              backgroundColor: 'var(--skillsaware-bg-primary)'
+            }}
+          >
+            <div
+              className='px-6 py-4 border-b'
+              style={{
+                backgroundColor: 'var(--skillsaware-bg-secondary)',
+                borderColor: 'var(--skillsaware-border)',
+                paddingTop: '1.5rem'
+              }}
+            >
+              <h3
+                className='text-base font-bold leading-tight flex items-center gap-2'
+                style={{ color: 'var(--skillsaware-text-primary)' }}
+              >
+                <span
+                  className='material-symbols-outlined'
+                  style={{ fontSize: '20px', color: 'var(--skillsaware-primary)' }}
+                >
+                  verified
+                </span>
+                Claim Information
+              </h3>
+            </div>
+            <div className='p-6 grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8'>
+              <div>
                 <p
+                  className='text-xs font-semibold uppercase tracking-wider mb-1'
+                  style={{ color: 'var(--skillsaware-text-secondary)' }}
+                >
+                  Claimant
+                </p>
+                <div className='flex items-center gap-3'>
+                  <div
+                    className='size-8 rounded-full overflow-hidden shrink-0'
+                    style={{ backgroundColor: 'var(--skillsaware-bg-tertiary)' }}
+                  >
+                    <span
+                      className='material-symbols-outlined text-sm flex items-center justify-center w-full h-full'
+                      style={{ color: 'var(--skillsaware-text-secondary)' }}
+                    >
+                      person
+                    </span>
+                  </div>
+                  <p
+                    className='text-sm font-medium'
+                    style={{ color: 'var(--skillsaware-text-primary)' }}
+                  >
+                    {payload.claimant_name}
+                  </p>
+                </div>
+              </div>
+              <div>
+                <p
+                  className='text-xs font-semibold uppercase tracking-wider mb-1'
+                  style={{ color: 'var(--skillsaware-text-secondary)' }}
+                >
+                  Skill Name
+                </p>
+                <p
+                  className='text-sm font-medium'
+                  style={{ color: 'var(--skillsaware-text-primary)' }}
+                >
+                  {payload.skill_name}
+                </p>
+              </div>
+              <div>
+                <p
+                  className='text-xs font-semibold uppercase tracking-wider mb-1'
+                  style={{ color: 'var(--skillsaware-text-secondary)' }}
+                >
+                  Skill Code
+                </p>
+                <code
+                  className='text-xs px-2 py-1 rounded font-mono border'
                   style={{
-                    color: 'var(--skillsaware-error)',
-                    fontSize: '12px',
-                    marginTop: '4px',
-                    marginBottom: '0'
+                    backgroundColor: 'var(--skillsaware-bg-secondary)',
+                    color: 'var(--skillsaware-text-primary)',
+                    borderColor: 'var(--skillsaware-border)'
                   }}
                 >
-                  {urlErrors[index]}
+                  {payload.skill_code}
+                </code>
+              </div>
+              <div className='col-span-1 md:col-span-2 mt-2'>
+                <p
+                  className='text-xs font-semibold uppercase tracking-wider mb-2'
+                  style={{ color: 'var(--skillsaware-text-secondary)' }}
+                >
+                  Claimant Narrative
                 </p>
+                <div
+                  className='border-l-4 p-4 rounded-r-lg'
+                  style={{
+                    backgroundColor: 'var(--skillsaware-bg-secondary)',
+                    borderColor: 'var(--skillsaware-primary)'
+                  }}
+                >
+                  <p
+                    className='text-sm italic leading-relaxed'
+                    style={{ color: 'var(--skillsaware-text-primary)' }}
+                  >
+                    &quot;{payload.claimant_narrative}&quot;
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Endorsement Form */}
+          <form
+            onSubmit={handleSubmit}
+            className='flex flex-col rounded-xl border overflow-hidden shadow-lg'
+            style={{
+              borderColor: 'var(--skillsaware-border)',
+              backgroundColor: 'var(--skillsaware-bg-primary)'
+            }}
+          >
+            <div
+              className='px-6 py-5 border-b flex justify-between items-center'
+              style={{
+                borderColor: 'var(--skillsaware-border)',
+                paddingTop: '1.5rem',
+                paddingBottom: '1.5rem'
+              }}
+            >
+              <h3
+                className='text-lg font-bold leading-tight'
+                style={{ color: 'var(--skillsaware-text-primary)' }}
+              >
+                Your Endorsement
+              </h3>
+              <span
+                className='px-2 py-1 rounded-full text-xs font-medium'
+                style={{
+                  backgroundColor: 'rgba(19, 127, 236, 0.1)',
+                  color: 'var(--skillsaware-primary)',
+                  paddingLeft: '1rem',
+                  paddingRight: '1rem',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: 'fit-content'
+                }}
+              >
+                Step 2 of 2
+              </span>
+            </div>
+            <div className='p-6 md:p-8 flex flex-col gap-8'>
+              {/* Credentials Field */}
+              <div className='flex flex-col gap-2'>
+                <label
+                  className='text-sm font-semibold flex items-center gap-1'
+                  htmlFor='credentials'
+                  style={{ color: 'var(--skillsaware-text-primary)' }}
+                >
+                  Your Credentials / Bona Fides{' '}
+                  <span style={{ color: 'var(--skillsaware-error)' }}>*</span>
+                </label>
+                <p
+                  className='text-xs'
+                  style={{ color: 'var(--skillsaware-text-secondary)' }}
+                >
+                  Why are you qualified to endorse this claim? (e.g., Senior Engineer,
+                  Project Lead)
+                </p>
+                <textarea
+                  className='w-full rounded-lg border p-3 text-sm focus:outline-none focus:ring-1 transition-all resize-none'
+                  id='credentials'
+                  value={bonaFides}
+                  onChange={e => setBonaFides(e.target.value)}
+                  required
+                  placeholder='e.g., I have 10 years of experience in React and supervised Jane on the Alpha project...'
+                  rows={3}
+                  style={{
+                    borderColor: 'var(--skillsaware-border)',
+                    backgroundColor: 'var(--skillsaware-bg-primary)',
+                    color: 'var(--skillsaware-text-primary)'
+                  }}
+                  onFocus={e => {
+                    e.target.style.borderColor = 'var(--skillsaware-primary)'
+                    e.target.style.boxShadow = '0 0 0 1px var(--skillsaware-primary)'
+                  }}
+                  onBlur={e => {
+                    e.target.style.borderColor = 'var(--skillsaware-border)'
+                    e.target.style.boxShadow = 'none'
+                  }}
+                />
+              </div>
+
+              {/* Statement Field */}
+              <div className='flex flex-col gap-2'>
+                <label
+                  className='text-sm font-semibold flex items-center gap-1'
+                  htmlFor='statement'
+                  style={{ color: 'var(--skillsaware-text-primary)' }}
+                >
+                  Endorsement Statement{' '}
+                  <span style={{ color: 'var(--skillsaware-error)' }}>*</span>
+                </label>
+                <textarea
+                  className='w-full rounded-lg border p-3 text-sm focus:outline-none focus:ring-1 transition-all resize-none'
+                  id='statement'
+                  value={endorsementText}
+                  onChange={e => setEndorsementText(e.target.value)}
+                  required
+                  placeholder='Provide your professional evaluation of the skill claim...'
+                  rows={5}
+                  style={{
+                    borderColor: 'var(--skillsaware-border)',
+                    backgroundColor: 'var(--skillsaware-bg-primary)',
+                    color: 'var(--skillsaware-text-primary)'
+                  }}
+                  onFocus={e => {
+                    e.target.style.borderColor = 'var(--skillsaware-primary)'
+                    e.target.style.boxShadow = '0 0 0 1px var(--skillsaware-primary)'
+                  }}
+                  onBlur={e => {
+                    e.target.style.borderColor = 'var(--skillsaware-border)'
+                    e.target.style.boxShadow = 'none'
+                  }}
+                />
+              </div>
+
+              {/* Supporting Evidence (Dynamic List) */}
+              <div className='flex flex-col gap-3'>
+                <div className='flex justify-between items-center'>
+                  <label
+                    className='text-sm font-semibold'
+                    style={{ color: 'var(--skillsaware-text-primary)' }}
+                  >
+                    Supporting Evidence
+                  </label>
+                  <span
+                    className='text-xs px-2 py-0.5 rounded'
+                    style={{
+                      backgroundColor: 'var(--skillsaware-bg-secondary)',
+                      color: 'var(--skillsaware-text-secondary)'
+                    }}
+                  >
+                    Optional
+                  </span>
+                </div>
+                <div className='flex flex-col gap-3'>
+                  {evidenceUrls.map((url, index) => (
+                    <div key={index} className='flex flex-col gap-2'>
+                      <div className='flex flex-col sm:flex-row items-start sm:items-center gap-2'>
+                        <div className='relative flex-1'>
+                          <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
+                            <span
+                              className='material-symbols-outlined'
+                              style={{
+                                fontSize: '18px',
+                                color: 'var(--skillsaware-text-tertiary)'
+                              }}
+                            >
+                              link
+                            </span>
+                          </div>
+                          <input
+                            className='w-full pl-10 rounded-lg border py-2.5 text-sm focus:outline-none focus:ring-1 transition-all'
+                            type='url'
+                            value={url}
+                            onChange={e => updateEvidenceUrl(index, e.target.value)}
+                            placeholder='https://github.com/project/repo...'
+                            style={{
+                              borderColor: urlErrors[index]
+                                ? 'var(--skillsaware-error)'
+                                : 'var(--skillsaware-border)',
+                              backgroundColor: 'var(--skillsaware-bg-primary)',
+                              color: 'var(--skillsaware-text-primary)'
+                            }}
+                            onFocus={e => {
+                              e.target.style.borderColor = 'var(--skillsaware-primary)'
+                              e.target.style.boxShadow =
+                                '0 0 0 1px var(--skillsaware-primary)'
+                            }}
+                            onBlur={e => {
+                              e.target.style.borderColor = urlErrors[index]
+                                ? 'var(--skillsaware-error)'
+                                : 'var(--skillsaware-border)'
+                              e.target.style.boxShadow = 'none'
+                            }}
+                          />
+                        </div>
+                        <button
+                          type='button'
+                          onClick={() => removeEvidenceField(index)}
+                          className='p-2 transition-colors shrink-0'
+                          style={{ color: 'var(--skillsaware-text-tertiary)' }}
+                          title='Remove URL'
+                        >
+                          <span
+                            className='material-symbols-outlined'
+                            style={{ fontSize: '20px' }}
+                          >
+                            delete
+                          </span>
+                        </button>
+                      </div>
+                      {urlErrors[index] && (
+                        <p
+                          className='text-xs'
+                          style={{ color: 'var(--skillsaware-error)' }}
+                        >
+                          {urlErrors[index]}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    className='flex items-center gap-1.5 text-sm font-medium transition-colors px-4 py-2.5 rounded-lg border whitespace-nowrap w-full sm:w-auto'
+                    type='button'
+                    onClick={addEvidenceField}
+                    style={{
+                      borderColor: 'var(--skillsaware-border)',
+                      backgroundColor: 'var(--skillsaware-bg-primary)',
+                      color: 'var(--skillsaware-text-primary)'
+                    }}
+                  >
+                    <span
+                      className='material-symbols-outlined'
+                      style={{ fontSize: '18px' }}
+                    >
+                      add
+                    </span>
+                    Add URL
+                  </button>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <hr style={{ borderColor: 'var(--skillsaware-border)' }} />
+
+              {/* Digital Signature */}
+              <div className='flex flex-col gap-2'>
+                <label
+                  className='text-sm font-semibold flex items-center gap-1'
+                  htmlFor='signature'
+                  style={{ color: 'var(--skillsaware-text-primary)' }}
+                >
+                  Digital Signature{' '}
+                  <span style={{ color: 'var(--skillsaware-error)' }}>*</span>
+                </label>
+                <p
+                  className='text-xs'
+                  style={{ color: 'var(--skillsaware-text-secondary)' }}
+                >
+                  Type your full legal name to sign this endorsement.
+                </p>
+                <div className='relative'>
+                  <input
+                    className='w-full rounded-lg border p-3 text-sm font-mono focus:outline-none focus:ring-1 transition-all'
+                    id='signature'
+                    type='text'
+                    value={signature}
+                    onChange={e => setSignature(e.target.value)}
+                    required
+                    placeholder='Full Name'
+                    style={{
+                      borderColor: 'var(--skillsaware-border)',
+                      backgroundColor: 'var(--skillsaware-bg-secondary)',
+                      color: 'var(--skillsaware-text-primary)'
+                    }}
+                    onFocus={e => {
+                      e.target.style.borderColor = 'var(--skillsaware-primary)'
+                      e.target.style.boxShadow = '0 0 0 1px var(--skillsaware-primary)'
+                      e.target.style.backgroundColor = 'var(--skillsaware-bg-primary)'
+                    }}
+                    onBlur={e => {
+                      e.target.style.borderColor = 'var(--skillsaware-border)'
+                      e.target.style.boxShadow = 'none'
+                      e.target.style.backgroundColor = 'var(--skillsaware-bg-secondary)'
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Consent Checkbox */}
+              <div
+                className='flex gap-3 items-start p-4 rounded-lg border'
+                style={{
+                  backgroundColor: 'rgba(19, 127, 236, 0.05)',
+                  borderColor: 'rgba(19, 127, 236, 0.2)'
+                }}
+              >
+                <div className='flex h-6 items-center'>
+                  <input
+                    className='h-5 w-5 rounded border focus:ring-primary'
+                    id='consent'
+                    name='consent'
+                    type='checkbox'
+                    checked={consent}
+                    onChange={e => setConsent(e.target.checked)}
+                    style={{
+                      borderColor: 'var(--skillsaware-border)',
+                      cursor: 'pointer'
+                    }}
+                  />
+                </div>
+                <div className='text-sm leading-6'>
+                  <label
+                    className='font-medium'
+                    htmlFor='consent'
+                    style={{ color: 'var(--skillsaware-text-primary)' }}
+                  >
+                    I certify that this endorsement is accurate.
+                  </label>
+                  <p
+                    className='text-xs mt-1'
+                    style={{ color: 'var(--skillsaware-text-secondary)' }}
+                  >
+                    By checking this box, I confirm that I have reviewed the claim and
+                    that my endorsement is based on professional knowledge of the
+                    claimant&apos;s skills. I understand this credential will be
+                    cryptographically signed.
+                  </p>
+                </div>
+              </div>
+
+              {/* Error Message */}
+              {error && (
+                <div
+                  className='flex items-center gap-2 p-3 rounded-lg border'
+                  style={{
+                    backgroundColor: 'rgba(222, 53, 11, 0.1)',
+                    borderColor: 'rgba(222, 53, 11, 0.2)',
+                    color: 'var(--skillsaware-error)'
+                  }}
+                >
+                  <span
+                    className='material-symbols-outlined'
+                    style={{ fontSize: '20px' }}
+                  >
+                    error
+                  </span>
+                  <span className='text-sm font-medium'>{error}</span>
+                </div>
               )}
             </div>
-          ))}
-          <button
-            type='button'
-            onClick={addEvidenceField}
-            className='btn btn-secondary'
-            style={{ marginTop: '10px' }}
-          >
-            + Add Evidence URL
-          </button>
-        </div>
 
-        <div className='mb-2'>
-          <label htmlFor='signature'>Digital Signature (Type your full name) *</label>
-          <input
-            type='text'
-            id='signature'
-            value={signature}
-            onChange={e => setSignature(e.target.value)}
-            required
-            placeholder='Your Full Name'
-          />
-        </div>
-
-        <div className='mb-2'>
-          <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-            <input
-              type='checkbox'
-              checked={consent}
-              onChange={e => setConsent(e.target.checked)}
+            {/* Footer Actions */}
+            <div
+              className='px-6 py-5 border-t flex flex-col md:flex-row justify-end items-center gap-4'
               style={{
-                marginRight: '10px',
-                cursor: 'pointer',
-                width: '18px',
-                height: '18px'
+                backgroundColor: 'var(--skillsaware-bg-secondary)',
+                borderColor: 'var(--skillsaware-border)'
               }}
-            />
-            <span style={{ fontSize: '14px' }}>
-              I consent to this endorsement being recorded and shared. I confirm that the
-              information provided is accurate to the best of my knowledge.
-            </span>
-          </label>
+            >
+              <button
+                type='button'
+                className='text-sm font-bold px-4 py-2 transition-colors'
+                style={{ color: 'var(--skillsaware-text-secondary)' }}
+              >
+                Cancel
+              </button>
+              <button
+                type='submit'
+                disabled={submitting}
+                className='flex min-w-[180px] items-center justify-center overflow-hidden rounded-lg h-11 px-6 text-white text-sm font-bold leading-normal transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed'
+                style={{
+                  backgroundColor: submitting
+                    ? 'var(--skillsaware-text-tertiary)'
+                    : 'var(--skillsaware-primary)',
+                  cursor: submitting ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {submitting ? (
+                  <>
+                    <svg
+                      className='animate-spin -ml-1 mr-3 h-4 w-4 text-white'
+                      fill='none'
+                      viewBox='0 0 24 24'
+                      xmlns='http://www.w3.org/2000/svg'
+                    >
+                      <circle
+                        className='opacity-25'
+                        cx='12'
+                        cy='12'
+                        r='10'
+                        stroke='currentColor'
+                        strokeWidth='4'
+                      ></circle>
+                      <path
+                        className='opacity-75'
+                        d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                        fill='currentColor'
+                      ></path>
+                    </svg>
+                    <span className='truncate'>Submitting...</span>
+                  </>
+                ) : (
+                  <span className='truncate'>Submit Endorsement</span>
+                )}
+              </button>
+            </div>
+          </form>
         </div>
-
-        {error && <div className='alert alert-error'>{error}</div>}
-
-        <button type='submit' disabled={submitting} className='btn btn-primary'>
-          {submitting ? (
-            <>
-              <span
-                className='loading'
-                style={{ width: '16px', height: '16px', borderWidth: '2px' }}
-              ></span>
-              Submitting...
-            </>
-          ) : (
-            'Submit Endorsement'
-          )}
-        </button>
-      </form>
+      </div>
     </div>
   )
 }
