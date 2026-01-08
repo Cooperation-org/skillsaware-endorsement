@@ -2,18 +2,18 @@ import React from 'react'
 import Image from 'next/image'
 
 interface CredentialTemplateProps {
-  skillName: string
-  skillCode: string
-  skillDescription: string
-  claimantName: string
-  narrative: string
-  endorserName: string
-  endorsementText: string
-  bonaFides: string
-  signature: string
-  evidence?: string[]
-  logoUrl?: string
-  primaryColor?: string
+  readonly skillName: string
+  readonly skillCode: string
+  readonly skillDescription: string
+  readonly claimantName: string
+  readonly narrative: string
+  readonly endorserName: string
+  readonly endorsementText: string
+  readonly bonaFides: string
+  readonly signature: string
+  readonly evidence?: readonly string[]
+  readonly logoUrl?: string
+  readonly primaryColor?: string
 }
 
 export default function CredentialTemplate({

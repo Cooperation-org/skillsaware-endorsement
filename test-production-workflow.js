@@ -19,8 +19,11 @@
  *   node test-production-workflow.js http://localhost:3000
  */
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const https = require('https')
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const http = require('http')
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { URL } = require('url')
 
 // Configuration
@@ -28,7 +31,8 @@ const BASE_URL = process.argv[2] || process.env.API_BASE_URL || 'http://localhos
 const API_KEY =
   process.env.SKILLSAWARE_API_KEY ||
   '8f33e3a4fd9322e89dc15300f603d91654d7eb38802f0cef0440ca292bf2c3f5'
-const AWS_REGION = process.env.AWS_REGION || 'us-east-1'
+// AWS_REGION is kept for potential future use
+// const AWS_REGION = process.env.AWS_REGION || 'us-east-1'
 const S3_BUCKET = process.env.S3_BUCKET || 'skillsaware-artifacts-linkedtrust'
 const S3_PREFIX = process.env.S3_PREFIX || 'endorsements'
 
@@ -117,7 +121,7 @@ function makeRequest(url, options = {}) {
         try {
           const jsonData = data ? JSON.parse(data) : {}
           resolve({ status: res.statusCode, headers: res.headers, data: jsonData })
-        } catch (e) {
+        } catch {
           resolve({ status: res.statusCode, headers: res.headers, data: data })
         }
       })
@@ -401,7 +405,7 @@ async function testSubmitEndorsement(claimId, endorserToken) {
   return null
 }
 
-async function testDownloadFiles(downloads, endorserToken) {
+async function testDownloadFiles(downloads) {
   log('\n📥 Step 4: Testing file downloads...', 'cyan')
 
   if (!downloads || !downloads.json || !downloads.pdf) {
@@ -549,7 +553,7 @@ async function runTests() {
   }
 
   // Step 4: Test downloads
-  await testDownloadFiles(submitResult.downloads, endorserResult.endorserToken)
+  await testDownloadFiles(submitResult.downloads)
 
   // Step 5: Verify S3 (if configured)
   await testS3Verification(submitResult.claimId)

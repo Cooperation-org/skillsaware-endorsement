@@ -251,11 +251,14 @@ export async function POST(request: NextRequest) {
           size_estimate: '~180 KB',
           expires_in: s3PdfUrl ? '7 days' : '7 days (JWT expiry)',
           source: s3PdfUrl ? 's3' : 'api',
-          note: pdfBuffer
-            ? s3PdfUrl
-              ? 'PDF is ready for download from S3'
-              : 'PDF is ready for download'
-            : 'PDF will be generated when you access this URL (may take 5-10 seconds)'
+          note: (() => {
+            if (pdfBuffer) {
+              return s3PdfUrl
+                ? 'PDF is ready for download from S3'
+                : 'PDF is ready for download'
+            }
+            return 'PDF will be generated when you access this URL (may take 5-10 seconds)'
+          })()
         }
       },
       // Optional: include base64 JSON for immediate access if needed

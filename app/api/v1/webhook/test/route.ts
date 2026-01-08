@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateTenantApiKey } from '@/lib/config'
 import { sendWebhook } from '@/lib/webhook'
-import crypto from 'crypto'
+import crypto from 'node:crypto'
 
 export async function POST(request: NextRequest) {
   try {

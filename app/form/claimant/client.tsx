@@ -6,8 +6,8 @@ import { JwtPayload } from '@/types/jwt'
 import Navbar from '../../components/Navbar'
 
 interface ClaimantFormClientProps {
-  payload: JwtPayload
-  token: string
+  readonly payload: JwtPayload
+  readonly token: string
 }
 
 export default function ClaimantFormClient({ payload, token }: ClaimantFormClientProps) {

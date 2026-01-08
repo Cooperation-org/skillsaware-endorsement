@@ -1,8 +1,5 @@
 import type { Metadata } from 'next'
 
-const baseUrl =
-  process.env.NEXT_PUBLIC_BASE_URL || 'https://skillsaware-endorsement.vercel.app'
-
 export const metadata: Metadata = {
   title: 'API Documentation',
   description:

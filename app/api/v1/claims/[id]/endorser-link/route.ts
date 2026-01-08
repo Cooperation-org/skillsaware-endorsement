@@ -100,7 +100,7 @@ export async function POST(
       endorser_link: magicLink,
       expires_at: new Date(
         Date.now() +
-          parseInt(process.env.JWT_EXPIRY_DAYS || '7', 10) * 24 * 60 * 60 * 1000
+          Number.parseInt(process.env.JWT_EXPIRY_DAYS || '7', 10) * 24 * 60 * 60 * 1000
       ).toISOString()
     })
   } catch (error) {

@@ -208,7 +208,7 @@ SKILLSAWARE_WEBHOOK_SECRET=...
 
 Access comprehensive, interactive API documentation at:
 
-```
+```text
 http://localhost:3000/api-docs
 ```
 
@@ -224,7 +224,7 @@ http://localhost:3000/api-docs
 
 Download the OpenAPI 3.0 specification (JSON):
 
-```
+```text
 http://localhost:3000/api/openapi
 ```
 
@@ -421,7 +421,7 @@ GET /api/v1/endorsements/abc-123/download/pdf?token=eyJhbGc...
 
 ---
 
-# ⚠️ **IMPORTANT: WEBHOOK IMPLEMENTATION REQUIRED** ⚠️
+## ⚠️ **IMPORTANT: WEBHOOK IMPLEMENTATION REQUIRED** ⚠️
 
 ## 🚨 **THIS ENDPOINT IS FOR TESTING/DEMO ONLY - NOT FOR PRODUCTION** 🚨
 
@@ -546,7 +546,7 @@ The system now supports **two file delivery mechanisms**:
 
 #### 1. Direct Delivery (No S3 Required)
 
-```
+```text
 User submits endorsement
     ↓
 Generate PDF + JSON
@@ -610,7 +610,7 @@ User downloads via download URLs
 
 ### Complete Workflow Flow
 
-```
+```text
 1. Create Claim (API)
    ├─ POST /api/v1/claims
    ├─ Requires: API key in x-api-key header
@@ -666,7 +666,7 @@ User downloads via download URLs
 
 ### Email Notification Flow
 
-```
+```text
 Claimant submits endorser details
     ↓
 System generates endorser link
@@ -687,7 +687,7 @@ Completes endorsement
 
 ### Project Structure
 
-```
+```text
 skillsaware/
 ├── app/
 │   ├── api/v1/              # API routes
@@ -1032,7 +1032,7 @@ const retryDelays = [60, 300, 1800, 21600, 86400] // seconds
   - `https://www.w3.org/ns/credentials/v2`
   - `https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json`
   - `https://purl.imsglobal.org/spec/ob/v3p0/schema/achievement-credential-3.0.3.json` (schema reference)
-- **Spec**: https://www.imsglobal.org/spec/ob/v3p0
+- **Spec**: <https://www.imsglobal.org/spec/ob/v3p0>
 - **Credential types**: OpenBadgeCredential, EndorsementCredential
 - **DID Format**: Uses DID:Web method (e.g., `did:web:skillsaware-endorsement.vercel.app:users:base64email`)
   - Domain extracted from issuer ID
@@ -1042,7 +1042,7 @@ const retryDelays = [60, 300, 1800, 21600, 86400] // seconds
 ### W3C Verifiable Credentials
 
 - **Context**: `https://www.w3.org/ns/credentials/v2`
-- **Spec**: https://www.w3.org/TR/vc-data-model-2.0/
+- **Spec**: <https://www.w3.org/TR/vc-data-model-2.0/>
 - **Credential Schema**: Included in `@context` array for validation
 
 ## 🐛 Troubleshooting
@@ -1201,7 +1201,7 @@ For future developers:
 
 #### 3. Evidence Capture Flow
 
-```
+```text
 Claimant Form → JWT (narrative)
      ↓
 Endorser Form → API (narrative + evidence_urls)

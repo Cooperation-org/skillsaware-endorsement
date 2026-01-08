@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createToken } from '@/lib/jwt'
-import crypto from 'crypto'
+import crypto from 'node:crypto'
 
 /**
  * Test endpoint to generate JWT tokens for API testing

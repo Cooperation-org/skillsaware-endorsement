@@ -1,9 +1,6 @@
 import type { Metadata } from 'next'
 import VerifyPdfClient from './client'
 
-const baseUrl =
-  process.env.NEXT_PUBLIC_BASE_URL || 'https://skillsaware-endorsement.vercel.app'
-
 export const metadata: Metadata = {
   title: 'Verify Certificate',
   description:

@@ -8,7 +8,7 @@ import type { ComponentProps } from 'react'
 const SwaggerUI = dynamic(() => import('swagger-ui-react'), { ssr: false })
 
 // Define props type based on SwaggerUI component props
-type SwaggerUIWrapperProps = ComponentProps<typeof SwaggerUI>
+type SwaggerUIWrapperProps = Readonly<ComponentProps<typeof SwaggerUI>>
 
 // Wrapper component to suppress React strict mode warnings from swagger-ui-react
 export function SwaggerUIWrapper(props: SwaggerUIWrapperProps) {

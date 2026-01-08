@@ -4,9 +4,6 @@ import { redirect } from 'next/navigation'
 import { verifyToken } from '@/lib/jwt'
 import ClaimantFormClient from './client'
 
-const baseUrl =
-  process.env.NEXT_PUBLIC_BASE_URL || 'https://skillsaware-endorsement.vercel.app'
-
 export const metadata: Metadata = {
   title: 'Claimant Form',
   description:
@@ -42,22 +39,22 @@ export default async function ClaimantFormPage() {
   const token = cookieStore.get('token')?.value
 
   if (!token) {
-    redirect('/error/invalid-token')
+    return redirect('/error/invalid-token')
   }
 
   try {
     const payload = await verifyToken(token)
 
     if (payload.role !== 'claimant') {
-      redirect('/error/invalid-token')
+      return redirect('/error/invalid-token')
     }
 
     // Pass payload and token to client component
     return <ClaimantFormClient payload={payload} token={token} />
   } catch (error) {
     if (error instanceof Error && error.message === 'TOKEN_EXPIRED') {
-      redirect('/error/token-expired')
+      return redirect('/error/token-expired')
     }
-    redirect('/error/invalid-token')
+    return redirect('/error/invalid-token')
   }
 }

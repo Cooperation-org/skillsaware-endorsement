@@ -3,9 +3,6 @@ import Link from 'next/link'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 
-const baseUrl =
-  process.env.NEXT_PUBLIC_BASE_URL || 'https://skillsaware-endorsement.vercel.app'
-
 export const metadata: Metadata = {
   title: 'Home',
   description:

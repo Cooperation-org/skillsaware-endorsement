@@ -5,8 +5,8 @@ import { JwtPayload } from '@/types/jwt'
 import Navbar from '../../components/Navbar'
 
 interface EndorserFormClientProps {
-  payload: JwtPayload
-  token: string
+  readonly payload: JwtPayload
+  readonly token: string
 }
 
 export default function EndorserFormClient({ payload, token }: EndorserFormClientProps) {
@@ -134,7 +134,12 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
     setEvidenceUrls(newUrls)
 
     // Validate URL format if not empty
-    if (value.trim() !== '') {
+    if (value.trim() === '') {
+      // Clear error if field is empty
+      const newErrors = { ...urlErrors }
+      delete newErrors[index]
+      setUrlErrors(newErrors)
+    } else {
       try {
         new URL(value.trim())
         // Clear error if URL is valid
@@ -147,11 +152,6 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
           [index]: 'Please enter a valid URL (e.g., https://example.com)'
         })
       }
-    } else {
-      // Clear error if field is empty
-      const newErrors = { ...urlErrors }
-      delete newErrors[index]
-      setUrlErrors(newErrors)
     }
   }
 
@@ -161,18 +161,18 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
       const byteCharacters = atob(base64)
       const byteNumbers = new Array(byteCharacters.length)
       for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i)
+        byteNumbers[i] = byteCharacters.codePointAt(i) ?? 0
       }
       const byteArray = new Uint8Array(byteNumbers)
       const blob = new Blob([byteArray], { type: mimeType })
-      const url = window.URL.createObjectURL(blob)
+      const url = globalThis.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
       link.download = filename
       document.body.appendChild(link)
       link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
+      link.remove()
+      globalThis.URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Download failed:', error)
       alert('Direct download failed. Please use the download link instead.')
@@ -588,12 +588,12 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
               {/* Supporting Evidence (Dynamic List) */}
               <div className='flex flex-col gap-3'>
                 <div className='flex justify-between items-center'>
-                  <label
+                  <div
                     className='text-sm font-semibold'
                     style={{ color: 'var(--skillsaware-text-primary)' }}
                   >
                     Supporting Evidence
-                  </label>
+                  </div>
                   <span
                     className='text-xs px-2 py-0.5 rounded'
                     style={{
