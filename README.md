@@ -118,6 +118,23 @@ See [CHANGES_SUMMARY.md](./CHANGES_SUMMARY.md) for detailed technical changes.
    JWT_EXPIRY_DAYS=7
    ```
 
+   **Optional - OBv3 Cryptographic Proof (for Ed25519Signature2020 signatures):**
+
+   ```bash
+   # Ed25519 private key for issuer (64 hex characters)
+   # Generate with: openssl rand -hex 32
+   SKILLSAWARE_ISSUER_PRIVATE_KEY=your-64-hex-character-private-key
+
+   # Ed25519 public key (optional, can be derived from private key)
+   SKILLSAWARE_ISSUER_PUBLIC_KEY=your-64-hex-character-public-key
+
+   # DID key identifier (optional, can be generated from public key)
+   # Format: did:key:z6Mk...
+   SKILLSAWARE_ISSUER_DID_KEY=did:key:z6Mk...
+   ```
+
+   **Note:** If issuer keys are not provided, credentials will be generated without cryptographic proofs. For production use, always configure issuer keys for verifiable credentials.
+
    See `.env.example` file for a complete template with all available options.
 
 3. **Run development server:**
@@ -341,12 +358,15 @@ The email is sent asynchronously and failures are logged but don't break the req
 
 **What Happens During Submission:**
 
-1. **OBV3 JSON Generation**: Creates AchievementCredential with:
-   - Schema references in `@context` array
+1. **OBV3 JSON Generation**: Creates OpenBadgeCredential with:
+   - W3C Verifiable Credentials v2.0 and OBv3 contexts in `@context` array
+   - `credentialSchema` property with 1EdTech JSON Schema validator reference
    - Proper DID:Web format for subject IDs (e.g., `did:web:skillsaware-endorsement.vercel.app:users:base64email`)
+   - `validFrom` property (VCDM v2.0 compliant, replaces issuanceDate)
    - Claimant narrative in `credentialSubject.narrative`
    - Evidence URLs in `evidence` array
    - Embedded EndorsementCredential
+   - Ed25519Signature2020 cryptographic proof (if issuer keys configured)
 
 2. **PDF Generation**: Creates professional certificate with:
    - SkillsAware logo and branding
@@ -711,7 +731,7 @@ For testing the complete production workflow with S3 integration, use the automa
 
 ```bash
 # Test against production
-node test-production-workflow.js https://your-production-domain.com
+node test-production-workflow.js https://skillsaware-endorsement.vercel.app/
 
 # Test against localhost
 node test-production-workflow.js http://localhost:3000
@@ -943,6 +963,14 @@ See `Dockerfile` in project root for containerized deployment.
 - ⚪ `NEXT_PUBLIC_APP_URL` - Public URL for magic links
 - ⚪ `JWT_EXPIRY_DAYS` - Token expiry in days (default: 7)
 
+**Optional (OBv3 Cryptographic Proof):**
+
+- ⚪ `SKILLSAWARE_ISSUER_PRIVATE_KEY` - Ed25519 private key (64 hex characters) for signing credentials
+- ⚪ `SKILLSAWARE_ISSUER_PUBLIC_KEY` - Ed25519 public key (optional, can derive from private)
+- ⚪ `SKILLSAWARE_ISSUER_DID_KEY` - DID key identifier (optional, can generate from public key)
+
+**Note:** Without issuer keys, credentials are generated without cryptographic proofs. For production, always configure issuer keys.
+
 **AWS Secrets Management:**
 
 For production AWS deployments, store sensitive values (`JWT_SECRET`, `SKILLSAWARE_API_KEY`) in:
@@ -1005,7 +1033,7 @@ const retryDelays = [60, 300, 1800, 21600, 86400] // seconds
   - `https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json`
   - `https://purl.imsglobal.org/spec/ob/v3p0/schema/achievement-credential-3.0.3.json` (schema reference)
 - **Spec**: https://www.imsglobal.org/spec/ob/v3p0
-- **Credential types**: AchievementCredential, EndorsementCredential
+- **Credential types**: OpenBadgeCredential, EndorsementCredential
 - **DID Format**: Uses DID:Web method (e.g., `did:web:skillsaware-endorsement.vercel.app:users:base64email`)
   - Domain extracted from issuer ID
   - Email encoded in base64url format

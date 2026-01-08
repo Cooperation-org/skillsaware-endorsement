@@ -58,30 +58,36 @@ export async function GET(
     const signature = searchParams.get('signature') || ''
 
     if (type === 'json') {
-      // Regenerate JSON credential
-      const achievementCred = generateAchievementCredential({
-        claimId: payload.claim_id,
-        tenantId: payload.tenant,
-        issuerId: tenant.issuer_id,
-        issuerName: tenant.issuer_name,
-        claimantName: payload.claimant_name!,
-        claimantEmail: payload.claimant_email!,
-        skillCode: payload.skill_code,
-        skillName: payload.skill_name,
-        skillDescription: payload.skill_description,
-        narrative: payload.claimant_narrative!,
-        evidence: evidenceUrls
-      })
+      // Regenerate JSON credential (now async to support proof generation)
+      const achievementCred = await generateAchievementCredential(
+        {
+          claimId: payload.claim_id,
+          tenantId: payload.tenant,
+          issuerId: tenant.issuer_id,
+          issuerName: tenant.issuer_name,
+          claimantName: payload.claimant_name!,
+          claimantEmail: payload.claimant_email!,
+          skillCode: payload.skill_code,
+          skillName: payload.skill_name,
+          skillDescription: payload.skill_description,
+          narrative: payload.claimant_narrative!,
+          evidence: evidenceUrls
+        },
+        tenant
+      )
 
-      const endorsementCred = generateEndorsementCredential({
-        claimId: payload.claim_id,
-        achievementCredentialId: achievementCred.id,
-        endorserName: payload.endorser_name!,
-        endorserEmail: payload.endorser_email!,
-        endorsementText: endorsementText,
-        bonaFides: bonaFides,
-        issuerId: tenant.issuer_id
-      })
+      const endorsementCred = await generateEndorsementCredential(
+        {
+          claimId: payload.claim_id,
+          achievementCredentialId: achievementCred.id,
+          endorserName: payload.endorser_name!,
+          endorserEmail: payload.endorser_email!,
+          endorsementText: endorsementText,
+          bonaFides: bonaFides,
+          issuerId: tenant.issuer_id
+        },
+        tenant
+      )
 
       // Attach endorsement to achievement credential
       achievementCred.endorsement = [endorsementCred]

@@ -471,16 +471,22 @@ const isValid = verifyWebhook(
     "https://www.w3.org/ns/credentials/v2",
     "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json"
   ],
-  "type": ["VerifiableCredential", "AchievementCredential"],
+  "type": ["VerifiableCredential", "OpenBadgeCredential"],
   "id": "urn:uuid:...",
   "issuer": {
     "id": "https://skillsaware-endorsement.vercel.app/issuers/whatscookin",
     "type": "Profile",
-    "name": "What's Cookin' Inc."
+    "name": "SkillsAware"
   },
-  "issuanceDate": "2025-01-19T12:00:00.000Z",
+  "validFrom": "2025-01-19T12:00:00.000Z",
+  "credentialSchema": [
+    {
+      "id": "https://purl.imsglobal.org/spec/ob/v3p0/schema/json/ob_v3p0_achievementcredential_schema.json",
+      "type": "1EdTechJsonSchemaValidator2019"
+    }
+  ],
   "credentialSubject": {
-    "id": "did:email:jane.doe@example.com",
+    "id": "did:web:skillsaware-endorsement.vercel.app:users:amFuZS5kb2VAZXhhbXBsZS5jb20",
     "type": "AchievementSubject",
     "name": "Jane Doe",
     "narrative": "...",
@@ -496,7 +502,10 @@ const isValid = verifyWebhook(
   },
   "endorsement": [
     {
-      "@context": [...],
+      "@context": [
+        "https://www.w3.org/ns/credentials/v2",
+        "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json"
+      ],
       "type": ["VerifiableCredential", "EndorsementCredential"],
       "id": "urn:uuid:...",
       "issuer": {
@@ -504,7 +513,13 @@ const isValid = verifyWebhook(
         "type": "Profile",
         "name": "John Manager"
       },
-      "issuanceDate": "2025-01-19T12:00:00.000Z",
+      "validFrom": "2025-01-19T12:00:00.000Z",
+      "credentialSchema": [
+        {
+          "id": "https://purl.imsglobal.org/spec/ob/v3p0/schema/json/ob_v3p0_achievementcredential_schema.json",
+          "type": "1EdTechJsonSchemaValidator2019"
+        }
+      ],
       "credentialSubject": {
         "id": "<achievement-credential-id>",
         "type": "EndorsementSubject",
@@ -514,6 +529,13 @@ const isValid = verifyWebhook(
           "name": "John Manager",
           "description": "Senior Technical Lead at TechCorp"
         }
+      },
+      "proof": {
+        "type": "Ed25519Signature2020",
+        "created": "2025-01-19T12:00:00.000Z",
+        "verificationMethod": "did:key:z6Mk...#z6Mk...",
+        "proofPurpose": "assertionMethod",
+        "proofValue": "z4grD6Hc9p7cHtDvv9Ai3pmToAn6k4dMGA19Nj7TvAzE9ffKCjaZ4i4A2qBSRanwVcz38swaKaYPFffHqJ2swHnSj"
       }
     }
   ],
@@ -523,16 +545,26 @@ const isValid = verifyWebhook(
       "type": "Evidence",
       "name": "Evidence 1"
     }
-  ]
+  ],
+  "proof": {
+    "type": "Ed25519Signature2020",
+    "created": "2025-01-19T12:00:00.000Z",
+    "verificationMethod": "did:key:z6Mk...#z6Mk...",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "z4grD6Hc9p7cHtDvv9Ai3pmToAn6k4dMGA19Nj7TvAzE9ffKCjaZ4i4A2qBSRanwVcz38swaKaYPFffHqJ2swHnSj"
+  }
 }
 ```
 
 **Validation Checklist:**
 
-- ✅ `@context` includes W3C and OBv3 v3.0.3 contexts
-- ✅ `type` includes "VerifiableCredential" and "AchievementCredential"
+- ✅ `@context` includes W3C VC v2.0 and OBv3 v3.0.3 contexts (NO schema URL in @context)
+- ✅ `credentialSchema` property includes 1EdTech JSON Schema validator reference
+- ✅ `type` includes "VerifiableCredential" and "OpenBadgeCredential" (not AchievementCredential)
+- ✅ `validFrom` property used instead of `issuanceDate` (VCDM v2.0 compliance)
 - ✅ `id` is a URN with UUID
-- ✅ `credentialSubject.id` uses DID format
+- ✅ `credentialSubject.id` uses DID:Web format
+- ✅ `proof` includes Ed25519Signature2020 cryptographic proof (if issuer keys configured)
 - ✅ `endorsement` array contains EndorsementCredential
 - ✅ `issuanceDate` is ISO 8601 format
 - ✅ All required fields present

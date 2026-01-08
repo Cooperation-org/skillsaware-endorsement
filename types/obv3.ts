@@ -1,3 +1,16 @@
+export interface Ed25519Signature2020Proof {
+  type: 'Ed25519Signature2020'
+  created: string
+  verificationMethod: string
+  proofPurpose: 'assertionMethod'
+  proofValue: string
+}
+
+export interface CredentialSchema {
+  id: string
+  type: string
+}
+
 export interface OBv3AchievementCredential {
   '@context': string[]
   type: string[]
@@ -9,7 +22,8 @@ export interface OBv3AchievementCredential {
     url?: string
     image?: string
   }
-  issuanceDate: string
+  validFrom: string
+  credentialSchema?: CredentialSchema[]
   credentialSubject: {
     id: string
     type: string
@@ -31,6 +45,7 @@ export interface OBv3AchievementCredential {
     type: string
     name?: string
   }>
+  proof?: Ed25519Signature2020Proof
 }
 
 export interface OBv3EndorsementCredential {
@@ -42,7 +57,8 @@ export interface OBv3EndorsementCredential {
     type: string
     name: string
   }
-  issuanceDate: string
+  validFrom: string
+  credentialSchema?: CredentialSchema[]
   credentialSubject: {
     id: string // Reference to the achievement or credential
     type: string
@@ -53,4 +69,5 @@ export interface OBv3EndorsementCredential {
       description?: string // bona fides
     }
   }
+  proof?: Ed25519Signature2020Proof
 }

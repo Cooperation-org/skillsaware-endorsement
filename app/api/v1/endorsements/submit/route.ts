@@ -49,30 +49,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Tenant not found' }, { status: 404 })
     }
 
-    // Generate OBv3 credentials
-    const achievementCred = generateAchievementCredential({
-      claimId: payload.claim_id,
-      tenantId: payload.tenant,
-      issuerId: tenant.issuer_id,
-      issuerName: tenant.issuer_name,
-      claimantName: payload.claimant_name!,
-      claimantEmail: payload.claimant_email!,
-      skillCode: payload.skill_code,
-      skillName: payload.skill_name,
-      skillDescription: payload.skill_description,
-      narrative: payload.claimant_narrative!,
-      evidence: data.evidence_urls
-    })
+    // Generate OBv3 credentials (now async to support proof generation)
+    const achievementCred = await generateAchievementCredential(
+      {
+        claimId: payload.claim_id,
+        tenantId: payload.tenant,
+        issuerId: tenant.issuer_id,
+        issuerName: tenant.issuer_name,
+        claimantName: payload.claimant_name!,
+        claimantEmail: payload.claimant_email!,
+        skillCode: payload.skill_code,
+        skillName: payload.skill_name,
+        skillDescription: payload.skill_description,
+        narrative: payload.claimant_narrative!,
+        evidence: data.evidence_urls
+      },
+      tenant
+    )
 
-    const endorsementCred = generateEndorsementCredential({
-      claimId: payload.claim_id,
-      achievementCredentialId: achievementCred.id,
-      endorserName: payload.endorser_name!,
-      endorserEmail: payload.endorser_email!,
-      endorsementText: data.endorsement_text,
-      bonaFides: data.bona_fides,
-      issuerId: tenant.issuer_id
-    })
+    const endorsementCred = await generateEndorsementCredential(
+      {
+        claimId: payload.claim_id,
+        achievementCredentialId: achievementCred.id,
+        endorserName: payload.endorser_name!,
+        endorserEmail: payload.endorser_email!,
+        endorsementText: data.endorsement_text,
+        bonaFides: data.bona_fides,
+        issuerId: tenant.issuer_id
+      },
+      tenant
+    )
 
     // Attach endorsement to achievement credential
     achievementCred.endorsement = [endorsementCred]

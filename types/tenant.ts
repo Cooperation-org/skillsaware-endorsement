@@ -11,4 +11,7 @@ export interface TenantConfig {
   brand_primary_color?: string
   issuer_id: string // e.g., "https://skillsaware-endorsement.vercel.app/issuers/whatscookin"
   issuer_name: string // e.g., "What's Cookin' Inc."
+  issuer_private_key?: string // Ed25519 private key (base58 or hex)
+  issuer_public_key?: string // Ed25519 public key (optional, can derive from private)
+  issuer_did_key?: string // DID key identifier (optional, can generate from public key)
 }

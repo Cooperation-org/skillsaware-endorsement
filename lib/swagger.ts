@@ -9,7 +9,7 @@ A secure, serverless API for issuing and verifying Open Badge v3.0-compliant ski
 
 ## Features
 
-- 🎓 Open Badges v3.0 compliant credentials
+- 🎓 Open Badges v3.0 compliant credentials (OpenBadgeCredential with Ed25519Signature2020 proofs)
 - 🔐 JWT-based magic link authentication
 - 📄 PDF and JSON credential generation with cryptographic signatures
 - ✅ Built-in PDF verification and tamper detection

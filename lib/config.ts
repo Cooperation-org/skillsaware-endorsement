@@ -19,7 +19,10 @@ const TENANT_CONFIGS: Record<string, TenantConfig> = {
     issuer_id: 'https://skillsaware-endorsement.vercel.app/issuers/whatscookin',
     issuer_name: 'SkillsAware',
     brand_logo_url: process.env.BRAND_LOGO_URL || '/logo/skillsaware-logo.svg',
-    brand_primary_color: process.env.BRAND_PRIMARY_COLOR || '#0B5FFF'
+    brand_primary_color: process.env.BRAND_PRIMARY_COLOR || '#0B5FFF',
+    issuer_private_key: process.env.SKILLSAWARE_ISSUER_PRIVATE_KEY,
+    issuer_public_key: process.env.SKILLSAWARE_ISSUER_PUBLIC_KEY,
+    issuer_did_key: process.env.SKILLSAWARE_ISSUER_DID_KEY
   }
 }
 
