@@ -75,7 +75,8 @@ export async function POST(request: NextRequest) {
         endorserEmail: payload.endorser_email!,
         endorsementText: data.endorsement_text,
         bonaFides: data.bona_fides,
-        issuerId: tenant.issuer_id
+        issuerId: tenant.issuer_id,
+        tenantId: payload.tenant
       },
       tenant
     )

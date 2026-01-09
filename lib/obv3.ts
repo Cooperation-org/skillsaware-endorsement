@@ -103,9 +103,14 @@ export async function generateAchievementCredential(
       const { privateKey, didKey } = getOrGenerateDidKey(
         tenant.issuer_private_key,
         tenant.issuer_public_key,
-        tenant.issuer_did_key
+        tenant.issuer_did_key,
+        tenant.id || data.tenantId // Pass tenant ID to ensure consistent DID per tenant
       )
-      credential.proof = await generateProof(credential, privateKey, didKey)
+      credential.proof = await generateProof(
+        credential as unknown as Record<string, unknown>,
+        privateKey,
+        didKey
+      )
     } catch (error) {
       console.warn('Failed to generate proof for achievement credential:', error)
       // Continue without proof if generation fails
@@ -124,6 +129,7 @@ export async function generateEndorsementCredential(
     endorsementText: string
     bonaFides: string
     issuerId: string
+    tenantId?: string // Optional tenant ID for DID caching
   },
   tenant?: TenantConfig
 ): Promise<OBv3EndorsementCredential> {
@@ -158,9 +164,14 @@ export async function generateEndorsementCredential(
       const { privateKey, didKey } = getOrGenerateDidKey(
         tenant.issuer_private_key,
         tenant.issuer_public_key,
-        tenant.issuer_did_key
+        tenant.issuer_did_key,
+        tenant.id || data.tenantId // Pass tenant ID to ensure consistent DID per tenant
       )
-      credential.proof = await generateProof(credential, privateKey, didKey)
+      credential.proof = await generateProof(
+        credential as unknown as Record<string, unknown>,
+        privateKey,
+        didKey
+      )
     } catch (error) {
       console.warn('Failed to generate proof for endorsement credential:', error)
       // Continue without proof if generation fails

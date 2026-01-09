@@ -84,7 +84,8 @@ export async function GET(
           endorserEmail: payload.endorser_email!,
           endorsementText: endorsementText,
           bonaFides: bonaFides,
-          issuerId: tenant.issuer_id
+          issuerId: tenant.issuer_id,
+          tenantId: payload.tenant
         },
         tenant
       )

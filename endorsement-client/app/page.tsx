@@ -522,12 +522,11 @@ export default function Home() {
                   borderColor: 'var(--skillsaware-border)',
                   listStyle: 'none',
                   paddingLeft: 0,
-                  marginLeft: 0,
-                  textAlign: 'center'
+                  marginLeft: 0
                 }}
               >
                 <li>
-                  <div className='flex flex-col items-center gap-3'>
+                  <div className='flex flex-col gap-2'>
                     <div className='flex items-center gap-3'>
                       <span
                         className='flex items-center justify-center rounded-full shrink-0'
@@ -535,7 +534,6 @@ export default function Home() {
                           width: '32px',
                           height: '32px',
                           backgroundColor: 'rgba(19, 127, 236, 0.15)',
-                          border: '2px solid var(--skillsaware-primary)',
                           color: 'var(--skillsaware-primary)',
                           fontSize: '14px',
                           fontWeight: 'bold'
@@ -553,8 +551,11 @@ export default function Home() {
                       </h3>
                     </div>
                     <p
-                      className='text-sm font-normal max-w-xs'
-                      style={{ color: 'var(--skillsaware-text-secondary)' }}
+                      className='text-sm font-normal'
+                      style={{
+                        color: 'var(--skillsaware-text-secondary)',
+                        paddingLeft: '44px'
+                      }}
                     >
                       Enter the claimant&apos;s details and the specific skill attributes
                       in the form.
@@ -562,7 +563,7 @@ export default function Home() {
                   </div>
                 </li>
                 <li>
-                  <div className='flex flex-col items-center gap-3'>
+                  <div className='flex flex-col gap-2'>
                     <div className='flex items-center gap-3'>
                       <span
                         className='flex items-center justify-center rounded-full shrink-0'
@@ -570,7 +571,6 @@ export default function Home() {
                           width: '32px',
                           height: '32px',
                           backgroundColor: 'rgba(19, 127, 236, 0.15)',
-                          border: '2px solid var(--skillsaware-primary)',
                           color: 'var(--skillsaware-primary)',
                           fontSize: '14px',
                           fontWeight: 'bold'
@@ -586,8 +586,11 @@ export default function Home() {
                       </h3>
                     </div>
                     <p
-                      className='text-sm font-normal max-w-xs'
-                      style={{ color: 'var(--skillsaware-text-secondary)' }}
+                      className='text-sm font-normal'
+                      style={{
+                        color: 'var(--skillsaware-text-secondary)',
+                        paddingLeft: '44px'
+                      }}
                     >
                       The system creates a signed, time-sensitive URL containing the claim
                       data.
@@ -595,7 +598,7 @@ export default function Home() {
                   </div>
                 </li>
                 <li>
-                  <div className='flex flex-col items-center gap-3'>
+                  <div className='flex flex-col gap-2'>
                     <div className='flex items-center gap-3'>
                       <span
                         className='flex items-center justify-center rounded-full shrink-0'
@@ -603,7 +606,6 @@ export default function Home() {
                           width: '32px',
                           height: '32px',
                           backgroundColor: 'rgba(19, 127, 236, 0.15)',
-                          border: '2px solid var(--skillsaware-primary)',
                           color: 'var(--skillsaware-primary)',
                           fontSize: '14px',
                           fontWeight: 'bold'
@@ -619,8 +621,11 @@ export default function Home() {
                       </h3>
                     </div>
                     <p
-                      className='text-sm font-normal max-w-xs'
-                      style={{ color: 'var(--skillsaware-text-secondary)' }}
+                      className='text-sm font-normal'
+                      style={{
+                        color: 'var(--skillsaware-text-secondary)',
+                        paddingLeft: '44px'
+                      }}
                     >
                       Share the link. The claimant will verify their identity and accept
                       the endorsement.

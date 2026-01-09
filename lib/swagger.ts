@@ -362,7 +362,8 @@ Tokens are issued via magic links and expire after 7 days (configurable).
           },
           json_base64: {
             type: 'string',
-            description: 'Base64-encoded OBv3 JSON credential for immediate access',
+            description:
+              'Base64-encoded OBv3 JSON credential (OpenBadgeCredential with validFrom, credentialSchema, and Ed25519Signature2020 proof) for immediate access',
             example: 'eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvbnMv...'
           },
           s3_uploaded: {
@@ -687,7 +688,7 @@ Tokens are issued via magic links and expire after 7 days (configurable).
         tags: ['Endorsements'],
         summary: 'Submit endorsement',
         description:
-          'Submit an endorsement for a skill claim. Requires endorser JWT token authentication. Generates verifiable PDF and JSON credentials.',
+          'Submit an endorsement for a skill claim. Requires endorser JWT token authentication. Generates verifiable PDF and OBv3-compliant JSON credentials (OpenBadgeCredential with validFrom, credentialSchema, and Ed25519Signature2020 proof if issuer keys are configured).',
         operationId: 'submitEndorsement',
         security: [{ BearerAuth: [] }],
         requestBody: {
@@ -757,9 +758,9 @@ Tokens are issued via magic links and expire after 7 days (configurable).
     '/api/v1/endorsements/{id}/download/{type}': {
       get: {
         tags: ['Endorsements'],
-        summary: 'Download credential',
+        summary: 'Download credential (OBv3 JSON or PDF)',
         description:
-          'Download a PDF or JSON credential. The PDF includes cryptographic signatures and embedded JWT token for verification.',
+          'Download a PDF or OBv3 JSON credential. The JSON credential is OpenBadgeCredential-compliant with validFrom, credentialSchema, and Ed25519Signature2020 proof (if issuer keys configured). The PDF includes cryptographic signatures and embedded JWT token for verification.',
         operationId: 'downloadCredential',
         parameters: [
           {
@@ -842,7 +843,99 @@ Tokens are issued via magic links and expire after 7 days (configurable).
               'application/json': {
                 schema: {
                   type: 'object',
-                  description: 'Open Badges v3.0 compliant credential'
+                  description:
+                    'Open Badges v3.0 compliant credential (OpenBadgeCredential with Ed25519Signature2020 proof)',
+                  example: {
+                    '@context': [
+                      'https://www.w3.org/ns/credentials/v2',
+                      'https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json'
+                    ],
+                    type: ['VerifiableCredential', 'OpenBadgeCredential'],
+                    id: 'urn:uuid:550e8400-e29b-41d4-a716-446655440000',
+                    issuer: {
+                      id: 'https://skillsaware-endorsement.vercel.app/issuers/whatscookin',
+                      type: 'Profile',
+                      name: 'SkillsAware'
+                    },
+                    validFrom: '2025-01-19T12:00:00.000Z',
+                    credentialSchema: [
+                      {
+                        id: 'https://purl.imsglobal.org/spec/ob/v3p0/schema/json/ob_v3p0_achievementcredential_schema.json',
+                        type: '1EdTechJsonSchemaValidator2019'
+                      }
+                    ],
+                    credentialSubject: {
+                      id: 'did:web:skillsaware-endorsement.vercel.app:users:amFuZS5kb2VAZXhhbXBsZS5jb20',
+                      type: 'AchievementSubject',
+                      name: 'Jane Doe',
+                      narrative: 'I have demonstrated this skill through...',
+                      achievement: {
+                        id: 'ICTDSN403',
+                        type: 'Achievement',
+                        name: 'Design Skills',
+                        description: 'Demonstrates advanced design capabilities',
+                        criteria: {
+                          narrative: 'Demonstrated competency through peer endorsement'
+                        }
+                      }
+                    },
+                    evidence: [
+                      {
+                        id: 'https://github.com/example/project',
+                        type: 'Evidence',
+                        name: 'Evidence 1'
+                      }
+                    ],
+                    endorsement: [
+                      {
+                        '@context': [
+                          'https://www.w3.org/ns/credentials/v2',
+                          'https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json'
+                        ],
+                        type: ['VerifiableCredential', 'EndorsementCredential'],
+                        id: 'urn:uuid:660e8400-e29b-41d4-a716-446655440001',
+                        issuer: {
+                          id: 'https://skillsaware-endorsement.vercel.app/issuers/whatscookin',
+                          type: 'Profile',
+                          name: 'John Manager'
+                        },
+                        validFrom: '2025-01-19T12:00:00.000Z',
+                        credentialSchema: [
+                          {
+                            id: 'https://purl.imsglobal.org/spec/ob/v3p0/schema/json/ob_v3p0_achievementcredential_schema.json',
+                            type: '1EdTechJsonSchemaValidator2019'
+                          }
+                        ],
+                        credentialSubject: {
+                          id: 'urn:uuid:550e8400-e29b-41d4-a716-446655440000',
+                          type: 'EndorsementSubject',
+                          endorsementComment:
+                            'Jane has demonstrated exceptional skills...',
+                          profile: {
+                            type: 'Profile',
+                            name: 'John Manager',
+                            description: 'Senior Technical Lead at TechCorp'
+                          }
+                        },
+                        proof: {
+                          type: 'Ed25519Signature2020',
+                          created: '2025-01-19T12:00:00.000Z',
+                          verificationMethod: 'did:key:z6Mk...#z6Mk...',
+                          proofPurpose: 'assertionMethod',
+                          proofValue:
+                            'z4grD6Hc9p7cHtDvv9Ai3pmToAn6k4dMGA19Nj7TvAzE9ffKCjaZ4i4A2qBSRanwVcz38swaKaYPFffHqJ2swHnSj'
+                        }
+                      }
+                    ],
+                    proof: {
+                      type: 'Ed25519Signature2020',
+                      created: '2025-01-19T12:00:00.000Z',
+                      verificationMethod: 'did:key:z6Mk...#z6Mk...',
+                      proofPurpose: 'assertionMethod',
+                      proofValue:
+                        'z4grD6Hc9p7cHtDvv9Ai3pmToAn6k4dMGA19Nj7TvAzE9ffKCjaZ4i4A2qBSRanwVcz38swaKaYPFffHqJ2swHnSj'
+                    }
+                  }
                 }
               }
             }
