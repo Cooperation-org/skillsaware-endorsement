@@ -5,6 +5,7 @@ export interface WebhookPayload {
   skill_name: string
   claimant_name: string
   endorser_name: string
+  endorser_email: string
   tenant_id?: string // Optional tenant ID for webhook routing
   artifacts: Array<{
     type: 'obv3-json' | 'pdf'

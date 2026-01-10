@@ -53,6 +53,8 @@ The webhook sends a JSON payload with the following structure:
   "skill_name": "Production Test Skill",
   "claimant_name": "Test Claimant",
   "endorser_name": "Test Endorser",
+  "endorser_email": "endorser@example.com",
+  "tenant_id": "skillsaware",
   "artifacts": [
     {
       "type": "obv3-json",
@@ -118,6 +120,10 @@ app.post('/api/webhook', async (req, res) => {
   await db.endorsements.create({
     claimId: req.body.claim_id,
     skillCode: req.body.skill_code,
+    skillName: req.body.skill_name,
+    claimantName: req.body.claimant_name,
+    endorserName: req.body.endorser_name,
+    endorserEmail: req.body.endorser_email,
     s3JsonKey: req.body.artifacts[0].s3_key,
     s3PdfKey: req.body.artifacts[1].s3_key,
     timestamp: req.body.timestamp

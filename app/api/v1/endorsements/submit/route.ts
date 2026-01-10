@@ -177,6 +177,7 @@ export async function POST(request: NextRequest) {
           skill_name: payload.skill_name,
           claimant_name: payload.claimant_name!,
           endorser_name: payload.endorser_name!,
+          endorser_email: payload.endorser_email!,
           tenant_id: payload.tenant, // Include tenant ID for webhook routing
           artifacts: [
             { type: 'obv3-json', s3_key: jsonKey },

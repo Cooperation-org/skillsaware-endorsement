@@ -35,6 +35,8 @@ export async function POST(request: NextRequest) {
         skill_name: 'Test Skill',
         claimant_name: 'Test Claimant',
         endorser_name: 'Test Endorser',
+        endorser_email: 'test.endorser@example.com',
+        tenant_id: tenant.id,
         artifacts: [
           { type: 'obv3-json', s3_key: `test/${testClaimId}/claim.obv3.json` },
           { type: 'pdf', s3_key: `test/${testClaimId}/claim.pdf` }

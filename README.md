@@ -475,6 +475,8 @@ This endpoint receives notifications when endorsements are completed. **This is 
   "skill_name": "Production Test Skill",
   "claimant_name": "Test Claimant",
   "endorser_name": "Test Endorser",
+  "endorser_email": "endorser@example.com",
+  "tenant_id": "skillsaware",
   "artifacts": [
     {
       "type": "obv3-json",

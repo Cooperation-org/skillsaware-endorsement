@@ -1043,7 +1043,7 @@ If any content or metadata has been modified after issuance, the verification wi
         tags: ['Endorsements'],
         summary: 'Send test webhook event',
         description:
-          'Sends a test `claim.endorsed` webhook event to the configured tenant webhook URL. Useful for validating webhook receivers and HMAC verification.',
+          'Sends a test `claim.endorsed` webhook event to the configured tenant webhook URL. Useful for validating webhook receivers and HMAC verification.\n\n**Webhook Payload includes:**\n- `event`: "claim.endorsed"\n- `claim_id`: Test claim ID\n- `skill_code`, `skill_name`: Test skill information\n- `claimant_name`: Test claimant name\n- `endorser_name`: Test endorser name\n- `endorser_email`: Test endorser email address\n- `tenant_id`: Tenant identifier\n- `artifacts`: Array of S3 artifact keys (JSON and PDF)\n- `timestamp`: ISO timestamp',
         operationId: 'testWebhook',
         security: [{ ApiKeyAuth: [] }],
         responses: {

@@ -381,7 +381,7 @@
           "host": ["{{base_url}}"],
           "path": ["api", "v1", "webhook", "test"]
         },
-        "description": "Tests webhook delivery to the configured webhook URL.\n\n**Required Headers:**\n- `x-api-key`: API key for tenant authentication\n\n**Response:**\n- `success`: Boolean indicating if webhook was delivered\n- `webhook_url`: The webhook URL that was tested\n- `error`: Error message if delivery failed\n\n**Note:** This sends a test webhook payload to verify the webhook endpoint is working correctly."
+        "description": "Tests webhook delivery to the configured webhook URL.\n\n**Required Headers:**\n- `x-api-key`: API key for tenant authentication\n\n**Response:**\n- `success`: Boolean indicating if webhook was delivered\n- `webhook_url`: The webhook URL that was tested\n- `error`: Error message if delivery failed\n\n**Webhook Payload:**\nThe test webhook includes:\n- `event`: \"claim.endorsed\"\n- `claim_id`: Test claim ID\n- `skill_code`, `skill_name`: Test skill information\n- `claimant_name`: Test claimant name\n- `endorser_name`: Test endorser name\n- `endorser_email`: Test endorser email\n- `tenant_id`: Tenant identifier\n- `artifacts`: Array of S3 artifact keys\n- `timestamp`: ISO timestamp\n\n**Note:** This sends a test webhook payload to verify the webhook endpoint is working correctly."
       },
       "response": []
     },

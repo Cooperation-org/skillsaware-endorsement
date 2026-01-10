@@ -108,6 +108,7 @@ export async function POST(request: NextRequest) {
       skill_name: payload.skill_name,
       claimant_name: payload.claimant_name,
       endorser_name: payload.endorser_name,
+      endorser_email: payload.endorser_email,
       event_id: eventId,
       timestamp: payload.timestamp
     })
@@ -125,6 +126,7 @@ export async function POST(request: NextRequest) {
     //      skillName: payload.skill_name,
     //      claimantName: payload.claimant_name,
     //      endorserName: payload.endorser_name,
+    //      endorserEmail: payload.endorser_email,
     //      s3JsonKey: payload.artifacts[0].s3_key,
     //      s3PdfKey: payload.artifacts[1].s3_key,
     //      timestamp: payload.timestamp
