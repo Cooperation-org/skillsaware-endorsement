@@ -59,7 +59,7 @@ export default function Navbar() {
             API Reference
           </Link>
           <Link
-            href='https://endorsement-client.vercel.app/'
+            href='https://skillsaware-endorsement-client.vercel.app/'
             target='_blank'
             rel='noopener noreferrer'
             className='text-sm font-medium transition-colors'
@@ -158,7 +158,7 @@ export default function Navbar() {
               API Reference
             </Link>
             <Link
-              href='https://endorsement-client.vercel.app/'
+              href='https://skillsaware-endorsement-client.vercel.app/'
               target='_blank'
               rel='noopener noreferrer'
               className='text-sm font-medium transition-colors py-2'
