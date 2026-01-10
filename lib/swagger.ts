@@ -209,6 +209,16 @@ Tokens are issued via magic links and expire after 7 days (configurable).
             format: 'date-time',
             description: 'Token expiration timestamp',
             example: '2025-11-03T10:30:00.000Z'
+          },
+          email_sent: {
+            type: 'boolean',
+            description: 'Whether the invitation email was successfully sent to the endorser',
+            example: true
+          },
+          email_error: {
+            type: 'string',
+            description: 'Error message if email sending failed (only present if email_sent is false)',
+            example: 'AccessDenied: User is not authorized to perform ses:SendEmail'
           }
         }
       },
@@ -614,7 +624,7 @@ Tokens are issued via magic links and expire after 7 days (configurable).
         tags: ['Claims'],
         summary: 'Generate endorser link',
         description:
-          'Generates a secure magic link for an endorser. Requires claimant JWT token authentication.',
+          'Generates a secure magic link for a single endorser. Client applications can call this endpoint multiple times concurrently to send bulk invitations. Requires claimant JWT token authentication.',
         operationId: 'generateEndorserLink',
         security: [{ BearerAuth: [] }],
         parameters: [
@@ -852,6 +862,7 @@ Tokens are issued via magic links and expire after 7 days (configurable).
                     ],
                     type: ['VerifiableCredential', 'OpenBadgeCredential'],
                     id: 'urn:uuid:550e8400-e29b-41d4-a716-446655440000',
+                    name: 'Design Skills Certificate',
                     issuer: {
                       id: 'https://skillsaware-endorsement.vercel.app/issuers/whatscookin',
                       type: 'Profile',
@@ -870,7 +881,7 @@ Tokens are issued via magic links and expire after 7 days (configurable).
                       name: 'Jane Doe',
                       narrative: 'I have demonstrated this skill through...',
                       achievement: {
-                        id: 'ICTDSN403',
+                        id: 'https://skillsaware-endorsement.vercel.app/achievements/ICTDSN403',
                         type: 'Achievement',
                         name: 'Design Skills',
                         description: 'Demonstrates advanced design capabilities',
@@ -894,15 +905,16 @@ Tokens are issued via magic links and expire after 7 days (configurable).
                         ],
                         type: ['VerifiableCredential', 'EndorsementCredential'],
                         id: 'urn:uuid:660e8400-e29b-41d4-a716-446655440001',
+                        name: 'Peer Endorsement for Design Skills',
                         issuer: {
-                          id: 'https://skillsaware-endorsement.vercel.app/issuers/whatscookin',
+                          id: 'did:web:skillsaware.com:users:am9obi5tYW5hZ2VyQGV4YW1wbGUuY29t',
                           type: 'Profile',
                           name: 'John Manager'
                         },
                         validFrom: '2025-01-19T12:00:00.000Z',
                         credentialSchema: [
                           {
-                            id: 'https://purl.imsglobal.org/spec/ob/v3p0/schema/json/ob_v3p0_achievementcredential_schema.json',
+                            id: 'https://purl.imsglobal.org/spec/ob/v3p0/schema/json/ob_v3p0_endorsementcredential_schema.json',
                             type: '1EdTechJsonSchemaValidator2019'
                           }
                         ],

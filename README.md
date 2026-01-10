@@ -293,13 +293,22 @@ Import this into tools like Postman, Insomnia, or any OpenAPI-compatible client.
 ```json
 {
   "endorser_link": "http://localhost:3000/form/endorser?token=<jwt>",
-  "expires_at": "2025-01-26T00:00:00.000Z"
+  "expires_at": "2025-01-26T00:00:00.000Z",
+  "email_sent": true,
+  "email_error": null
 }
 ```
 
+**Response Fields:**
+
+- `endorser_link`: Magic link for the endorser to access the endorsement form
+- `expires_at`: ISO timestamp when the link expires (default: 7 days)
+- `email_sent`: Boolean indicating if the invitation email was successfully sent
+- `email_error`: Error message if email sending failed (only present when `email_sent` is `false`)
+
 **Email Notification:**
 
-When an endorser link is generated, the system automatically sends an email to the endorser (if AWS SES is configured) with:
+When an endorser link is generated, the system automatically attempts to send an email to the endorser (if AWS SES is configured and both `endorser_name` and `endorser_email` are provided) with:
 
 - Professional SkillsAware-branded email template
 - Skill information (name and code)
@@ -307,7 +316,13 @@ When an endorser link is generated, the system automatically sends an email to t
 - Direct link to complete the endorsement
 - Link expiration notice (7 days)
 
-The email is sent asynchronously and failures are logged but don't break the request flow.
+**Email Status:**
+
+- If `email_sent: true`: Email was successfully sent to the endorser
+- If `email_sent: false` or `email_error` is present: Email sending failed (check `email_error` for details)
+- If `email_sent` is not present: No email was attempted (endorser email/name not provided)
+
+Email failures are logged but don't break the request flow. The endorser link is always generated regardless of email status.
 
 ### 3. Submit Endorsement
 
@@ -360,12 +375,12 @@ The email is sent asynchronously and failures are logged but don't break the req
 
 1. **OBV3 JSON Generation**: Creates OpenBadgeCredential with:
    - W3C Verifiable Credentials v2.0 and OBv3 contexts in `@context` array
-   - `credentialSchema` property with 1EdTech JSON Schema validator reference
+   - `credentialSchema` property with 1EdTech JSON Schema validator reference (Achievement vs Endorsement)
    - Proper DID:Web format for subject IDs (e.g., `did:web:skillsaware-endorsement.vercel.app:users:base64email`)
    - `validFrom` property (VCDM v2.0 compliant, replaces issuanceDate)
    - Claimant narrative in `credentialSubject.narrative`
    - Evidence URLs in `evidence` array
-   - Embedded EndorsementCredential
+   - Embedded EndorsementCredential with strict OBv3 compliance (name, correct schema, URI IDs)
    - Ed25519Signature2020 cryptographic proof (if issuer keys configured)
 
 2. **PDF Generation**: Creates professional certificate with:
@@ -621,14 +636,15 @@ User downloads via download URLs
    ├─ Access via claimant_link
    ├─ Form fields:
    │   ├─ Skill Narrative (textarea) - describes their skill demonstration
-   │   ├─ Endorser Name
-   │   └─ Endorser Email
-   ├─ Submits to: POST /api/v1/claims/{id}/endorser-link
+   │   └─ Endorsers List (multiple)
+   │       ├─ Endorser Name
+   │       └─ Endorser Email
+   ├─ Submits to: POST /api/v1/claims/{id}/endorser-link (one request per endorser)
    └─ System:
-       ├─ Creates endorser JWT token (includes claimant narrative)
-       ├─ Generates endorser magic link
-       ├─ Sends email to endorser (if AWS SES configured)
-       └─ Returns: endorser_link
+       ├─ Creates separate endorser JWT tokens for each invite
+       ├─ Generates unique magic links
+       ├─ Sends emails to each endorser (if AWS SES configured)
+       └─ Displays results table with individual copy links
 
 3. Endorser Form (Web)
    ├─ Receives email with endorsement request

@@ -15,6 +15,7 @@ export interface OBv3AchievementCredential {
   '@context': string[]
   type: string[]
   id: string
+  name: string
   issuer: {
     id: string
     type: string
@@ -52,6 +53,7 @@ export interface OBv3EndorsementCredential {
   '@context': string[]
   type: string[]
   id: string
+  name: string
   issuer: {
     id: string
     type: string

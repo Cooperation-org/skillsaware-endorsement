@@ -22,6 +22,8 @@ export interface GenerateEndorserLinkRequest {
 export interface GenerateEndorserLinkResponse {
   endorser_link: string
   expires_at: string
+  email_sent?: boolean
+  email_error?: string
 }
 
 export interface SubmitEndorsementRequest {

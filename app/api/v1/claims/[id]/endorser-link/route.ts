@@ -69,6 +69,9 @@ export async function POST(
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const magicLink = `${appUrl}/form/endorser?token=${endorserToken}`
 
+    let emailSent = false
+    let emailError: string | null = null
+
     // Send email to endorser only if both name and email are provided (non-blocking - don't fail if email fails)
     if (data.endorser_name && data.endorser_email) {
       try {
@@ -81,19 +84,25 @@ export async function POST(
           appUrl
         })
 
-        await sendEmail({
+        const emailResult = await sendEmail({
           to: data.endorser_email,
           subject: `Skill Endorsement Request: ${payload.skill_name}`,
           htmlBody: emailContent.html,
           textBody: emailContent.text
         })
-        console.log(`✅ Endorser invitation email sent to ${data.endorser_email}`)
-      } catch (emailError) {
-        console.warn('⚠️  Failed to send endorser invitation email:', emailError)
+        
+        if (emailResult) {
+          emailSent = true
+          console.log(`✅ Endorser invitation email sent to ${data.endorser_email}`)
+        } else {
+          emailError = 'Failed to send email'
+          console.warn(`⚠️  Failed to send endorser invitation email to ${data.endorser_email}`)
+        }
+      } catch (err) {
+        emailError = err instanceof Error ? err.message : 'Failed to send email'
+        console.warn('⚠️  Failed to send endorser invitation email:', err)
         // Continue - email failure shouldn't break the request
       }
-    } else {
-      console.log('ℹ️  Endorser email not provided - skipping email send')
     }
 
     return NextResponse.json({
@@ -101,7 +110,9 @@ export async function POST(
       expires_at: new Date(
         Date.now() +
           Number.parseInt(process.env.JWT_EXPIRY_DAYS || '7', 10) * 24 * 60 * 60 * 1000
-      ).toISOString()
+      ).toISOString(),
+      email_sent: emailSent,
+      email_error: emailError || undefined
     })
   } catch (error) {
     console.error('Generate endorser link error:', error)

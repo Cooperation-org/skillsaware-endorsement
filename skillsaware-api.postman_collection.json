@@ -81,6 +81,17 @@
               "    pm.environment.set('endorser_token', endorser_token);",
               "    ",
               "    console.log('Endorser Link:', response.endorser_link);",
+              "    ",
+              "    // Log email status",
+              "    if (response.email_sent !== undefined) {",
+              "        if (response.email_sent) {",
+              "            console.log('✅ Email sent successfully');",
+              "        } else {",
+              "            console.log('❌ Email failed:', response.email_error || 'Unknown error');",
+              "        }",
+              "    } else {",
+              "        console.log('ℹ️  No email sent (endorser email/name not provided)');",
+              "    }",
               "}"
             ],
             "type": "text/javascript"
@@ -114,7 +125,7 @@
           "host": ["{{base_url}}"],
           "path": ["api", "v1", "claims", "{{claim_id}}", "endorser-link"]
         },
-        "description": "Generates endorser magic link after claimant submits their narrative.\n\n**Required Headers:**\n- `Authorization: Bearer <claimant_token>`\n\n**Prerequisites:**\n- Must run \"1. Create Claim\" first to get claimant_token\n\n**Response:**\n- `endorser_link`: Magic link JWT for endorser to submit endorsement\n- `expires_at`: Token expiration timestamp\n\n**Email Notification:**\nIf AWS SES is configured, an email is automatically sent to the endorser with the link."
+        "description": "Generates endorser magic link after claimant submits their narrative.\n\n**Required Headers:**\n- `Authorization: Bearer <claimant_token>`\n\n**Prerequisites:**\n- Must run \"1. Create Claim\" first to get claimant_token\n\n**Response:**\n- `endorser_link`: Magic link JWT for endorser to submit endorsement\n- `expires_at`: Token expiration timestamp\n- `email_sent`: Boolean indicating if invitation email was successfully sent\n- `email_error`: Error message if email sending failed (only present if email_sent is false)\n\n**Email Notification:**\nIf AWS SES is configured and both `endorser_name` and `endorser_email` are provided, an email is automatically sent to the endorser with the link.\n\n**Email Status:**\n- If `email_sent: true`: Email was successfully sent\n- If `email_sent: false` or `email_error` is present: Email sending failed (check `email_error` for details)\n- If `email_sent` is not present: No email was attempted (endorser email/name not provided)"
       },
       "response": []
     },

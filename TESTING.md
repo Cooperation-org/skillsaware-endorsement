@@ -88,15 +88,17 @@ curl -X POST http://localhost:3000/api/v1/claims \
 - ✅ Skill name, code, and description are displayed (read-only)
 - ✅ Claimant name is shown
 - ✅ Form has textarea for "Your Skill Narrative"
-- ✅ Form has inputs for "Endorser Name" and "Endorser Email"
-- ✅ "Generate Endorser Link" button is visible
+- ✅ Form allows adding multiple endorsers (Name + Email)
+- ✅ "Generate Invitations" button is visible
 
 **Manual Test:**
 
 1. Fill in narrative: "I have successfully designed and developed complex ICT solutions..."
-2. Enter endorser name: "John Manager"
-3. Enter endorser email: "john.manager@example.com"
-4. Click "Generate Endorser Link"
+2. Add Endorser 1: "John Manager" (john.manager@example.com)
+3. Click "Add another endorser"
+4. Add Endorser 2: "Jane Supervisor" (jane.supervisor@example.com)
+5. Click "Generate Invitations"
+6. Verify a results table appears with 2 successful links
 
 ---
 
@@ -116,9 +118,13 @@ curl -X POST http://localhost:3000/api/v1/claims \
 ```json
 {
   "endorser_link": "http://localhost:3000/form/endorser?token=eyJhbGc...",
-  "expires_at": "2025-01-26T12:00:00.000Z"
+  "expires_at": "2025-01-26T12:00:00.000Z",
+  "email_sent": true,
+  "email_error": null
 }
 ```
+
+**Note:** If email sending fails, `email_sent` will be `false` and `email_error` will contain the error message.
 
 **Validation:**
 
@@ -126,6 +132,8 @@ curl -X POST http://localhost:3000/api/v1/claims \
 - ✅ `endorser_link` contains a different JWT than claimant link
 - ✅ Link is displayed in the browser UI
 - ✅ "Copy to Clipboard" button works
+- ✅ `email_sent` indicates whether invitation email was sent successfully
+- ✅ `email_error` is present only if email sending failed
 
 ---
 
@@ -473,6 +481,7 @@ const isValid = verifyWebhook(
   ],
   "type": ["VerifiableCredential", "OpenBadgeCredential"],
   "id": "urn:uuid:...",
+  "name": "Design Skills Certificate",
   "issuer": {
     "id": "https://skillsaware-endorsement.vercel.app/issuers/whatscookin",
     "type": "Profile",
@@ -491,7 +500,7 @@ const isValid = verifyWebhook(
     "name": "Jane Doe",
     "narrative": "...",
     "achievement": {
-      "id": "ICTDSN403",
+      "id": "https://skillsaware-endorsement.vercel.app/achievements/ICTDSN403",
       "type": "Achievement",
       "name": "Design Skills",
       "description": "...",
@@ -508,15 +517,16 @@ const isValid = verifyWebhook(
       ],
       "type": ["VerifiableCredential", "EndorsementCredential"],
       "id": "urn:uuid:...",
+      "name": "Peer Endorsement for Design Skills",
       "issuer": {
-        "id": "https://skillsaware-endorsement.vercel.app/issuers/whatscookin",
+        "id": "did:web:skillsaware.com:users:am9obi5tYW5hZ2VyQGV4YW1wbGUuY29t",
         "type": "Profile",
         "name": "John Manager"
       },
       "validFrom": "2025-01-19T12:00:00.000Z",
       "credentialSchema": [
         {
-          "id": "https://purl.imsglobal.org/spec/ob/v3p0/schema/json/ob_v3p0_achievementcredential_schema.json",
+          "id": "https://purl.imsglobal.org/spec/ob/v3p0/schema/json/ob_v3p0_endorsementcredential_schema.json",
           "type": "1EdTechJsonSchemaValidator2019"
         }
       ],

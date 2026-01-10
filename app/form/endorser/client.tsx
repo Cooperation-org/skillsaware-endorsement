@@ -510,6 +510,50 @@ export default function EndorserFormClient({ payload, token }: EndorserFormClien
               </span>
             </div>
             <div className='p-6 md:p-8 flex flex-col gap-8'>
+              {/* Identity Field (Read-only) */}
+              <div className='flex flex-col gap-2'>
+                <label
+                  className='text-sm font-semibold flex items-center gap-1'
+                  htmlFor='endorserEmail'
+                  style={{ color: 'var(--skillsaware-text-primary)' }}
+                >
+                  Endorsing as
+                </label>
+                <div className='relative'>
+                  <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
+                    <span
+                      className='material-symbols-outlined'
+                      style={{
+                        fontSize: '18px',
+                        color: 'var(--skillsaware-text-tertiary)'
+                      }}
+                    >
+                      email
+                    </span>
+                  </div>
+                  <input
+                    className='w-full rounded-lg border pl-10 pr-3 py-3 text-sm focus:outline-none transition-all cursor-not-allowed opacity-75'
+                    id='endorserEmail'
+                    type='text'
+                    value={payload.endorser_email || ''}
+                    readOnly
+                    disabled
+                    style={{
+                      borderColor: 'var(--skillsaware-border)',
+                      backgroundColor: 'var(--skillsaware-bg-secondary)',
+                      color: 'var(--skillsaware-text-secondary)'
+                    }}
+                  />
+                </div>
+                <p
+                  className='text-xs'
+                  style={{ color: 'var(--skillsaware-text-tertiary)' }}
+                >
+                  This is the email address associated with your secure endorsement
+                  link.
+                </p>
+              </div>
+
               {/* Credentials Field */}
               <div className='flex flex-col gap-2'>
                 <label

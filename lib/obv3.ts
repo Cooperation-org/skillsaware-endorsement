@@ -13,9 +13,13 @@ const OBV3_ACHIEVEMENT_CREDENTIAL_SCHEMA = {
   type: '1EdTechJsonSchemaValidator2019'
 }
 
+const OBV3_ENDORSEMENT_CREDENTIAL_SCHEMA = {
+  id: 'https://purl.imsglobal.org/spec/ob/v3p0/schema/json/ob_v3p0_endorsementcredential_schema.json',
+  type: '1EdTechJsonSchemaValidator2019'
+}
+
 /**
  * Generate a DID:Web identifier from an email address
- * Format: did:web:domain.com:users:base64url(email)
  */
 function generateDidWeb(email: string, issuerId: string): string {
   try {
@@ -45,6 +49,20 @@ function generateDidWeb(email: string, issuerId: string): string {
   }
 }
 
+/**
+ * Generate a URI for an achievement
+ */
+function generateAchievementId(skillCode: string, issuerId: string): string {
+  try {
+    const issuerUrl = new URL(issuerId)
+    const origin = issuerUrl.origin
+    return `${origin}/achievements/${skillCode}`
+  } catch {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://skillsaware.com'
+    return `${appUrl}/achievements/${skillCode}`
+  }
+}
+
 export async function generateAchievementCredential(
   data: {
     claimId: string
@@ -63,11 +81,13 @@ export async function generateAchievementCredential(
 ): Promise<OBv3AchievementCredential> {
   const credentialId = `urn:uuid:${crypto.randomUUID()}`
   const subjectId = generateDidWeb(data.claimantEmail, data.issuerId)
+  const achievementId = generateAchievementId(data.skillCode, data.issuerId)
 
   const credential: OBv3AchievementCredential = {
     '@context': OBV3_CONTEXT,
     type: ['VerifiableCredential', 'OpenBadgeCredential'],
     id: credentialId,
+    name: `${data.skillName} Certificate`,
     issuer: {
       id: data.issuerId,
       type: 'Profile',
@@ -81,7 +101,7 @@ export async function generateAchievementCredential(
       name: data.claimantName,
       narrative: data.narrative,
       achievement: {
-        id: data.skillCode,
+        id: achievementId,
         type: 'Achievement',
         name: data.skillName,
         description: data.skillDescription,
@@ -130,22 +150,25 @@ export async function generateEndorsementCredential(
     bonaFides: string
     issuerId: string
     tenantId?: string // Optional tenant ID for DID caching
+    skillName?: string // Optional skill name for the credential name
   },
   tenant?: TenantConfig
 ): Promise<OBv3EndorsementCredential> {
   const credentialId = `urn:uuid:${crypto.randomUUID()}`
+  const endorserId = generateDidWeb(data.endorserEmail, data.issuerId)
 
   const credential: OBv3EndorsementCredential = {
     '@context': OBV3_CONTEXT,
     type: ['VerifiableCredential', 'EndorsementCredential'],
     id: credentialId,
+    name: `Peer Endorsement for ${data.skillName || 'Achievement'}`,
     issuer: {
-      id: data.issuerId,
+      id: endorserId,
       type: 'Profile',
       name: data.endorserName
     },
     validFrom: new Date().toISOString(),
-    credentialSchema: [OBV3_ACHIEVEMENT_CREDENTIAL_SCHEMA],
+    credentialSchema: [OBV3_ENDORSEMENT_CREDENTIAL_SCHEMA],
     credentialSubject: {
       id: data.achievementCredentialId,
       type: 'EndorsementSubject',
