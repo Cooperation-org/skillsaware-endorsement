@@ -39,8 +39,6 @@ This system provides a complete endorsement workflow for SkillsAware:
 8. ✅ **Evidence Verified**: Complete evidence capture confirmed (narrative + URLs)
 9. ✅ **Dual Download Methods**: Base64 + download URLs for maximum compatibility
 
-See [CHANGES_SUMMARY.md](./CHANGES_SUMMARY.md) for detailed technical changes.
-
 ### Installation
 
 1. **Clone and install dependencies:**
