@@ -154,7 +154,10 @@ export class EndorsementClient {
   ): Promise<VerifyPdfResponse> {
     const base = normalizeBaseUrl(this.baseUrl)
     const form = new FormData()
-    const bytes = pdfBytes instanceof ArrayBuffer ? new Uint8Array(pdfBytes) : pdfBytes
+    const bytes: Uint8Array =
+      pdfBytes instanceof ArrayBuffer
+        ? new Uint8Array(pdfBytes)
+        : new Uint8Array(pdfBytes.buffer, pdfBytes.byteOffset, pdfBytes.byteLength)
     form.append('pdf', new Blob([bytes], { type: 'application/pdf' }), 'credential.pdf')
     if (options?.skillCode) form.append('skillCode', options.skillCode)
     if (options?.claimantName) form.append('claimantName', options.claimantName)

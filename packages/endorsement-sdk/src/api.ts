@@ -134,7 +134,10 @@ export async function verifyPdf(
 ): Promise<VerifyPdfResponse> {
   const base = normalizeBaseUrl(config.baseUrl)
   const form = new FormData()
-  const bytes = pdfBytes instanceof ArrayBuffer ? new Uint8Array(pdfBytes) : pdfBytes
+  const bytes: Uint8Array =
+    pdfBytes instanceof ArrayBuffer
+      ? new Uint8Array(pdfBytes)
+      : new Uint8Array(pdfBytes.buffer, pdfBytes.byteOffset, pdfBytes.byteLength)
   const blob = new Blob([bytes], { type: 'application/pdf' })
   form.append('pdf', blob, 'credential.pdf')
   if (options?.skillCode) form.append('skillCode', options.skillCode)
