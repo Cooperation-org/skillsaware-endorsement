@@ -152,7 +152,7 @@ ENDORSEMENT_API_KEY=your-production-api-key
 
 ## 📦 SDK dependency
 
-This app uses **skillsaware-endorsement-sdk** (see `../packages/endorsement-sdk`). It is installed via `file:../packages/endorsement-sdk` for local development. For production, install from NPM: `npm install skillsaware-endorsement-sdk`. Use `npm run build` for production builds (Turbopack may not resolve local `file:` packages; use `npm run build:turbo` only if the SDK is installed from NPM).
+This app uses **skillsaware-endorsement-sdk** from NPM. Install with `npm install` (it’s listed in `package.json`). To add or update: `npm i skillsaware-endorsement-sdk`.
 
 ## 📁 Project Structure
 
