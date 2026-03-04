@@ -150,6 +150,10 @@ ENDORSEMENT_API_URL=https://your-endorsement-system.vercel.app
 ENDORSEMENT_API_KEY=your-production-api-key
 ```
 
+## 📦 SDK dependency
+
+This app uses **skillsaware-endorsement-sdk** (see `../packages/endorsement-sdk`). It is installed via `file:../packages/endorsement-sdk` for local development. For production, install from NPM: `npm install skillsaware-endorsement-sdk`. Use `npm run build` for production builds (Turbopack may not resolve local `file:` packages; use `npm run build:turbo` only if the SDK is installed from NPM).
+
 ## 📁 Project Structure
 
 ```
@@ -157,7 +161,7 @@ endorsement-client/
 ├── app/
 │   ├── api/
 │   │   └── create-claim/
-│   │       └── route.ts       # Proxy to endorsement API
+│   │       └── route.ts       # Uses SDK to create claim
 │   ├── page.tsx                # Main form UI
 │   └── layout.tsx              # Root layout
 ├── .env.local                  # Your config (create this)

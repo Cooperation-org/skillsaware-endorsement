@@ -1,0 +1,257 @@
+{
+  "info": {
+    "name": "SkillsAware Endorsement API",
+    "description": "API for SkillsAware OBv3 Endorsement: create claims, generate endorser links, submit endorsements, and download credentials. Set collection variables: `baseUrl` (e.g. https://skillsaware-endorsement.vercel.app or http://localhost:3000) and `apiKey` (SKILLSAWARE_API_KEY). After Create Claim, run Generate Endorser Link with the claimant token; after that, use Submit Endorsement with the endorser token.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "apiKey", "value": "your-api-key" },
+    { "key": "claimId", "value": "" },
+    { "key": "claimantToken", "value": "" },
+    { "key": "endorserToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Claims",
+      "item": [
+        {
+          "name": "Create Claim",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.claim_id) { pm.collectionVariables.set('claimId', res.claim_id); }",
+                  "if (res.claimant_link) {",
+                  "    const u = new URL(res.claimant_link);",
+                  "    const t = u.searchParams.get('token');",
+                  "    if (t) pm.collectionVariables.set('claimantToken', t);",
+                  "}",
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has claim_id and claimant_link', () => {",
+                  "    pm.expect(res).to.have.property('claim_id');",
+                  "    pm.expect(res).to.have.property('claimant_link');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-api-key", "value": "{{apiKey}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"skillsaware\",\n  \"skill_code\": \"ICTDSN403\",\n  \"skill_name\": \"Design Skills\",\n  \"skill_description\": \"Demonstrates advanced design capabilities\",\n  \"claimant_name\": \"Jane Doe\",\n  \"claimant_email\": \"jane@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/claims",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "claims"]
+            },
+            "description": "Creates a new claim and returns claim_id and claimant_link (magic link). Collection variables claimId and claimantToken are set from the response."
+          }
+        },
+        {
+          "name": "Generate Endorser Link",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.endorser_link) {",
+                  "    const u = new URL(res.endorser_link);",
+                  "    const t = u.searchParams.get('token');",
+                  "    if (t) pm.collectionVariables.set('endorserToken', t);",
+                  "}",
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has endorser_link', () => pm.expect(res).to.have.property('endorser_link'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{claimantToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claimant_narrative\": \"I have demonstrated this skill through project work and training.\",\n  \"endorser_name\": \"John Manager\",\n  \"endorser_email\": \"john@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/claims/{{claimId}}/endorser-link",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "claims", "{{claimId}}", "endorser-link"]
+            },
+            "description": "Requires claimant JWT (from Create Claim response claimant_link). Sets collection variable endorserToken from endorser_link."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Endorsements",
+      "item": [
+        {
+          "name": "Submit Endorsement",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Success and has downloads', () => {",
+                  "    pm.expect(res).to.have.property('success', true);",
+                  "    if (res.downloads) {",
+                  "        pm.expect(res.downloads).to.have.property('pdf');",
+                  "        pm.expect(res.downloads).to.have.property('json');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{endorserToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"endorsement_text\": \"Jane has demonstrated exceptional design skills in our team projects.\",\n  \"bona_fides\": \"Senior Developer at Company X\",\n  \"evidence_urls\": [\"https://example.com/portfolio\", \"https://example.com/cert\"],\n  \"signature\": \"John Manager\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/endorsements/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "endorsements", "submit"]
+            },
+            "description": "Requires endorser JWT (from Generate Endorser Link response endorser_link). Returns download URLs and optional json_base64."
+          }
+        },
+        {
+          "name": "Download JSON",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/endorsements/{{claimId}}/download/json?token={{endorserToken}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "endorsements", "{{claimId}}", "download", "json"],
+              "query": [
+                { "key": "token", "value": "{{endorserToken}}" }
+              ]
+            },
+            "description": "Downloads OBv3 JSON credential. Uses endorserToken (query param). Save response as file or open in new tab."
+          }
+        },
+        {
+          "name": "Download PDF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/endorsements/{{claimId}}/download/pdf?token={{endorserToken}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "endorsements", "{{claimId}}", "download", "pdf"],
+              "query": [
+                { "key": "token", "value": "{{endorserToken}}" }
+              ]
+            },
+            "description": "Downloads PDF certificate. Uses endorserToken (query param)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Testing (Dev only)",
+      "item": [
+        {
+          "name": "Get Test Token (Claimant)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) pm.collectionVariables.set('claimantToken', res.token);",
+                  "if (res.claim_id) pm.collectionVariables.set('claimId', res.claim_id);",
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"claimant\",\n  \"claim_id\": \"\",\n  \"tenant_id\": \"skillsaware\",\n  \"skill_code\": \"TEST001\",\n  \"skill_name\": \"Test Skill\",\n  \"claimant_name\": \"Test Claimant\",\n  \"claimant_email\": \"test@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/test-token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "test-token"]
+            },
+            "description": "Development only (NODE_ENV=development). Generates a claimant JWT for testing endorser-link without going through the claimant form."
+          }
+        },
+        {
+          "name": "Get Test Token (Endorser)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) pm.collectionVariables.set('endorserToken', res.token);",
+                  "if (res.claim_id) pm.collectionVariables.set('claimId', res.claim_id);",
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"endorser\",\n  \"claim_id\": \"{{claimId}}\",\n  \"tenant_id\": \"skillsaware\",\n  \"skill_code\": \"TEST001\",\n  \"skill_name\": \"Test Skill\",\n  \"claimant_narrative\": \"Test narrative\",\n  \"endorser_name\": \"Test Endorser\",\n  \"endorser_email\": \"endorser@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/test-token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "test-token"]
+            },
+            "description": "Development only. Generates an endorser JWT for testing submit and download without completing the endorser form. Set claimId first (e.g. from Create Claim)."
+          }
+        },
+        {
+          "name": "Test Webhook",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "x-api-key", "value": "{{apiKey}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/webhook/test",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "webhook", "test"]
+            },
+            "description": "Sends a test webhook payload to the configured SKILLSAWARE_WEBHOOK_URL (if set). Used to verify webhook endpoint connectivity."
+          }
+        }
+      ]
+    }
+  ]
+}

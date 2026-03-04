@@ -1,0 +1,39 @@
+{
+  "name": "skillsaware-endorsement-sdk",
+  "version": "0.1.0",
+  "description": "Client SDK for SkillsAware OBv3 Endorsement: create claims, generate endorser links, submit endorsements, and download credentials.",
+  "keywords": ["skillsaware", "endorsement", "obv3", "credentials", "sdk"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cooperation-org/skillsaware-endorsement.git",
+    "directory": "packages/endorsement-sdk"
+  },
+  "homepage": "https://github.com/Cooperation-org/skillsaware-endorsement#readme",
+  "bugs": {
+    "url": "https://github.com/Cooperation-org/skillsaware-endorsement/issues"
+  },
+  "author": "SkillsAware",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist", "README.md", "LICENSE", "CHANGELOG.md", "postman"],
+  "scripts": {
+    "build": "tsup",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.5",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
