@@ -1,6 +1,6 @@
 {
   "name": "skillsaware-endorsement-sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Client SDK for SkillsAware OBv3 Endorsement: create claims, generate endorser links, submit endorsements, and download credentials.",
   "keywords": ["skillsaware", "endorsement", "obv3", "credentials", "sdk"],
   "license": "MIT",
