@@ -1,5 +1,106 @@
-import { PDFDocument } from 'pdf-lib'
+import { PDFDocument, PDFDict, PDFName } from 'pdf-lib'
 import crypto from 'crypto'
+
+/** Metadata extracted from a PDF's info dictionary */
+interface PdfExtractedMetadata {
+  title?: string
+  author?: string
+  subject?: string
+  keywords?: string
+  creator?: string
+  producer?: string
+  creationDate?: Date
+  modificationDate?: Date
+  customFields: Record<string, string>
+}
+
+/** Extracted credential data from PDF text */
+interface ExtractedData {
+  skillCode?: string
+  skillName?: string
+  claimantName?: string
+  endorserName?: string
+}
+
+/** A single tamper change detected in the PDF */
+interface TamperChange {
+  field: string
+  original: string
+  modified?: string
+  current?: string
+  status?: string
+  description?: string
+}
+
+/** Result of tamper detection analysis */
+interface TamperDetectionResult {
+  detected: boolean
+  changes?: TamperChange[]
+  extractedData?: ExtractedData
+  originalData?: StoredCredentialData
+  warning?: string
+  contentModified?: boolean
+  metadataTampered?: boolean
+  contentHash?: string
+  verified?: boolean
+  jwtError?: string
+}
+
+/** Details of full signature verification */
+interface VerificationDetails {
+  providedData?: {
+    skillCode: string
+    claimantName: string
+    endorserName: string
+  }
+  pdfData?: ExtractedData
+  pdfTimestamp?: string
+  signatureMatch?: boolean
+  differences?: Array<{
+    field: string
+    youEntered: string
+    pdfContains: string
+  }>
+  expectedSignature?: string
+  foundSignature?: string
+  hint?: string
+}
+
+/** Shape of parsed credential data stored in PDF metadata */
+interface StoredCredentialData {
+  skillName?: string
+  skillCode?: string
+  skillDescription?: string
+  claimantName?: string
+  narrative?: string
+  endorserName?: string
+  endorsementText?: string
+  bonaFides?: string
+  signature?: string
+  evidence?: string[]
+}
+
+/** Parse and validate stored credential data from JSON */
+function parseStoredCredentialData(data: unknown): StoredCredentialData {
+  if (typeof data !== 'object' || data === null) {
+    return {}
+  }
+  const obj: Record<string, unknown> = Object.fromEntries(Object.entries(data as object))
+  return {
+    skillName: typeof obj.skillName === 'string' ? obj.skillName : undefined,
+    skillCode: typeof obj.skillCode === 'string' ? obj.skillCode : undefined,
+    skillDescription: typeof obj.skillDescription === 'string' ? obj.skillDescription : undefined,
+    claimantName: typeof obj.claimantName === 'string' ? obj.claimantName : undefined,
+    narrative: typeof obj.narrative === 'string' ? obj.narrative : undefined,
+    endorserName: typeof obj.endorserName === 'string' ? obj.endorserName : undefined,
+    endorsementText: typeof obj.endorsementText === 'string' ? obj.endorsementText : undefined,
+    bonaFides: typeof obj.bonaFides === 'string' ? obj.bonaFides : undefined,
+    signature: typeof obj.signature === 'string' ? obj.signature : undefined,
+    evidence: Array.isArray(obj.evidence)
+      ? obj.evidence.filter((e: unknown): e is string => typeof e === 'string')
+      : undefined,
+  }
+}
 
 /**
  * Extract text content from PDF using pdfjs-dist (Mozilla's PDF.js)
@@ -35,7 +136,7 @@ export async function extractPdfText(pdfBuffer: Buffer): Promise<{
     }
   } catch (error) {
     console.error('[PDF Verify] Failed to extract PDF text:', error)
-    console.error('[PDF Verify] Error message:', (error as Error).message)
+    console.error('[PDF Verify] Error message:', error instanceof Error ? error.message : String(error))
     // Return empty text - verification will skip text-based checks
     return {
       fullText: '',
@@ -53,6 +154,7 @@ export async function extractPdfMetadata(pdfBuffer: Buffer) {
   try {
     const pdfDoc = await PDFDocument.load(pdfBuffer)
 
+    const customFields: Record<string, string> = {}
     const metadata = {
       title: pdfDoc.getTitle(),
       author: pdfDoc.getAuthor(),
@@ -62,52 +164,49 @@ export async function extractPdfMetadata(pdfBuffer: Buffer) {
       producer: pdfDoc.getProducer(),
       creationDate: pdfDoc.getCreationDate(),
       modificationDate: pdfDoc.getModificationDate(),
-      customFields: {} as Record<string, string>
+      customFields,
     }
 
     // Extract custom SkillsAware metadata
     try {
-      const infoDict = pdfDoc.context.lookup(pdfDoc.context.trailerInfo.Info)
-      if (infoDict && typeof infoDict === 'object') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const dict = (infoDict as any).dict
-        if (dict && typeof dict.get === 'function') {
-          const skillsAwareFields = [
-            'SkillsAware-Signature',
-            'SkillsAware-Timestamp',
-            'SkillsAware-ClaimID',
-            'SkillsAware-Version',
-            'SkillsAware-Issuer',
-            'SkillsAware-ContentHash',
-            'SkillsAware-JWT',
-            'SkillsAware-CredentialData'
-          ]
+      const infoRef = pdfDoc.context.trailerInfo.Info
+      if (infoRef) {
+        const infoDict = pdfDoc.context.lookup(infoRef, PDFDict)
+        const skillsAwareFields = [
+          'SkillsAware-Signature',
+          'SkillsAware-Timestamp',
+          'SkillsAware-ClaimID',
+          'SkillsAware-Version',
+          'SkillsAware-Issuer',
+          'SkillsAware-ContentHash',
+          'SkillsAware-JWT',
+          'SkillsAware-CredentialData'
+        ]
 
-          for (const field of skillsAwareFields) {
-            try {
-              const value = dict.get(pdfDoc.context.obj(field))
-              if (value) {
-                // Decode PDF string value - remove leading '/' and decode hex sequences
-                let decodedValue = String(value)
+        for (const field of skillsAwareFields) {
+          try {
+            const value = infoDict.get(PDFName.of(field))
+            if (value) {
+              // Decode PDF string value - remove leading '/' and decode hex sequences
+              let decodedValue = String(value)
 
-                // Remove leading slash if present
-                if (decodedValue.startsWith('/')) {
-                  decodedValue = decodedValue.substring(1)
-                }
-
-                // Decode hex sequences like #20 -> space
-                decodedValue = decodedValue.replace(
-                  /#([0-9A-Fa-f]{2})/g,
-                  (match, hex) => {
-                    return String.fromCharCode(parseInt(hex, 16))
-                  }
-                )
-
-                metadata.customFields[field] = decodedValue
+              // Remove leading slash if present
+              if (decodedValue.startsWith('/')) {
+                decodedValue = decodedValue.substring(1)
               }
-            } catch {
-              // Field not found, skip
+
+              // Decode hex sequences like #20 -> space
+              decodedValue = decodedValue.replace(
+                /#([0-9A-Fa-f]{2})/g,
+                (_match, hex: string) => {
+                  return String.fromCharCode(parseInt(hex, 16))
+                }
+              )
+
+              metadata.customFields[field] = decodedValue
             }
+          } catch {
+            // Field not found, skip
           }
         }
       }
@@ -134,8 +233,7 @@ export async function verifyPdfSignature(
   skillCode: string,
   claimantName: string,
   endorserName: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Promise<{ valid: boolean; message: string; metadata?: any; details?: any }> {
+): Promise<{ valid: boolean; message: string; metadata?: PdfExtractedMetadata; details?: VerificationDetails }> {
   try {
     const metadata = await extractPdfMetadata(pdfBuffer)
     const textData = await extractPdfText(pdfBuffer)
@@ -257,10 +355,8 @@ export async function verifyPdfSignature(
 export async function verifyPdfBasic(pdfBuffer: Buffer): Promise<{
   valid: boolean
   message: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  metadata?: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  tamperDetails?: any
+  metadata?: PdfExtractedMetadata
+  tamperDetails?: TamperDetectionResult
 }> {
   try {
     const metadata = await extractPdfMetadata(pdfBuffer)
@@ -333,7 +429,7 @@ export async function verifyPdfBasic(pdfBuffer: Buffer): Promise<{
 
     if (storedCredentialData && storedContentHash) {
       try {
-        const originalData = JSON.parse(storedCredentialData)
+        const originalData = parseStoredCredentialData(JSON.parse(storedCredentialData))
 
         // Recompute the content hash from the stored original data
         const contentPayload = JSON.stringify({

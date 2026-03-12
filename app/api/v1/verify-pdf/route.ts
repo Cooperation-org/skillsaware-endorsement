@@ -7,14 +7,14 @@ export const runtime = 'nodejs'
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
-    const file = formData.get('pdf') as File
+    const fileEntry = formData.get('pdf')
 
-    if (!file) {
+    if (!(fileEntry instanceof File)) {
       return NextResponse.json({ error: 'No PDF file provided' }, { status: 400 })
     }
 
     // Check file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
+    if (fileEntry.size > 10 * 1024 * 1024) {
       return NextResponse.json(
         { error: 'PDF file too large (max 10MB)' },
         { status: 400 }
@@ -22,11 +22,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Check file type
-    if (file.type !== 'application/pdf') {
+    if (fileEntry.type !== 'application/pdf') {
       return NextResponse.json({ error: 'File must be a PDF' }, { status: 400 })
     }
 
-    const bytes = await file.arrayBuffer()
+    const bytes = await fileEntry.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
     // Step 1: Extract metadata
@@ -36,9 +36,12 @@ export async function POST(request: NextRequest) {
     const basicResult = await verifyPdfBasic(buffer)
 
     // Step 3: Full verification if credential data provided
-    const skillCode = formData.get('skillCode') as string
-    const claimantName = formData.get('claimantName') as string
-    const endorserName = formData.get('endorserName') as string
+    const skillCodeEntry = formData.get('skillCode')
+    const claimantNameEntry = formData.get('claimantName')
+    const endorserNameEntry = formData.get('endorserName')
+    const skillCode = typeof skillCodeEntry === 'string' ? skillCodeEntry : null
+    const claimantName = typeof claimantNameEntry === 'string' ? claimantNameEntry : null
+    const endorserName = typeof endorserNameEntry === 'string' ? endorserNameEntry : null
 
     let fullVerification = null
 
@@ -54,8 +57,8 @@ export async function POST(request: NextRequest) {
 
     // Return comprehensive verification result
     return NextResponse.json({
-      filename: file.name,
-      fileSize: file.size,
+      filename: fileEntry.name,
+      fileSize: fileEntry.size,
       basicVerification: basicResult,
       fullVerification: fullVerification,
       metadata: {

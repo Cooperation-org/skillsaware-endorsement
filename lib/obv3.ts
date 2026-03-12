@@ -127,7 +127,7 @@ export async function generateAchievementCredential(
         tenant.id || data.tenantId // Pass tenant ID to ensure consistent DID per tenant
       )
       credential.proof = await generateProof(
-        credential as unknown as Record<string, unknown>,
+        { ...credential },
         privateKey,
         didKey
       )
@@ -191,7 +191,7 @@ export async function generateEndorsementCredential(
         tenant.id || data.tenantId // Pass tenant ID to ensure consistent DID per tenant
       )
       credential.proof = await generateProof(
-        credential as unknown as Record<string, unknown>,
+        { ...credential },
         privateKey,
         didKey
       )

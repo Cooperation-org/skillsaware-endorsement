@@ -16,6 +16,12 @@ import type {
   VerifyPdfResponse
 } from './types'
 import { EndorsementClient, EndorsementApiError } from './client'
+import {
+  assertResponse,
+  isGenerateEndorserLinkResponse,
+  isSubmitEndorsementResponse,
+  isVerifyPdfResponse
+} from './guards'
 
 function normalizeBaseUrl(baseUrl: string): string {
   return baseUrl.replace(/\/+$/, '')
@@ -67,12 +73,13 @@ export async function generateEndorserLink(
       body: JSON.stringify(body)
     }
   )
-  const data = (await res.json()) as { error?: string } | GenerateEndorserLinkResponse
+  const data: unknown = await res.json()
   if (!res.ok) {
-    const msg = 'error' in data ? data.error : res.statusText
+    const errBody = data as Record<string, unknown> | undefined
+    const msg = errBody && typeof errBody === 'object' && 'error' in errBody ? String(errBody.error) : res.statusText
     throw new EndorsementApiError(msg ?? 'Request failed', res.status, data)
   }
-  return data as GenerateEndorserLinkResponse
+  return assertResponse(data, isGenerateEndorserLinkResponse, 'GenerateEndorserLinkResponse')
 }
 
 /**
@@ -92,12 +99,13 @@ export async function submitEndorsement(
     },
     body: JSON.stringify(payload)
   })
-  const data = (await res.json()) as { error?: string } | SubmitEndorsementResponse
+  const data: unknown = await res.json()
   if (!res.ok) {
-    const msg = 'error' in data ? data.error : res.statusText
+    const errBody = data as Record<string, unknown> | undefined
+    const msg = errBody && typeof errBody === 'object' && 'error' in errBody ? String(errBody.error) : res.statusText
     throw new EndorsementApiError(msg ?? 'Request failed', res.status, data)
   }
-  return data as SubmitEndorsementResponse
+  return assertResponse(data, isSubmitEndorsementResponse, 'SubmitEndorsementResponse')
 }
 
 /**
@@ -148,10 +156,11 @@ export async function verifyPdf(
     method: 'POST',
     body: form
   })
-  const data = (await res.json()) as { error?: string } | VerifyPdfResponse
+  const data: unknown = await res.json()
   if (!res.ok) {
-    const msg = 'error' in data ? data.error : res.statusText
+    const errBody = data as Record<string, unknown> | undefined
+    const msg = errBody && typeof errBody === 'object' && 'error' in errBody ? String(errBody.error) : res.statusText
     throw new EndorsementApiError(msg ?? 'Verification failed', res.status, data)
   }
-  return data as VerifyPdfResponse
+  return assertResponse(data, isVerifyPdfResponse, 'VerifyPdfResponse')
 }

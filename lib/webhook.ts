@@ -24,10 +24,15 @@ export function verifyWebhookSignature(
   return crypto.timingSafeEqual(expectedSig, receivedSig)
 }
 
+/** Check whether an unknown value has a string `code` property. */
+function hasCode(value: unknown): value is { code: string } {
+  return typeof value === 'object' && value !== null && 'code' in value && typeof value.code === 'string'
+}
+
 function getErrorMessage(error: unknown, url: string): string {
   if (error instanceof Error) {
-    const errorCode = (error as Error & { code?: string }).code
-    const errorCause = (error as Error & { cause?: { code?: string } }).cause
+    const errorCode = hasCode(error) ? error.code : undefined
+    const errorCause = hasCode(error.cause) ? error.cause : undefined
 
     // Handle specific error codes
     if (errorCode === 'ECONNREFUSED' || errorCause?.code === 'ECONNREFUSED') {
@@ -86,7 +91,7 @@ export async function sendWebhook(
       const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
 
       // Extract tenant_id from payload if available, otherwise default to 'skillsaware'
-      const tenantId = (payload as { tenant_id?: string }).tenant_id || 'skillsaware'
+      const tenantId = payload.tenant_id ?? 'skillsaware'
 
       const response = await fetch(url, {
         method: 'POST',

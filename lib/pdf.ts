@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer-core'
 import chromium from '@sparticuz/chromium'
 import fs from 'fs'
-import { PDFDocument } from 'pdf-lib'
+import { PDFDocument, PDFDict, PDFName } from 'pdf-lib'
 import crypto from 'crypto'
 
 // Function to find Chrome/Edge executable on Windows
@@ -347,12 +347,11 @@ export async function renderCredentialPdf(data: {
     // Add custom metadata to PDF info dictionary
     // We embed the verification signature in the PDF's info dictionary
     try {
-      const infoDict = pdfDoc.context.lookup(pdfDoc.context.trailerInfo.Info)
-      if (infoDict && typeof infoDict === 'object' && 'dict' in infoDict) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const dict = (infoDict as any).dict
+      const infoRef = pdfDoc.context.trailerInfo.Info
+      if (infoRef) {
+        const infoDict = pdfDoc.context.lookup(infoRef, PDFDict)
         for (const [key, value] of Object.entries(customMetadata)) {
-          dict.set(pdfDoc.context.obj(key), pdfDoc.context.obj(value))
+          infoDict.set(PDFName.of(key), pdfDoc.context.obj(value))
         }
       }
     } catch (dictError) {

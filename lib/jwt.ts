@@ -1,4 +1,4 @@
-import { SignJWT, jwtVerify } from 'jose'
+import { SignJWT, jwtVerify, JWTPayload } from 'jose'
 import { JwtPayload } from '@/types/jwt'
 
 const JWT_SECRET = new TextEncoder().encode(
@@ -6,11 +6,42 @@ const JWT_SECRET = new TextEncoder().encode(
 )
 const JWT_EXPIRY_DAYS = parseInt(process.env.JWT_EXPIRY_DAYS || '7', 10)
 
+/**
+ * Convert a JwtPayload (minus exp) into a jose-compatible JWTPayload.
+ * This avoids `as unknown as Record<string, unknown>` by explicitly
+ * spreading the known fields into a structurally compatible object.
+ */
+function toJosePayload(payload: Omit<JwtPayload, 'exp'>): JWTPayload {
+  const result: JWTPayload = {}
+  for (const [key, value] of Object.entries(payload)) {
+    result[key] = value
+  }
+  return result
+}
+
+/**
+ * Runtime type guard that validates a jose JWTPayload contains
+ * the fields required by our application's JwtPayload interface.
+ */
+function isJwtPayload(value: JWTPayload): value is JWTPayload & JwtPayload {
+  return (
+    typeof value.iss === 'string' &&
+    typeof value.aud === 'string' &&
+    typeof value.tenant === 'string' &&
+    typeof value.claim_id === 'string' &&
+    typeof value.skill_code === 'string' &&
+    typeof value.skill_name === 'string' &&
+    typeof value.skill_description === 'string' &&
+    (value.role === 'claimant' || value.role === 'endorser') &&
+    typeof value.nonce === 'string'
+  )
+}
+
 export async function createToken(
   payload: Omit<JwtPayload, 'exp'>,
   expiryDays = JWT_EXPIRY_DAYS
 ): Promise<string> {
-  const token = await new SignJWT(payload as unknown as Record<string, unknown>)
+  const token = await new SignJWT(toJosePayload(payload))
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(`${expiryDays}d`)
@@ -26,7 +57,10 @@ export async function verifyToken(token: string): Promise<JwtPayload> {
     }
 
     const { payload } = await jwtVerify(token, JWT_SECRET)
-    return payload as unknown as JwtPayload
+    if (!isJwtPayload(payload)) {
+      throw new Error('TOKEN_INVALID: Token payload does not match expected structure')
+    }
+    return payload
   } catch (error) {
     if (error instanceof Error) {
       if (error.message.includes('expired')) {

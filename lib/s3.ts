@@ -11,8 +11,8 @@ const s3Client = hasAwsCredentials
   ? new S3Client({
       region: process.env.AWS_REGION || 'us-east-1',
       credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? '',
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? ''
       }
     })
   : null
@@ -67,18 +67,25 @@ export async function uploadToS3(
   }
 
   // Production: use actual S3
-  const body =
-    typeof content === 'string'
-      ? content
-      : new Uint8Array(content.buffer, content.byteOffset, content.byteLength)
-
-  const response = await fetch(presignedUrl, {
+  // Both string and Uint8Array are valid fetch body types.
+  // We branch explicitly so TypeScript can narrow each to a concrete BodyInit subtype.
+  const fetchOptions: RequestInit = {
     method: 'PUT',
-    body: body as BodyInit,
-    headers: {
-      'Content-Type': contentType
-    }
-  })
+    headers: { 'Content-Type': contentType }
+  }
+
+  if (typeof content === 'string') {
+    fetchOptions.body = content
+  } else {
+    // Convert Buffer to a plain ArrayBuffer to satisfy BodyInit without type assertions.
+    // Buffer.buffer may be a SharedArrayBuffer, so we copy into a fresh ArrayBuffer.
+    const arrayBuffer = content.buffer instanceof ArrayBuffer
+      ? content.buffer.slice(content.byteOffset, content.byteOffset + content.byteLength)
+      : new Uint8Array(content).buffer
+    fetchOptions.body = arrayBuffer
+  }
+
+  const response = await fetch(presignedUrl, fetchOptions)
 
   if (!response.ok) {
     throw new Error(`S3 upload failed: ${response.statusText}`)

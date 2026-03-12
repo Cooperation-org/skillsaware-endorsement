@@ -35,21 +35,31 @@ interface VerificationDifference {
   pdfContains: string
 }
 
+interface PdfMetadata {
+  title?: string
+  author?: string
+  subject?: string
+  keywords?: string
+  creator?: string
+  producer?: string
+  creationDate?: Date
+  modificationDate?: Date
+  customFields: Record<string, string>
+}
+
 interface VerificationResult {
   filename: string
   fileSize: number
   basicVerification: {
     valid: boolean
     message: string
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    metadata?: any
+    metadata?: PdfMetadata
     tamperDetails?: TamperDetails
   }
   fullVerification?: {
     valid: boolean
     message: string
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    metadata?: any
+    metadata?: PdfMetadata
     details?: {
       providedData?: {
         skillCode?: string
@@ -314,16 +324,20 @@ export default function VerifyPdfClient() {
                   onClick={() => {
                     const input = document.getElementById(
                       'pdf-file-input'
-                    ) as HTMLInputElement
-                    input?.click()
+                    )
+                    if (input instanceof HTMLInputElement) {
+                      input.click()
+                    }
                   }}
                   onKeyDown={e => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault()
                       const input = document.getElementById(
                         'pdf-file-input'
-                      ) as HTMLInputElement
-                      input?.click()
+                      )
+                      if (input instanceof HTMLInputElement) {
+                        input.click()
+                      }
                     }
                   }}
                   style={{

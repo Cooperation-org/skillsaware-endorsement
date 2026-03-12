@@ -9,6 +9,13 @@ import type {
   VerifyPdfOptions,
   VerifyPdfResponse
 } from './types'
+import {
+  assertResponse,
+  isCreateClaimResponse,
+  isGenerateEndorserLinkResponse,
+  isSubmitEndorsementResponse,
+  isVerifyPdfResponse
+} from './guards'
 
 /**
  * Error thrown when the endorsement API returns a non-2xx response.
@@ -34,7 +41,12 @@ function normalizeBaseUrl(baseUrl: string): string {
 }
 
 /**
- * Perform a JSON request and parse errors.
+ * Perform a JSON request, parse errors, and validate the response shape
+ * at runtime using the provided type guard.
+ *
+ * The `guard` and `label` parameters ensure that external JSON is never
+ * blindly trusted -- every response crosses a trust boundary and must be
+ * proven to match the expected type before it is returned.
  */
 async function request<T>(
   baseUrl: string,
@@ -43,7 +55,9 @@ async function request<T>(
     method: 'GET' | 'POST'
     headers?: Record<string, string>
     body?: unknown
-  }
+  },
+  guard: (v: unknown) => v is T,
+  label: string
 ): Promise<T> {
   const url = `${normalizeBaseUrl(baseUrl)}${path.startsWith('/') ? path : `/${path}`}`
   const headers: Record<string, string> = {
@@ -73,7 +87,7 @@ async function request<T>(
         : res.statusText || `HTTP ${res.status}`
     throw new EndorsementApiError(msg, res.status, body)
   }
-  return body as T
+  return assertResponse(body, guard, label)
 }
 
 /**
@@ -91,11 +105,17 @@ export class EndorsementClient {
    * Create a new claim and get the claimant magic link.
    */
   async createClaim(payload: CreateClaimPayload): Promise<CreateClaimResponse> {
-    return request<CreateClaimResponse>(this.baseUrl, '/api/v1/claims', {
-      method: 'POST',
-      headers: { 'x-api-key': this.apiKey },
-      body: payload
-    })
+    return request<CreateClaimResponse>(
+      this.baseUrl,
+      '/api/v1/claims',
+      {
+        method: 'POST',
+        headers: { 'x-api-key': this.apiKey },
+        body: payload
+      },
+      isCreateClaimResponse,
+      'CreateClaimResponse'
+    )
   }
 
   /**
@@ -113,7 +133,9 @@ export class EndorsementClient {
         method: 'POST',
         headers: { Authorization: `Bearer ${claimantToken}` },
         body: payload
-      }
+      },
+      isGenerateEndorserLinkResponse,
+      'GenerateEndorserLinkResponse'
     )
   }
 
@@ -131,7 +153,9 @@ export class EndorsementClient {
         method: 'POST',
         headers: { Authorization: `Bearer ${endorserToken}` },
         body: payload
-      }
+      },
+      isSubmitEndorsementResponse,
+      'SubmitEndorsementResponse'
     )
   }
 
@@ -163,12 +187,13 @@ export class EndorsementClient {
     if (options?.claimantName) form.append('claimantName', options.claimantName)
     if (options?.endorserName) form.append('endorserName', options.endorserName)
     const res = await fetch(`${base}/api/v1/verify-pdf`, { method: 'POST', body: form })
-    const data = (await res.json()) as { error?: string } | VerifyPdfResponse
+    const data: unknown = await res.json()
     if (!res.ok) {
-      const msg = 'error' in data ? data.error : res.statusText
+      const errBody = data as Record<string, unknown> | undefined
+      const msg = errBody && typeof errBody === 'object' && 'error' in errBody ? String(errBody.error) : res.statusText
       throw new EndorsementApiError(msg ?? 'Verification failed', res.status, data)
     }
-    return data as VerifyPdfResponse
+    return assertResponse(data, isVerifyPdfResponse, 'VerifyPdfResponse')
   }
 }
 
